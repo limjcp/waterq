@@ -32,21 +32,33 @@ model QueueTicket {
   updatedAt    DateTime    @updatedAt
 }
 
-// If you have staff members logging in to call numbers, etc.
-model Staff {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 // Status can be extended as needed
 enum QueueStatus {
   PENDING
   CALLED
   SERVED
   CANCELLED
+}
+
+model User {
+  id         String  @id @default(cuid())
+  firstName  String
+  middleName String?
+  lastName   String
+  email      String  @unique
+  image      String?
+  password   String
+  username   String  @unique
+
+  role Role[] @default([unverified])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+}
+
+enum Role {
+  unverified
+  staff
+  admin
 }

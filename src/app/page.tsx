@@ -1,7 +1,20 @@
-export default function Page() {
+import { auth } from "@/auth";
+import React from "react";
+
+export default async function UserPage() {
+  const session = await auth();
+
   return (
     <div>
-      <h1>General Santos City Water District Queueing System</h1>
+      {session ? (
+        <>
+          <h1>Welcome, {session.user?.firstName || session.user?.username}!</h1>
+
+          <pre>{JSON.stringify(session, null, 2)}</pre>
+        </>
+      ) : (
+        <p>You are not logged in zzz.</p>
+      )}
     </div>
   );
 }
