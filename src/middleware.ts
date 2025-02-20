@@ -9,7 +9,9 @@ export default auth((req) => {
   if (
     nextUrl.pathname === "/" ||
     nextUrl.pathname.startsWith("/api/auth") ||
-    nextUrl.pathname === "/file.svg" ||
+    nextUrl.pathname === "/WD.png" ||
+    nextUrl.pathname === "/wdmascot.png" ||
+    nextUrl.pathname === "/wdlogo.png" ||
     nextUrl.pathname.startsWith("/kiosk") ||
     nextUrl.pathname.startsWith("/auth/signin") ||
     nextUrl.pathname.startsWith("/api/tickets") ||
