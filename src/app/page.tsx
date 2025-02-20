@@ -8,7 +8,9 @@ export default async function UserPage() {
     <div>
       {session ? (
         <>
-          <h1>Welcome, {session.user?.firstName || session.user?.username}!</h1>
+          <h1>
+            Welcomse, {session.user?.firstName || session.user?.username}!
+          </h1>
 
           <pre>{JSON.stringify(session, null, 2)}</pre>
         </>
