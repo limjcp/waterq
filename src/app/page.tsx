@@ -17,7 +17,7 @@ export default async function UserPage() {
           <div className="text-center mb-8">
             <UserCircleIcon className="h-16 w-16 text-sky-500 mx-auto mb-4" />
             <h1 className="text-4xl font-bold text-sky-800 mb-2">
-              Welcome, {session.user?.firstName || session.user?.username}!
+              Welcomes, {session.user?.firstName || session.user?.username}!
             </h1>
             <p className="text-sky-600">You are successfully authenticated</p>
           </div>
