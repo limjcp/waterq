@@ -1,0 +1,52 @@
+// schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Each counter is physically a window/desk, 
+// e.g., "Customer Welfare", "New Service Application", "Payment"
+model Counter {
+  id        String        @id @default(cuid())
+  name      String
+  code      String        @unique
+  tickets   QueueTicket[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+// Represents each ticket in the queue
+model QueueTicket {
+  id           String      @id @default(cuid())
+  ticketNumber Int
+  prefix       String
+  status       QueueStatus @default(PENDING)
+  counterId    String?
+  counter      Counter?    @relation(fields: [counterId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+// If you have staff members logging in to call numbers, etc.
+model Staff {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Status can be extended as needed
+enum QueueStatus {
+  PENDING
+  CALLED
+  SERVED
+  CANCELLED
+}
