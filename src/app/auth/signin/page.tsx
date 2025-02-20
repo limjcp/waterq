@@ -43,7 +43,7 @@ export default function SigninPage() {
           <UserCircleIcon className="h-16 w-16 text-sky-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-sky-800 mb-2">Login</h1>
           <p className="text-sky-600">
-            Welcome back! Please sign in to continue.
+            Welcome sback! Please sign in to continue.
           </p>
         </div>
 
