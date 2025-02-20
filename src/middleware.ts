@@ -7,15 +7,18 @@ export default auth((req) => {
 
   // Public routes that don't require authentication
   if (
+    nextUrl.pathname === "/" ||
     nextUrl.pathname.startsWith("/api/auth") ||
-    nextUrl.pathname === "/file.svg"
+    nextUrl.pathname === "/file.svg" ||
+    nextUrl.pathname.startsWith("/kiosk") ||
+    nextUrl.pathname.startsWith("/auth/signin")
   ) {
     return NextResponse.next();
   }
 
   // Redirect unauthenticated users to login page
   if (!isLoggedIn) {
-    return NextResponse.redirect(new URL("/api/auth/signin", nextUrl));
+    return NextResponse.redirect(new URL("/auth/signin", nextUrl));
   }
 
   //   // Role-based redirects when accessing the root path "/"
