@@ -4,7 +4,7 @@ import { TicketIcon } from "@heroicons/react/24/outline";
 
 export default function Kiosk() {
   const [selectedCounterCode, setSelectedCounterCode] = useState("CW");
-  const [ticketNumber, setTicketNumber] = useState<number | null>(null);
+  const [ticketNumber, setTicketNumber] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -14,7 +14,8 @@ export default function Kiosk() {
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ counterCode: selectedCounterCode }),
+        // Update key from "counterCode" to "serviceCode"
+        body: JSON.stringify({ serviceCode: selectedCounterCode }),
       });
       const data = await res.json();
       setTicketNumber(data.ticketNumber);

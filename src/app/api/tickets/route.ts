@@ -1,45 +1,57 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { QueueStatus } from "@prisma/client";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { counterCode } = body;
-    if (!counterCode) {
+    const { serviceCode } = body;
+    if (!serviceCode) {
       return NextResponse.json(
-        { error: "Missing counterCode" },
+        { error: "Missing serviceCode" },
         { status: 400 }
       );
     }
 
-    // 1. Find the counter
-    const counter = await prisma.counter.findUnique({
-      where: { code: counterCode },
+    // 1. Find the service by its code
+    const service = await prisma.service.findUnique({
+      where: { code: serviceCode },
     });
-    if (!counter) {
-      return NextResponse.json({ error: "Counter not found" }, { status: 404 });
+    if (!service) {
+      return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
 
-    // 2. Find the max ticketNumber for that counter
+    // 2. Look for an available counter that handles that service (using first found)
+    const counter = await prisma.counter.findFirst({
+      where: { serviceId: service.id },
+    });
+
+    // 3. Find the last ticket for that service (to get next ticketNumber)
     const lastTicket = await prisma.queueTicket.findFirst({
-      where: { counterId: counter.id },
+      where: { serviceId: service.id },
       orderBy: { ticketNumber: "desc" },
     });
     const nextTicketNumber = lastTicket ? lastTicket.ticketNumber + 1 : 1;
 
-    // 3. Create a new ticket
+    // 4. Create the new ticket – if a counter is found, mark as CALLED; otherwise, keep as PENDING.
     const newTicket = await prisma.queueTicket.create({
       data: {
         ticketNumber: nextTicketNumber,
-        prefix: counter.code,
-        counter: {
-          connect: { id: counter.id },
-        },
+        prefix: service.code,
+        status: counter ? QueueStatus.CALLED : QueueStatus.PENDING,
+        service: { connect: { id: service.id } },
+        ...(counter ? { counter: { connect: { id: counter.id } } } : {}),
       },
     });
 
+    // (Optional) Trigger a display update (e.g. send notification) here
+
     return NextResponse.json(
-      { ticketNumber: `${newTicket.prefix}${newTicket.ticketNumber}` },
+      {
+        ticketNumber: `${newTicket.prefix}${newTicket.ticketNumber}`,
+        status: newTicket.status,
+        counterId: counter ? counter.id : null,
+      },
       { status: 200 }
     );
   } catch (error) {

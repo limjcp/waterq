@@ -13,7 +13,9 @@ export default auth((req) => {
     nextUrl.pathname.startsWith("/kiosk") ||
     nextUrl.pathname.startsWith("/auth/signin") ||
     nextUrl.pathname.startsWith("/api/tickets") ||
-    nextUrl.pathname.startsWith("/api/display")
+    nextUrl.pathname.startsWith("/display") ||
+    nextUrl.pathname.startsWith("/api/display") ||
+    nextUrl.pathname === "/admin/register"
   ) {
     return NextResponse.next();
   }

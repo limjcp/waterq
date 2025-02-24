@@ -9,15 +9,29 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Each counter is physically a window/desk, 
-// e.g., "Customer Welfare", "New Service Application", "Payment"
+// Represents a type of service (e.g., Customer Welfare, New Service Application, Payment)
+model Service {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  name      String
+  counters  Counter[]
+  tickets   QueueTicket[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+// Each counter is physically a window/desk and is linked to a Service.
 model Counter {
   id        String        @id @default(cuid())
   name      String
   code      String        @unique
+  serviceId String
+  service   Service       @relation(fields: [serviceId], references: [id])
   tickets   QueueTicket[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+
+  User User[]
 }
 
 // Represents each ticket in the queue
@@ -26,13 +40,36 @@ model QueueTicket {
   ticketNumber Int
   prefix       String
   status       QueueStatus @default(PENDING)
+  // Each ticket is created for a particular service.
+  serviceId    String
+  service      Service     @relation(fields: [serviceId], references: [id])
+  // Once called, a ticket is assigned to a counter.
   counterId    String?
   counter      Counter?    @relation(fields: [counterId], references: [id])
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 }
 
-// Status can be extended as needed
+// Represents a user in the system. Staff members (role: staff) can be assigned to a counter.
+model User {
+  id                String    @id @default(cuid())
+  firstName         String
+  middleName        String?
+  lastName          String
+  email             String    @unique
+  image             String?
+  password          String
+  username          String    @unique
+  role              Role[]    @default([unverified])
+  // If the user is a staff, they can be assigned to a specific counter.
+  assignedCounterId String?
+  assignedCounter   Counter?  @relation(fields: [assignedCounterId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLogin         DateTime?
+}
+
+// Defines the possible states of a ticket.
 enum QueueStatus {
   PENDING
   CALLED
@@ -40,23 +77,7 @@ enum QueueStatus {
   CANCELLED
 }
 
-model User {
-  id         String  @id @default(cuid())
-  firstName  String
-  middleName String?
-  lastName   String
-  email      String  @unique
-  image      String?
-  password   String
-  username   String  @unique
-
-  role Role[] @default([unverified])
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  lastLogin DateTime?
-}
-
+// Defines the user roles.
 enum Role {
   unverified
   staff
