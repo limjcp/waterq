@@ -30,6 +30,7 @@ export default function SigninPage() {
 
     if (result?.error) {
       setError(result.error);
+      setError("Invalid Username or Password. Please try again.");
       setIsLoading(false);
     } else {
       router.push("/");
