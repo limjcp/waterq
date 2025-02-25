@@ -5,10 +5,15 @@ export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
+  console.log("isLoggedIn:", isLoggedIn);
+  console.log("req.auth:", req.auth);
+
   // Public routes that don't require authentication
   if (
-    nextUrl.pathname === "/" ||
     nextUrl.pathname.startsWith("/api/auth") ||
+    nextUrl.pathname === "/WD.png" ||
+    nextUrl.pathname === "/wdmascot.png" ||
+    nextUrl.pathname === "/wdlogo.png" ||
     nextUrl.pathname === "/file.svg" ||
     nextUrl.pathname.startsWith("/kiosk") ||
     nextUrl.pathname.startsWith("/auth/signin") ||
@@ -25,38 +30,39 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/auth/signin", nextUrl));
   }
 
-  //   // Role-based redirects when accessing the root path "/"
-  //   if (nextUrl.pathname === "/") {
-  //     const roleDashboardMap: Record<string, string> = {
-  //       admin: "/admin-dashboard",
-  //       staff: "/staff-approve",
-  //       signatory: "/signatory-sign",
-  //       student: "/student-dashboard",
-  //     };
+  // Role-based redirects when accessing the root path "/"
+  if (nextUrl.pathname === "/") {
+    const user = req.auth.user;
 
-  //     for (const role of req.auth?.user?.role || []) {
-  //       if (roleDashboardMap[role]) {
-  //         return NextResponse.redirect(new URL(roleDashboardMap[role], nextUrl));
-  //       }
-  //     }
-  //   }
+    // For admin users, redirect to admin dashboard
+    if (user.role && Array.isArray(user.role) && user.role.includes("admin")) {
+      console.log("Redirecting admin user to /admin/dashboard");
+      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
+    }
 
-  //   // Role-specific route protection
-  //   const routeRoleMap: Record<string, string> = {
-  //     admin: "/admin",
-  //     staff: "/staff",
-  //     signatory: "/signatory",
-  //     student: "/student",
-  //   };
+    // For staff users, check the assigned counter and redirect accordingly
+    if (user.role && Array.isArray(user.role) && user.role.includes("staff")) {
+      const counterDashboardMap: Record<string, string> = {
+        "Customer Welfare Counter": "/staff/customerWelfare",
+        "New Service Application Counter": "/staff/newServiceApplication",
+        "Payment Counter": "/staff/payment",
+      };
 
-  //   for (const role in routeRoleMap) {
-  //     if (
-  //       nextUrl.pathname.startsWith(routeRoleMap[role]) &&
-  //       !req.auth?.user?.role?.includes(role)
-  //     ) {
-  //       return NextResponse.redirect(new URL("/", nextUrl));
-  //     }
-  //   }
+      const assignedCounterName = user.assignedCounterName;
+      if (assignedCounterName && counterDashboardMap[assignedCounterName]) {
+        console.log(
+          `Redirecting staff with counter ${assignedCounterName} to ${counterDashboardMap[assignedCounterName]}`
+        );
+        return NextResponse.redirect(
+          new URL(counterDashboardMap[assignedCounterName], nextUrl)
+        );
+      }
+
+      // Fallback for staff users without a specific counter mapping
+      console.log("Redirecting staff user to /staff");
+      return NextResponse.redirect(new URL("/staff", nextUrl));
+    }
+  }
 
   return NextResponse.next();
 });

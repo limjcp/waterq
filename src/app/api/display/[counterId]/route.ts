@@ -11,7 +11,10 @@ export async function GET(
   try {
     // Find the most recent ticket that is CALLED for the given counter.
     const ticket = await prisma.queueTicket.findFirst({
-      where: { counterId, status: QueueStatus.CALLED },
+      where: {
+        counterId,
+        status: { in: [QueueStatus.CALLED, QueueStatus.SERVING] },
+      },
       orderBy: { updatedAt: "desc" },
       include: { service: true },
     });

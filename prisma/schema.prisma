@@ -48,6 +48,10 @@ model QueueTicket {
   counter      Counter?    @relation(fields: [counterId], references: [id])
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+  // Add fields to track serving start and end times
+  servingStart DateTime?
+  servingEnd   DateTime?
+  isPrioritized Boolean    @default(false)
 }
 
 // Represents a user in the system. Staff members (role: staff) can be assigned to a counter.
@@ -73,7 +77,9 @@ model User {
 enum QueueStatus {
   PENDING
   CALLED
+  SERVING
   SERVED
+  LAPSED
   CANCELLED
 }
 

@@ -9,15 +9,20 @@ export async function GET() {
     const tickets = await prisma.queueTicket.findMany({
       where: {
         status: {
-          in: [QueueStatus.PENDING, QueueStatus.CALLED],
+          in: [
+            QueueStatus.PENDING,
+            QueueStatus.SERVING,
+            QueueStatus.CALLED,
+            QueueStatus.LAPSED,
+          ],
         },
       },
-      orderBy: {
-        createdAt: "asc",
-      },
+      orderBy: [
+        { isPrioritized: "desc" }, // Prioritized tickets come first.
+        { createdAt: "asc" }, // Then sorted by creation time.
+      ],
       include: {
-        // If you need to fetch related counter info, uncomment below:
-        // counter: true,
+        // Include any related fields if needed.
       },
     });
     return NextResponse.json(tickets);

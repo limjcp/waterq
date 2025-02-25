@@ -6,16 +6,25 @@ export default function Kiosk() {
   const [selectedCounterCode, setSelectedCounterCode] = useState("CW");
   const [ticketNumber, setTicketNumber] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPrioritized, setIsPrioritized] = useState(false);
+  const [serviceCode, setServiceCode] = useState(selectedCounterCode);
+  const [isPWD, setIsPWD] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
+    const prioritized = isPWD;
+    const code = isPWD
+      ? selectedCounterCode.replace("PWD-", "")
+      : selectedCounterCode;
+    setIsPrioritized(prioritized);
+    setServiceCode(code);
+
     try {
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Update key from "counterCode" to "serviceCode"
-        body: JSON.stringify({ serviceCode: selectedCounterCode }),
+        body: JSON.stringify({ serviceCode, isPrioritized }),
       });
       const data = await res.json();
       setTicketNumber(data.ticketNumber);
@@ -49,7 +58,7 @@ export default function Kiosk() {
                 {ticketNumber}
               </div>
               <div className="mt-3 inline-flex items-center px-4 py-1 bg-sky-500 text-white rounded-full text-sm font-medium animate-fade-in">
-                {selectedCounterCode}
+                {isPrioritized ? `PWD - ${serviceCode}` : serviceCode}
               </div>
             </div>
             <button
@@ -63,6 +72,36 @@ export default function Kiosk() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
+                Are you a PWD?
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setIsPWD(false)}
+                  className={`w-full py-3 px-6 rounded-lg transition-all duration-200 ${
+                    !isPWD
+                      ? "bg-sky-500 text-white"
+                      : "bg-white border border-sky-200 text-sky-700"
+                  }`}
+                >
+                  No
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPWD(true)}
+                  className={`w-full py-3 px-6 rounded-lg transition-all duration-200 ${
+                    isPWD
+                      ? "bg-sky-500 text-white"
+                      : "bg-white border border-sky-200 text-sky-700"
+                  }`}
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-sky-700 mb-2">
                 Choose Service Type
               </label>
               <select
@@ -70,9 +109,21 @@ export default function Kiosk() {
                 onChange={(e) => setSelectedCounterCode(e.target.value)}
                 className="w-full px-4 py-3 border border-sky-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all bg-white"
               >
-                <option value="CW">Customer Welfare</option>
-                <option value="NSA">New Service Application</option>
-                <option value="P">Payment</option>
+                {isPWD ? (
+                  <>
+                    <option value="PWD-CW">PWD - Customer Welfare</option>
+                    <option value="PWD-NSA">
+                      PWD - New Service Application
+                    </option>
+                    <option value="PWD-P">PWD - Payment</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="CW">Customer Welfare</option>
+                    <option value="NSA">New Service Application</option>
+                    <option value="P">Payment</option>
+                  </>
+                )}
               </select>
             </div>
 

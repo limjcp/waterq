@@ -11,7 +11,9 @@ export async function GET() {
         const lastCalled = await prisma.queueTicket.findFirst({
           where: {
             counterId: counter.id,
-            status: "CALLED",
+            status: {
+              in: ["CALLED", "SERVING"],
+            },
           },
           orderBy: {
             updatedAt: "desc",

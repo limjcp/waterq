@@ -5,7 +5,7 @@ import { QueueStatus } from "@prisma/client";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { serviceCode } = body;
+    const { serviceCode, isPrioritized } = body;
     if (!serviceCode) {
       return NextResponse.json(
         { error: "Missing serviceCode" },
@@ -26,31 +26,35 @@ export async function POST(request: Request) {
       where: { serviceId: service.id },
     });
 
-    // 3. Find the last ticket for that service (to get next ticketNumber)
+    // 3. Find the last ticket for that service to get the next ticket number.
     const lastTicket = await prisma.queueTicket.findFirst({
       where: { serviceId: service.id },
       orderBy: { ticketNumber: "desc" },
     });
     const nextTicketNumber = lastTicket ? lastTicket.ticketNumber + 1 : 1;
 
-    // 4. Create the new ticket – if a counter is found, mark as CALLED; otherwise, keep as PENDING.
+    // 4. Create the new ticket.
+    // Use normal status assignment but set isPrioritized based on input.
+    const ticketStatus = counter ? QueueStatus.PENDING : QueueStatus.CALLED;
+
     const newTicket = await prisma.queueTicket.create({
       data: {
         ticketNumber: nextTicketNumber,
         prefix: service.code,
-        status: counter ? QueueStatus.CALLED : QueueStatus.PENDING,
+        status: ticketStatus,
+        isPrioritized: isPrioritized,
         service: { connect: { id: service.id } },
-        ...(counter ? { counter: { connect: { id: counter.id } } } : {}),
+        ...(counter && isPrioritized !== true
+          ? { counter: { connect: { id: counter.id } } }
+          : {}),
       },
     });
-
-    // (Optional) Trigger a display update (e.g. send notification) here
 
     return NextResponse.json(
       {
         ticketNumber: `${newTicket.prefix}${newTicket.ticketNumber}`,
         status: newTicket.status,
-        counterId: counter ? counter.id : null,
+        counterId: counter && isPrioritized !== true ? counter.id : null,
       },
       { status: 200 }
     );

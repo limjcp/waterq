@@ -33,13 +33,13 @@ export default function CounterDisplayPage() {
     fetchTicket();
     const interval = setInterval(fetchTicket, 5000); // poll every 5 seconds
     return () => clearInterval(interval);
-  }, [counterId]);
+  }, [counterId, fetchTicket]);
 
   return (
     <div className="min-h-screen w-full bg-sky-50 flex flex-col items-center justify-center p-6">
       <div className="w-full flex flex-col items-center justify-center">
         <h1 className="text-5xl font-bold mb-8 text-sky-800">
-          {ticket.service.name}
+          {ticket?.service?.name}
         </h1>
         {ticket && ticket.id ? (
           <>
