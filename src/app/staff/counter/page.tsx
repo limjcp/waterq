@@ -41,6 +41,11 @@ export default function StaffDashboard() {
   const [ticketToTransfer, setTicketToTransfer] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // New state for timer
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [formattedTime, setFormattedTime] = useState("00:00");
+  const [servingStartTime, setServingStartTime] = useState<Date | null>(null);
+
   // Fetch assigned counter ID when session is available
   useEffect(() => {
     async function getAssignedCounter() {
@@ -70,6 +75,47 @@ export default function StaffDashboard() {
       setLoading(false);
     }
   }, [session, status]);
+
+  // Timer effect for serving ticket
+  useEffect(() => {
+    let timerId: NodeJS.Timeout;
+
+    if (servingTicketId) {
+      // Start the timer
+      if (!servingStartTime) {
+        setServingStartTime(new Date());
+        setElapsedTime(0);
+      }
+
+      timerId = setInterval(() => {
+        if (servingStartTime) {
+          const now = new Date();
+          const seconds = Math.floor(
+            (now.getTime() - servingStartTime.getTime()) / 1000
+          );
+          setElapsedTime(seconds);
+
+          // Format time as MM:SS
+          const minutes = Math.floor(seconds / 60);
+          const remainingSeconds = seconds % 60;
+          setFormattedTime(
+            `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+              .toString()
+              .padStart(2, "0")}`
+          );
+        }
+      }, 1000);
+    } else {
+      // Reset the timer when not serving
+      setServingStartTime(null);
+      setElapsedTime(0);
+      setFormattedTime("00:00");
+    }
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [servingTicketId, servingStartTime]);
 
   // Fetch available services for transfer (exclude current service)
   useEffect(() => {
@@ -193,6 +239,7 @@ export default function StaffDashboard() {
       body: JSON.stringify({ status: "SERVING" }),
     });
     setServingTicketId(ticketId);
+    setServingStartTime(new Date()); // Reset start time when starting a new ticket
     fetchTickets();
   }
 
@@ -204,6 +251,7 @@ export default function StaffDashboard() {
     });
     setServingTicketId(null);
     setCalledTicketId(null);
+    setServingStartTime(null); // Reset timer when ticket is served
     fetchTickets();
   }
 
@@ -258,6 +306,7 @@ export default function StaffDashboard() {
         setTicketToTransfer(null);
         setSelectedServiceId("");
         setServingTicketId(null);
+        setServingStartTime(null); // Reset timer when ticket is transferred
         fetchTickets();
       } else {
         console.error("Failed to transfer ticket");
@@ -287,6 +336,11 @@ export default function StaffDashboard() {
 
   // Disable if a ticket is already in CALLED or SERVING
   const isAnyActive = calledTicketId !== null || servingTicketId !== null;
+
+  // Get current serving ticket
+  const currentServingTicket = tickets.find(
+    (ticket) => ticket.id === servingTicketId
+  );
 
   if (status === "loading" || loading) {
     return (
@@ -329,215 +383,279 @@ export default function StaffDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100 p-8">
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
-        <h1 className="text-3xl font-bold text-sky-800 mb-2">
-          Staff Dashboard
-        </h1>
-        <h2 className="text-xl font-medium text-sky-600 mb-6">
-          {session?.user?.assignedCounterName ||
-            `Counter ID: ${assignedCounterId}`}
-        </h2>
+      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+        {/* Main content area */}
+        <div className="flex-1 bg-white rounded-2xl shadow-2xl p-8">
+          <h1 className="text-3xl font-bold text-sky-800 mb-2">
+            Staff Dashboard
+          </h1>
+          <h2 className="text-xl font-medium text-sky-600 mb-6">
+            {session?.user?.assignedCounterName ||
+              `Counter ID: ${assignedCounterId}`}
+          </h2>
 
-        <div className="mb-6">
-          <button
-            onClick={callNextTicket}
-            className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors"
-            disabled={isAnyActive}
-          >
-            Call Next Ticket
-          </button>
+          <div className="mb-6">
+            <button
+              onClick={callNextTicket}
+              className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors"
+              disabled={isAnyActive}
+            >
+              Call Next Ticket
+            </button>
+          </div>
+
+          {/* Active Tickets */}
+          <h2 className="text-2xl font-bold text-sky-800 mb-4">
+            Active Tickets
+          </h2>
+          {activeTickets.length ? (
+            activeTickets.map((ticket) => (
+              <div
+                key={ticket.id}
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-sky-100 p-4 rounded-lg mb-4"
+              >
+                <div>
+                  <p className="text-xl font-semibold text-sky-700">
+                    Ticket: {ticket.prefix}
+                    {ticket.ticketNumber}
+                    {ticket.isPrioritized && " (PWD)"}
+                  </p>
+                  <p className="text-sm text-sky-500">
+                    Status: {ticket.status}
+                  </p>
+                </div>
+                <div className="mt-4 sm:mt-0">
+                  {ticket.status === "CALLED" && (
+                    <>
+                      <button
+                        onClick={() => startServing(ticket.id)}
+                        className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors mr-2"
+                      >
+                        Start Serving
+                      </button>
+                      <button
+                        onClick={() => markLapsed(ticket.id)}
+                        className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded transition-colors"
+                      >
+                        Mark as Lapsed
+                      </button>
+                    </>
+                  )}
+                  {ticket.status === "SERVING" && (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => markServed(ticket.id)}
+                        className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors"
+                      >
+                        Mark as Served
+                      </button>
+                      {/* Show transfer button only for Payment counter */}
+                      {isPaymentCounter && (
+                        <button
+                          onClick={() => openTransferModal(ticket.id)}
+                          className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded transition-colors"
+                        >
+                          Transfer to Other Service
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-sky-600">
+              No active tickets available.
+            </p>
+          )}
+
+          {/* Lapsed Tickets Section */}
+          <h2 className="text-2xl font-bold text-sky-800 mt-8 mb-4">
+            Lapsed Tickets
+          </h2>
+          {lapsedTickets.length ? (
+            lapsedTickets.map((ticket) => (
+              <div
+                key={ticket.id}
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-amber-100 p-4 rounded-lg mb-4"
+              >
+                <div>
+                  <p className="text-xl font-semibold text-amber-700">
+                    Ticket: {ticket.prefix}
+                    {ticket.ticketNumber}
+                  </p>
+                  <p className="text-sm text-amber-500">
+                    Status: {ticket.status}
+                  </p>
+                </div>
+                <div className="mt-4 sm:mt-0">
+                  <button
+                    onClick={() => recallTicket(ticket.id)}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded transition-colors"
+                    disabled={
+                      calledTicketId !== null || servingTicketId !== null
+                    }
+                  >
+                    Recall Ticket
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-amber-600">No lapsed tickets.</p>
+          )}
+
+          {/* Returning Tickets Section - for CW and NSA only */}
+          {!isPaymentCounter && (
+            <>
+              <h2 className="text-2xl font-bold text-sky-800 mt-8 mb-4">
+                Returning Tickets
+              </h2>
+              {returningTickets.length ? (
+                returningTickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-purple-100 p-4 rounded-lg mb-4"
+                  >
+                    <div>
+                      <p className="text-xl font-semibold text-purple-700">
+                        Ticket: {ticket.prefix}
+                        {ticket.ticketNumber}
+                        {ticket.isPrioritized && " (PWD)"}
+                      </p>
+                      <p className="text-sm text-purple-500">
+                        Status: {ticket.status}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Transferred from Payment
+                      </p>
+                    </div>
+                    <div className="mt-4 sm:mt-0">
+                      <button
+                        onClick={() => recallTicket(ticket.id)}
+                        className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded transition-colors"
+                        disabled={
+                          calledTicketId !== null || servingTicketId !== null
+                        }
+                      >
+                        Call Ticket
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-purple-600">
+                  No returning tickets.
+                </p>
+              )}
+            </>
+          )}
         </div>
 
-        {/* Active Tickets */}
-        <h2 className="text-2xl font-bold text-sky-800 mb-4">Active Tickets</h2>
-        {activeTickets.length ? (
-          activeTickets.map((ticket) => (
-            <div
-              key={ticket.id}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-sky-100 p-4 rounded-lg mb-4"
-            >
-              <div>
-                <p className="text-xl font-semibold text-sky-700">
-                  Ticket: {ticket.prefix}
-                  {ticket.ticketNumber}
-                  {ticket.isPrioritized && " (PWD)"}
+        {/* Current serving ticket card */}
+        <div className="lg:w-80 bg-white rounded-2xl shadow-2xl p-6 h-fit sticky top-8">
+          <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
+            Currently Serving
+          </h2>
+          {currentServingTicket ? (
+            <div className="flex flex-col items-center">
+              <div className="bg-sky-100 rounded-full w-32 h-32 flex items-center justify-center mb-4">
+                <span className="text-3xl font-bold text-sky-700">
+                  {currentServingTicket.prefix}
+                  {currentServingTicket.ticketNumber}
+                </span>
+              </div>
+              <p className="text-sm font-medium text-sky-600 mb-1">
+                {currentServingTicket.service?.name || "Unknown Service"}
+              </p>
+              {currentServingTicket.isPrioritized && (
+                <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
+                  Priority
+                </span>
+              )}
+              <div className="mt-4 w-full">
+                <p className="text-sm text-gray-500 text-center mb-1">
+                  Transaction Time
                 </p>
-                <p className="text-sm text-sky-500">Status: {ticket.status}</p>
-              </div>
-              <div className="mt-4 sm:mt-0">
-                {ticket.status === "CALLED" && (
-                  <>
-                    <button
-                      onClick={() => startServing(ticket.id)}
-                      className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors mr-2"
-                    >
-                      Start Serving
-                    </button>
-                    <button
-                      onClick={() => markLapsed(ticket.id)}
-                      className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                    >
-                      Mark as Lapsed
-                    </button>
-                  </>
-                )}
-                {ticket.status === "SERVING" && (
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => markServed(ticket.id)}
-                      className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                    >
-                      Mark as Served
-                    </button>
-                    {/* Show transfer button only for Payment counter */}
-                    {isPaymentCounter && (
-                      <button
-                        onClick={() => openTransferModal(ticket.id)}
-                        className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                      >
-                        Transfer to Other Service
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-sky-600">
-            No active tickets available.
-          </p>
-        )}
-
-        {/* Lapsed Tickets Section */}
-        <h2 className="text-2xl font-bold text-sky-800 mt-8 mb-4">
-          Lapsed Tickets
-        </h2>
-        {lapsedTickets.length ? (
-          lapsedTickets.map((ticket) => (
-            <div
-              key={ticket.id}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-amber-100 p-4 rounded-lg mb-4"
-            >
-              <div>
-                <p className="text-xl font-semibold text-amber-700">
-                  Ticket: {ticket.prefix}
-                  {ticket.ticketNumber}
-                </p>
-                <p className="text-sm text-amber-500">
-                  Status: {ticket.status}
-                </p>
-              </div>
-              <div className="mt-4 sm:mt-0">
-                <button
-                  onClick={() => recallTicket(ticket.id)}
-                  className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                  disabled={calledTicketId !== null || servingTicketId !== null}
-                >
-                  Recall Ticket
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-amber-600">No lapsed tickets.</p>
-        )}
-
-        {/* Returning Tickets Section - for CW and NSA only */}
-        {!isPaymentCounter && (
-          <>
-            <h2 className="text-2xl font-bold text-sky-800 mt-8 mb-4">
-              Returning Tickets
-            </h2>
-            {returningTickets.length ? (
-              returningTickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-purple-100 p-4 rounded-lg mb-4"
-                >
-                  <div>
-                    <p className="text-xl font-semibold text-purple-700">
-                      Ticket: {ticket.prefix}
-                      {ticket.ticketNumber}
-                      {ticket.isPrioritized && " (PWD)"}
-                    </p>
-                    <p className="text-sm text-purple-500">
-                      Status: {ticket.status}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Transferred from Payment
-                    </p>
-                  </div>
-                  <div className="mt-4 sm:mt-0">
-                    <button
-                      onClick={() => recallTicket(ticket.id)}
-                      className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                      disabled={
-                        calledTicketId !== null || servingTicketId !== null
-                      }
-                    >
-                      Call Ticket
-                    </button>
+                <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-center">
+                  <div className="text-2xl font-mono font-bold text-sky-800">
+                    {formattedTime}
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-center text-purple-600">
-                No returning tickets.
-              </p>
-            )}
-          </>
-        )}
-
-        {/* Transfer Modal */}
-        {isTransferModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 shadow-2xl">
-              <h3 className="text-lg font-semibold mb-4">Transfer Ticket</h3>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Destination Service
-                </label>
-                <select
-                  value={selectedServiceId}
-                  onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-                >
-                  <option value="">Select a service...</option>
-                  {availableServices.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))}
-                </select>
               </div>
-              <div className="flex justify-end space-x-2">
+              <div className="mt-6 w-full">
                 <button
-                  onClick={() => {
-                    setIsTransferModalOpen(false);
-                    setTicketToTransfer(null);
-                    setSelectedServiceId("");
-                  }}
-                  className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
+                  onClick={() => markServed(currentServingTicket.id)}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
                 >
-                  Cancel
+                  Complete Transaction
                 </button>
-                <button
-                  onClick={handleTransferTicket}
-                  disabled={!selectedServiceId}
-                  className={`px-4 py-2 rounded-md text-white ${
-                    selectedServiceId
-                      ? "bg-sky-500 hover:bg-sky-600"
-                      : "bg-sky-300 cursor-not-allowed"
-                  }`}
-                >
-                  Transfer
-                </button>
+                {isPaymentCounter && (
+                  <button
+                    onClick={() => openTransferModal(currentServingTicket.id)}
+                    className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                  >
+                    Transfer Ticket
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <p>No ticket currently being served</p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Transfer Modal */}
+      {isTransferModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-2xl">
+            <h3 className="text-lg font-semibold mb-4">Transfer Ticket</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Destination Service
+              </label>
+              <select
+                value={selectedServiceId}
+                onChange={(e) => setSelectedServiceId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="">Select a service...</option>
+                {availableServices.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => {
+                  setIsTransferModalOpen(false);
+                  setTicketToTransfer(null);
+                  setSelectedServiceId("");
+                }}
+                className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTransferTicket}
+                disabled={!selectedServiceId}
+                className={`px-4 py-2 rounded-md text-white ${
+                  selectedServiceId
+                    ? "bg-sky-500 hover:bg-sky-600"
+                    : "bg-sky-300 cursor-not-allowed"
+                }`}
+              >
+                Transfer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
