@@ -21,21 +21,48 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
 
-    // 2. Look for an available counter that handles that service (using first found)
-    const counter = await prisma.counter.findFirst({
+    // 2. Find all counters that handle this service
+    const counters = await prisma.counter.findMany({
       where: { serviceId: service.id },
     });
 
-    // 3. Find the last ticket for that service to get the next ticket number.
+    // 3. Get the counter with the least pending tickets
+    let selectedCounter = null;
+    if (counters.length > 0) {
+      // Get pending ticket counts for each counter
+      const countersWithTicketCounts = await Promise.all(
+        counters.map(async (counter) => {
+          const pendingTicketsCount = await prisma.queueTicket.count({
+            where: {
+              counterId: counter.id,
+              status: QueueStatus.PENDING,
+            },
+          });
+          return {
+            counter,
+            pendingTicketsCount,
+          };
+        })
+      );
+
+      // Sort by pending ticket count (ascending) and get the counter with fewest tickets
+      countersWithTicketCounts.sort(
+        (a, b) => a.pendingTicketsCount - b.pendingTicketsCount
+      );
+      selectedCounter = countersWithTicketCounts[0].counter;
+    }
+
+    // 4. Find the last ticket for that service to get the next ticket number
     const lastTicket = await prisma.queueTicket.findFirst({
       where: { serviceId: service.id },
       orderBy: { ticketNumber: "desc" },
     });
     const nextTicketNumber = lastTicket ? lastTicket.ticketNumber + 1 : 1;
 
-    // 4. Create the new ticket.
-    // Use normal status assignment but set isPrioritized based on input.
-    const ticketStatus = counter ? QueueStatus.PENDING : QueueStatus.CALLED;
+    // 5. Create the new ticket - Always assign to a counter if one is available
+    const ticketStatus = selectedCounter
+      ? QueueStatus.PENDING
+      : QueueStatus.CALLED;
 
     const newTicket = await prisma.queueTicket.create({
       data: {
@@ -44,17 +71,21 @@ export async function POST(request: Request) {
         status: ticketStatus,
         isPrioritized: isPrioritized,
         service: { connect: { id: service.id } },
-        ...(counter && isPrioritized !== true
-          ? { counter: { connect: { id: counter.id } } }
+        // Always assign to the selected counter if available, regardless of prioritization
+        ...(selectedCounter
+          ? { counter: { connect: { id: selectedCounter.id } } }
           : {}),
       },
     });
 
+    // Return more detailed information about the ticket and counter
     return NextResponse.json(
       {
         ticketNumber: `${newTicket.prefix}${newTicket.ticketNumber}`,
         status: newTicket.status,
-        counterId: counter && isPrioritized !== true ? counter.id : null,
+        counterId: selectedCounter ? selectedCounter.id : null,
+        counterName: selectedCounter ? selectedCounter.name : null,
+        isPrioritized: newTicket.isPrioritized,
       },
       { status: 200 }
     );

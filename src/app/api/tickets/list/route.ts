@@ -1,5 +1,3 @@
-// app/api/tickets/list/route.ts
-
 import { NextResponse } from "next/server";
 import { QueueStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +12,7 @@ export async function GET() {
             QueueStatus.SERVING,
             QueueStatus.CALLED,
             QueueStatus.LAPSED,
+            QueueStatus.RETURNING,
           ],
         },
       },
@@ -22,7 +21,20 @@ export async function GET() {
         { createdAt: "asc" }, // Then sorted by creation time.
       ],
       include: {
-        // Include any related fields if needed.
+        service: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+        counter: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
     });
     return NextResponse.json(tickets);

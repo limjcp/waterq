@@ -40,27 +40,10 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
     }
 
-    // For staff users, check the assigned counter and redirect accordingly
+    // For staff users, redirect to counter
     if (user.role && Array.isArray(user.role) && user.role.includes("staff")) {
-      const counterDashboardMap: Record<string, string> = {
-        "Customer Welfare Counter": "/staff/customerWelfare",
-        "New Service Application Counter": "/staff/newServiceApplication",
-        "Payment Counter": "/staff/payment",
-      };
-
-      const assignedCounterName = user.assignedCounterName;
-      if (assignedCounterName && counterDashboardMap[assignedCounterName]) {
-        console.log(
-          `Redirecting staff with counter ${assignedCounterName} to ${counterDashboardMap[assignedCounterName]}`
-        );
-        return NextResponse.redirect(
-          new URL(counterDashboardMap[assignedCounterName], nextUrl)
-        );
-      }
-
-      // Fallback for staff users without a specific counter mapping
-      console.log("Redirecting staff user to /staff");
-      return NextResponse.redirect(new URL("/staff", nextUrl));
+      console.log("Redirecting staff user to /staff/counter");
+      return NextResponse.redirect(new URL("/staff/counter", nextUrl));
     }
   }
 

@@ -1,38 +1,62 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TicketIcon } from "@heroicons/react/24/outline";
+
+type TicketResponse = {
+  ticketNumber: string;
+  status: string;
+  counterId: string | null;
+  counterName: string | null;
+  isPrioritized: boolean;
+};
 
 export default function Kiosk() {
   const [selectedCounterCode, setSelectedCounterCode] = useState("CW");
-  const [ticketNumber, setTicketNumber] = useState<string | null>(null);
+  const [ticketData, setTicketData] = useState<TicketResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPrioritized, setIsPrioritized] = useState(false);
-  const [serviceCode, setServiceCode] = useState(selectedCounterCode);
+  const [error, setError] = useState<string | null>(null);
   const [isPWD, setIsPWD] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    const prioritized = isPWD;
-    const code = isPWD
+    setError(null);
+
+    // Extract the actual service code without the PWD prefix
+    const serviceCode = isPWD
       ? selectedCounterCode.replace("PWD-", "")
       : selectedCounterCode;
-    setIsPrioritized(prioritized);
-    setServiceCode(code);
 
     try {
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceCode, isPrioritized }),
+        body: JSON.stringify({
+          serviceCode,
+          isPrioritized: isPWD,
+        }),
       });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to generate ticket");
+      }
+
       const data = await res.json();
-      setTicketNumber(data.ticketNumber);
+      setTicketData(data);
     } catch (err) {
       console.error(err);
+      setError(
+        err instanceof Error ? err.message : "Failed to generate ticket"
+      );
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function resetForm() {
+    setTicketData(null);
+    setError(null);
   }
 
   return (
@@ -48,21 +72,44 @@ export default function Kiosk() {
           <p className="text-sky-600">Get your digital queue ticket</p>
         </div>
 
-        {ticketNumber ? (
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 text-center">
+            <p>{error}</p>
+            <button onClick={resetForm} className="mt-2 text-red-600 underline">
+              Try again
+            </button>
+          </div>
+        )}
+
+        {ticketData ? (
           <div className="text-center space-y-6 animate-fade-in">
             <div className="bg-sky-50 rounded-xl p-6 border border-sky-100">
               <h2 className="text-sm font-semibold text-sky-600 mb-2">
                 YOUR TICKET NUMBER
               </h2>
               <div className="text-5xl font-bold text-sky-800 animate-pop-in">
-                {ticketNumber}
+                {ticketData.ticketNumber}
               </div>
+
               <div className="mt-3 inline-flex items-center px-4 py-1 bg-sky-500 text-white rounded-full text-sm font-medium animate-fade-in">
-                {isPrioritized ? `PWD - ${serviceCode}` : serviceCode}
+                {ticketData.isPrioritized
+                  ? `PWD - ${ticketData.ticketNumber.slice(0, -1)}`
+                  : ticketData.ticketNumber.slice(0, -1)}
               </div>
+
+              {ticketData.counterName && (
+                <div className="mt-4 text-sky-700">
+                  <p className="font-medium">
+                    Assigned to: {ticketData.counterName}
+                  </p>
+                  <p className="text-sm text-sky-600 mt-1">
+                    Please proceed to this counter
+                  </p>
+                </div>
+              )}
             </div>
             <button
-              onClick={() => setTicketNumber(null)}
+              onClick={resetForm}
               className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
             >
               Get Another Ticket
