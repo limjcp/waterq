@@ -1,6 +1,24 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TicketIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+
+// Add utility function for ticket formatting
+function formatTicketNumber(ticketNumber: string): string {
+  if (!ticketNumber) return "";
+
+  // If already has a dash, return as is
+  if (ticketNumber.includes("-")) return ticketNumber;
+
+  // Find where the numbers start
+  const numberIndex = ticketNumber.search(/\d/);
+  if (numberIndex === -1) return ticketNumber;
+
+  // Split prefix and number
+  const prefix = ticketNumber.substring(0, numberIndex);
+  const number = ticketNumber.substring(numberIndex);
+
+  return `${prefix}-${number}`;
+}
 
 type TicketResponse = {
   ticketNumber: string;
@@ -24,6 +42,7 @@ export default function Kiosk() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPWD, setIsPWD] = useState(false);
+  const [countdown, setCountdown] = useState(5);
 
   const services: ServiceOption[] = [
     {
@@ -93,7 +112,27 @@ export default function Kiosk() {
     setTicketData(null);
     setError(null);
     setCurrentStep(1);
+    setCountdown(5);
   }
+
+  // Add countdown effect when ticket is displayed
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (currentStep === 3 && ticketData) {
+      if (countdown > 0) {
+        timer = setTimeout(() => {
+          setCountdown(countdown - 1);
+        }, 1000);
+      } else {
+        resetForm();
+      }
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [currentStep, ticketData, countdown]);
 
   return (
     <div className="min-h-screen h-screen w-screen bg-gradient-to-br from-sky-50 to-sky-100 flex flex-col overflow-hidden">
@@ -180,7 +219,7 @@ export default function Kiosk() {
                       <p className="text-sky-600">{service.description}</p>
                       <div className="mt-3 flex justify-end">
                         <span className="inline-flex items-center px-3 py-1 bg-sky-100 text-sky-800 rounded-full text-sm font-medium">
-                          {isPWD ? `PWD-${service.code}` : service.code}
+                          {isPWD ? `PWD-${service.code}` : `${service.code}`}
                         </span>
                       </div>
                     </button>
@@ -196,13 +235,16 @@ export default function Kiosk() {
                     YOUR TICKET NUMBER
                   </h2>
                   <div className="text-6xl font-bold text-sky-800 animate-pop-in mb-4">
-                    {ticketData.ticketNumber}
+                    {formatTicketNumber(ticketData.ticketNumber)}
                   </div>
 
                   <div className="mt-3 inline-flex items-center px-4 py-2 bg-sky-500 text-white rounded-full text-lg font-medium animate-fade-in">
                     {ticketData.isPrioritized
-                      ? `PWD - ${ticketData.ticketNumber.slice(0, -1)}`
-                      : ticketData.ticketNumber.slice(0, -1)}
+                      ? `PWD-${formatTicketNumber(
+                          ticketData.ticketNumber.split("-").pop() ||
+                            ticketData.ticketNumber
+                        )}`
+                      : formatTicketNumber(ticketData.ticketNumber)}
                   </div>
 
                   {ticketData.counterName && (
@@ -220,7 +262,7 @@ export default function Kiosk() {
                   onClick={resetForm}
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-6 text-xl rounded-lg transition-colors duration-200 focus:ring-4 focus:ring-sky-300 focus:ring-offset-2"
                 >
-                  Get Another Ticket
+                  Get Another Ticket ({countdown})
                 </button>
               </div>
             )}
