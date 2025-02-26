@@ -5,8 +5,8 @@ export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
-  console.log("isLoggedIn:", isLoggedIn);
-  console.log("req.auth:", req.auth);
+  // console.log("isLoggedIn:", isLoggedIn);
+  // console.log("req.auth:", req.auth);
 
   // Public routes that don't require authentication
   if (

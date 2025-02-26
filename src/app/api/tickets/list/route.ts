@@ -17,8 +17,8 @@ export async function GET() {
         },
       },
       orderBy: [
-        { isPrioritized: "desc" }, // Prioritized tickets come first.
-        { createdAt: "asc" }, // Then sorted by creation time.
+        { isPrioritized: "desc" }, // Prioritized tickets come first
+        { createdAt: "asc" }, // Then sorted by creation time
       ],
       include: {
         service: {

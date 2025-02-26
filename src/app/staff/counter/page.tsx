@@ -157,23 +157,34 @@ export default function StaffDashboard() {
     if (!assignedCounterId || !assignedCounterService) return;
 
     try {
-      // Fetch tickets assigned to this counter
+      // First, get the counter info to reliably determine service type
+      const counterRes = await fetch(`/api/counter/${assignedCounterId}`);
+      let counterServiceCode = "";
+      if (counterRes.ok) {
+        const counterData = await counterRes.json();
+        counterServiceCode = counterData.service?.code || "";
+      }
+
+      // Fetch all tickets
       const res = await fetch("/api/tickets/list");
       const allTickets = await res.json();
 
-      // Filter tickets by the user's assigned counter
-      const counterTickets = allTickets.filter(
+      // Get tickets assigned to this counter (currently being served or called)
+      const assignedToCounter = allTickets.filter(
         (ticket: Ticket) => ticket.counterId === assignedCounterId
+      );
+
+      // Get pending tickets for this counter's service that aren't assigned to any counter
+      const pendingServiceTickets = allTickets.filter(
+        (ticket: Ticket) =>
+          ticket.status === "PENDING" &&
+          ticket.serviceId === assignedCounterService &&
+          ticket.counterId === null
       );
 
       // For Customer Welfare or New Service Application, also get returning tickets
       let returningTickets: Ticket[] = [];
-      if (
-        ["CW", "NSA"].includes(
-          allTickets.find((t: Ticket) => t.counterId === assignedCounterId)
-            ?.service?.code || ""
-        )
-      ) {
+      if (["CW", "NSA"].includes(counterServiceCode)) {
         const returningRes = await fetch(
           `/api/tickets/returning?serviceId=${assignedCounterService}`
         );
@@ -182,8 +193,12 @@ export default function StaffDashboard() {
         }
       }
 
-      // Combine tickets
-      const combinedTickets = [...counterTickets, ...returningTickets];
+      // Rest of the function remains the same...
+      const combinedTickets = [
+        ...assignedToCounter,
+        ...pendingServiceTickets,
+        ...returningTickets,
+      ];
 
       // Order tickets: prioritized first, then by creation time
       const sortedTickets = combinedTickets.sort((a: Ticket, b: Ticket) => {
@@ -198,12 +213,14 @@ export default function StaffDashboard() {
       setTickets(sortedTickets);
 
       const calledTicket = sortedTickets.find(
-        (ticket: Ticket) => ticket.status === "CALLED"
+        (ticket: Ticket) =>
+          ticket.status === "CALLED" && ticket.counterId === assignedCounterId
       );
       setCalledTicketId(calledTicket ? calledTicket.id : null);
 
       const servingTicket = sortedTickets.find(
-        (ticket: Ticket) => ticket.status === "SERVING"
+        (ticket: Ticket) =>
+          ticket.status === "SERVING" && ticket.counterId === assignedCounterId
       );
       setServingTicketId(servingTicket ? servingTicket.id : null);
     } catch (error) {
@@ -212,11 +229,26 @@ export default function StaffDashboard() {
   }
 
   async function callNextTicket() {
-    if (!assignedCounterId) return;
+    if (!assignedCounterId || !assignedCounterService) return;
 
-    const nextTicket = tickets.find(
-      (ticket) => ticket.status === "PENDING" || ticket.status === "RETURNING"
+    // First try to find a prioritized pending ticket for this service
+    let nextTicket = tickets.find(
+      (ticket) =>
+        (ticket.status === "PENDING" || ticket.status === "RETURNING") &&
+        ticket.isPrioritized &&
+        (ticket.serviceId === assignedCounterService ||
+          ticket.status === "RETURNING")
     );
+
+    // If no prioritized ticket, get the oldest pending ticket
+    if (!nextTicket) {
+      nextTicket = tickets.find(
+        (ticket) =>
+          (ticket.status === "PENDING" || ticket.status === "RETURNING") &&
+          (ticket.serviceId === assignedCounterService ||
+            ticket.status === "RETURNING")
+      );
+    }
 
     if (nextTicket) {
       await fetch(`/api/tickets/${nextTicket.id}`, {
@@ -224,25 +256,13 @@ export default function StaffDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "CALLED",
-          counterId: assignedCounterId,
+          counterId: assignedCounterId, // Assignment happens here
         }),
       });
       setCalledTicketId(nextTicket.id);
       fetchTickets();
     }
   }
-
-  async function startServing(ticketId: string) {
-    await fetch(`/api/tickets/${ticketId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "SERVING" }),
-    });
-    setServingTicketId(ticketId);
-    setServingStartTime(new Date()); // Reset start time when starting a new ticket
-    fetchTickets();
-  }
-
   async function markServed(ticketId: string) {
     await fetch(`/api/tickets/${ticketId}`, {
       method: "PUT",
@@ -261,6 +281,21 @@ export default function StaffDashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "LAPSED" }),
     });
+    fetchTickets();
+  }
+
+  async function startServing(ticketId: string) {
+    await fetch(`/api/tickets/${ticketId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: "SERVING",
+        counterId: assignedCounterId,
+      }),
+    });
+    setCalledTicketId(null);
+    setServingTicketId(ticketId);
+    setServingStartTime(new Date()); // Start timer when serving begins
     fetchTickets();
   }
 
@@ -323,8 +358,11 @@ export default function StaffDashboard() {
   );
 
   // Filter active tickets for this counter
-  const activeTickets = tickets.filter((ticket) =>
-    ["PENDING", "CALLED", "SERVING"].includes(ticket.status)
+  const activeTickets = tickets.filter(
+    (ticket) =>
+      ticket.status === "CALLED" || ticket.status === "SERVING"
+        ? ticket.counterId === assignedCounterId // For called/serving tickets, only show ones assigned to this counter
+        : ticket.serviceId === assignedCounterService // For pending tickets, show all for this service
   );
 
   const lapsedTickets = tickets.filter((ticket) => ticket.status === "LAPSED");
