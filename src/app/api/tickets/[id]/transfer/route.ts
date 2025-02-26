@@ -4,9 +4,9 @@ import { QueueStatus } from "@prisma/client";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const id = params.id;
+  const { id } = await context.params;
 
   try {
     const { serviceId } = await request.json();
