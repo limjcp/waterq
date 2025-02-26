@@ -7,6 +7,12 @@ type Service = {
   name: string;
 };
 
+type Counter = {
+  id: string;
+  name: string;
+  code: string;
+};
+
 type Ticket = {
   id: string;
   ticketNumber: number;
@@ -15,15 +21,20 @@ type Ticket = {
   service?: Service;
 };
 
+type DisplayData = {
+  counter: Counter;
+  ticket: Ticket | null;
+};
+
 export default function CounterDisplayPage() {
   const { counterId } = useParams<{ counterId: string }>();
-  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [data, setData] = useState<DisplayData | null>(null);
 
   async function fetchTicket() {
     try {
       const res = await fetch(`/api/display/${counterId}`);
-      const data = await res.json();
-      setTicket(data);
+      const responseData = await res.json();
+      setData(responseData);
     } catch (error) {
       console.error(error);
     }
@@ -33,14 +44,25 @@ export default function CounterDisplayPage() {
     fetchTicket();
     const interval = setInterval(fetchTicket, 5000); // poll every 5 seconds
     return () => clearInterval(interval);
-  }, [counterId, fetchTicket]);
+  }, [counterId]);
+
+  const ticket = data?.ticket;
+  const counter = data?.counter;
 
   return (
     <div className="min-h-screen w-full bg-sky-50 flex flex-col items-center justify-center p-6">
       <div className="w-full flex flex-col items-center justify-center">
+        {/* Display counter name at the top */}
+        <div className="absolute top-6 left-0 right-0 text-center">
+          <h2 className="text-4xl font-bold text-sky-700">
+            {counter?.name || "Counter Display"}
+          </h2>
+        </div>
+
         <h1 className="text-5xl font-bold mb-8 text-sky-800">
           {ticket?.service?.name}
         </h1>
+
         {ticket && ticket.id ? (
           <>
             <p className="text-9xl font-bold text-sky-800">

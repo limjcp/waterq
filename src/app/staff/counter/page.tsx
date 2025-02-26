@@ -24,6 +24,12 @@ type Service = {
   code: string;
 };
 
+type CounterStatus = {
+  counterId: string;
+  counterName: string;
+  ticket: Ticket | null;
+};
+
 export default function StaffDashboard() {
   const { data: session, status } = useSession();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -40,6 +46,10 @@ export default function StaffDashboard() {
   const [availableServices, setAvailableServices] = useState<Service[]>([]);
   const [ticketToTransfer, setTicketToTransfer] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Add new state for other counters with same service
+  const [otherCounterTickets, setOtherCounterTickets] = useState<
+    CounterStatus[]
+  >([]);
 
   // New state for timer
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -191,6 +201,15 @@ export default function StaffDashboard() {
         if (returningRes.ok) {
           returningTickets = await returningRes.json();
         }
+      }
+
+      // Get tickets being handled by other counters with the same service
+      const otherCountersRes = await fetch(
+        `/api/tickets/same-service?serviceId=${assignedCounterService}&excludeCounterId=${assignedCounterId}`
+      );
+      if (otherCountersRes.ok) {
+        const otherCounters = await otherCountersRes.json();
+        setOtherCounterTickets(otherCounters);
       }
 
       // Rest of the function remains the same...
@@ -441,6 +460,45 @@ export default function StaffDashboard() {
               Call Next Ticket
             </button>
           </div>
+
+          {/* Other Counters Status */}
+          <h2 className="text-2xl font-bold text-sky-800 mb-4">
+            Other {currentServingTicket?.service?.name || ""} Counters
+          </h2>
+          {otherCounterTickets.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+              {otherCounterTickets.map((counter) => (
+                <div
+                  key={counter.counterId}
+                  className="border border-sky-100 rounded-lg p-4 bg-sky-50"
+                >
+                  <p className="font-medium text-sky-700">
+                    {counter.counterName}
+                  </p>
+                  {counter.ticket ? (
+                    <div className="mt-2">
+                      <span className="inline-block bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-medium">
+                        {counter.ticket.prefix}
+                        {counter.ticket.ticketNumber}
+                        {counter.ticket.isPrioritized && " (PWD)"}
+                      </span>
+                      <span className="text-xs text-sky-600 block mt-1">
+                        Status: {counter.ticket.status}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 mt-2">
+                      No active tickets
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-sky-600 mb-8">
+              No other counters with this service.
+            </p>
+          )}
 
           {/* Active Tickets */}
           <h2 className="text-2xl font-bold text-sky-800 mb-4">
