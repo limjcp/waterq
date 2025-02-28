@@ -143,7 +143,7 @@ export default function Kiosk() {
             <div className="animate-bounce">
               <TicketIcon className="h-16 w-16 text-sky-500 mx-auto mb-4" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-sky-800 mb-2">
+            <h1 className="text-9xl md:text-9xl font-bold text-sky-800 mb-2">
               Service Kiosk
             </h1>
 
@@ -173,12 +173,12 @@ export default function Kiosk() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
                   <button
                     onClick={() => selectUserType(true)}
-                    className="flex flex-col items-center justify-center bg-white border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                    className="flex flex-col items-center justify-center bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
                     <span>
-                      <Accessibility className="h-52 w-52 mx-auto text-sky-500 mb-4" />
+                      <Accessibility className="h-52 w-52 mx-auto text-white mb-4" />
                     </span>
-                    <span className="text-8xl">PWD</span>
+                    <span className="text-8xl text-white">PWD</span>
                   </button>
                   <button
                     onClick={() => selectUserType(false)}
