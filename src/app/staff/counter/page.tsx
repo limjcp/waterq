@@ -30,6 +30,13 @@ type CounterStatus = {
   ticket: Ticket | null;
 };
 
+// Add new type for user statistics
+type UserStatistics = {
+  totalServed: number;
+  todayServed: number;
+  averageServiceTime: number;
+};
+
 export default function StaffDashboard() {
   const { data: session, status } = useSession();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -55,6 +62,13 @@ export default function StaffDashboard() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [formattedTime, setFormattedTime] = useState("00:00");
   const [servingStartTime, setServingStartTime] = useState<Date | null>(null);
+
+  // Add new state for user statistics
+  const [userStats, setUserStats] = useState<UserStatistics>({
+    totalServed: 0,
+    todayServed: 0,
+    averageServiceTime: 0,
+  });
 
   // Fetch assigned counter ID when session is available
   useEffect(() => {
@@ -247,6 +261,39 @@ export default function StaffDashboard() {
     }
   }
 
+  // Fetch user statistics when session is available
+  useEffect(() => {
+    async function fetchUserStatistics() {
+      if (session?.user) {
+        try {
+          const res = await fetch(
+            `/api/user/statistics?username=${session.user.username}`
+          );
+          if (res.ok) {
+            const stats = await res.json();
+            setUserStats(stats);
+          }
+        } catch (error) {
+          console.error("Error fetching user statistics:", error);
+        }
+      }
+    }
+
+    if (status === "authenticated") {
+      fetchUserStatistics();
+      // Refresh stats every minute
+      const interval = setInterval(fetchUserStatistics, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [session, status]);
+
+  // Add function to format average time
+  function formatAverageTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.round(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }
+
   async function callNextTicket() {
     if (!assignedCounterId || !assignedCounterService) return;
 
@@ -291,7 +338,20 @@ export default function StaffDashboard() {
     setServingTicketId(null);
     setCalledTicketId(null);
     setServingStartTime(null); // Reset timer when ticket is served
+
+    // Refresh tickets and statistics
     fetchTickets();
+
+    // Also refresh user statistics
+    if (session?.user) {
+      const res = await fetch(
+        `/api/user/statistics?username=${session.user.username}`
+      );
+      if (res.ok) {
+        const stats = await res.json();
+        setUserStats(stats);
+      }
+    }
   }
 
   async function markLapsed(ticketId: string) {
@@ -648,59 +708,91 @@ export default function StaffDashboard() {
           )}
         </div>
 
-        {/* Current serving ticket card */}
-        <div className="lg:w-80 bg-white rounded-2xl shadow-2xl p-6 h-fit sticky top-8">
-          <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
-            Currently Serving
-          </h2>
-          {currentServingTicket ? (
-            <div className="flex flex-col items-center">
-              <div className="bg-sky-100 rounded-full w-32 h-32 flex items-center justify-center mb-4">
-                <span className="text-3xl font-bold text-sky-700">
-                  {currentServingTicket.prefix}
-                  {currentServingTicket.ticketNumber}
-                </span>
-              </div>
-              <p className="text-sm font-medium text-sky-600 mb-1">
-                {currentServingTicket.service?.name || "Unknown Service"}
-              </p>
-              {currentServingTicket.isPrioritized && (
-                <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
-                  Priority
-                </span>
-              )}
-              <div className="mt-4 w-full">
-                <p className="text-sm text-gray-500 text-center mb-1">
-                  Transaction Time
+        {/* Sidebar section */}
+        <div className="lg:w-80 space-y-6">
+          {/* Current serving ticket card */}
+          <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit sticky top-8">
+            <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
+              Currently Serving
+            </h2>
+            {currentServingTicket ? (
+              <div className="flex flex-col items-center">
+                <div className="bg-sky-100 rounded-full w-32 h-32 flex items-center justify-center mb-4">
+                  <span className="text-3xl font-bold text-sky-700">
+                    {currentServingTicket.prefix}
+                    {currentServingTicket.ticketNumber}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-sky-600 mb-1">
+                  {currentServingTicket.service?.name || "Unknown Service"}
                 </p>
-                <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-center">
-                  <div className="text-2xl font-mono font-bold text-sky-800">
-                    {formattedTime}
+                {currentServingTicket.isPrioritized && (
+                  <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
+                    Priority
+                  </span>
+                )}
+                <div className="mt-4 w-full">
+                  <p className="text-sm text-gray-500 text-center mb-1">
+                    Transaction Time
+                  </p>
+                  <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-center">
+                    <div className="text-2xl font-mono font-bold text-sky-800">
+                      {formattedTime}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="mt-6 w-full">
-                <button
-                  onClick={() => markServed(currentServingTicket.id)}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-                >
-                  Complete Transaction
-                </button>
-                {isPaymentCounter && (
+                <div className="mt-6 w-full">
                   <button
-                    onClick={() => openTransferModal(currentServingTicket.id)}
-                    className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                    onClick={() => markServed(currentServingTicket.id)}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
                   >
-                    Transfer Ticket
+                    Complete Transaction
                   </button>
-                )}
+                  {isPaymentCounter && (
+                    <button
+                      onClick={() => openTransferModal(currentServingTicket.id)}
+                      className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      Transfer Ticket
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p>No ticket currently being served</p>
+              </div>
+            )}
+          </div>
+
+          {/* New User Statistics Card */}
+          <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit">
+            <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
+              Your Statistics
+            </h2>
+            <div className="space-y-4">
+              <div className="bg-sky-50 rounded-lg p-3">
+                <p className="text-sm text-sky-700 font-medium">Total Served</p>
+                <p className="text-2xl font-bold text-sky-800">
+                  {userStats.totalServed}
+                </p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3">
+                <p className="text-sm text-green-700 font-medium">Today</p>
+                <p className="text-2xl font-bold text-green-800">
+                  {userStats.todayServed}
+                </p>
+              </div>
+              <div className="bg-amber-50 rounded-lg p-3">
+                <p className="text-sm text-amber-700 font-medium">
+                  Avg. Service Time
+                </p>
+                <p className="text-2xl font-bold text-amber-800">
+                  {formatAverageTime(userStats.averageServiceTime)}
+                </p>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <p>No ticket currently being served</p>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
