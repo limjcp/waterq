@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { TicketIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { Accessibility, User } from "lucide-react";
 
 // Add utility function for ticket formatting
 function formatTicketNumber(ticketNumber: string): string {
@@ -145,6 +146,7 @@ export default function Kiosk() {
             <h1 className="text-3xl md:text-4xl font-bold text-sky-800 mb-2">
               Service Kiosk
             </h1>
+
             <p className="text-sky-600 text-lg md:text-xl">
               Get your digital queue ticket
             </p>
@@ -173,15 +175,19 @@ export default function Kiosk() {
                     onClick={() => selectUserType(true)}
                     className="flex flex-col items-center justify-center bg-white border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
-                    <span className="text-3xl mb-2">♿</span>
-                    <span className="text-2xl">PWD</span>
+                    <span>
+                      <Accessibility className="h-52 w-52 mx-auto text-sky-500 mb-4" />
+                    </span>
+                    <span className="text-8xl">PWD</span>
                   </button>
                   <button
                     onClick={() => selectUserType(false)}
                     className="flex flex-col items-center justify-center bg-white border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
-                    <span className="text-3xl mb-2">👤</span>
-                    <span className="text-2xl">REGULAR</span>
+                    <span>
+                      <User className="h-52 w-52 mx-auto text-sky-500 mb-4" />
+                    </span>
+                    <span className="text-8xl">REGULAR</span>
                   </button>
                 </div>
               </div>
