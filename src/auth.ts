@@ -20,11 +20,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user) return null;
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) return null;
+
+        let assignedCounterName = null;
+        if (user.assignedCounterId) {
+          const counter = await prisma.counter.findUnique({
+            where: { id: user.assignedCounterId },
+          });
+          assignedCounterName = counter ? counter.name : null;
+        }
+
         return {
           id: user.id,
           name: `${user.firstName} ${user.lastName}`,
           username: user.username,
           role: user.role,
+          assignedCounterName,
         };
       },
     }),
@@ -42,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.username = user.username;
         token.role = user.role;
+        token.assignedCounterName = user.assignedCounterName;
       }
       return token;
     },
@@ -50,6 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.username = token.username as string;
         session.user.role = token.role as string;
+        session.user.assignedCounterName = token.assignedCounterName as string;
       }
       return session;
     },

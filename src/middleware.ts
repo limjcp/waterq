@@ -5,17 +5,25 @@ export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
+  // console.log("isLoggedIn:", isLoggedIn);
+  // console.log("req.auth:", req.auth);
+
   // Public routes that don't require authentication
   if (
-    nextUrl.pathname === "/" ||
     nextUrl.pathname.startsWith("/api/auth") ||
     nextUrl.pathname === "/WD.png" ||
     nextUrl.pathname === "/wdmascot.png" ||
     nextUrl.pathname === "/wdlogo.png" ||
+<<<<<<< HEAD
+=======
+    nextUrl.pathname === "/file.svg" ||
+>>>>>>> 04277223803cfd00a36da27ec1774f9362ca3c40
     nextUrl.pathname.startsWith("/kiosk") ||
     nextUrl.pathname.startsWith("/auth/signin") ||
     nextUrl.pathname.startsWith("/api/tickets") ||
-    nextUrl.pathname.startsWith("/api/display")
+    nextUrl.pathname.startsWith("/display") ||
+    nextUrl.pathname.startsWith("/api/display") ||
+    nextUrl.pathname === "/admin/register"
   ) {
     return NextResponse.next();
   }
@@ -25,38 +33,22 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/auth/signin", nextUrl));
   }
 
-  //   // Role-based redirects when accessing the root path "/"
-  //   if (nextUrl.pathname === "/") {
-  //     const roleDashboardMap: Record<string, string> = {
-  //       admin: "/admin-dashboard",
-  //       staff: "/staff-approve",
-  //       signatory: "/signatory-sign",
-  //       student: "/student-dashboard",
-  //     };
+  // Role-based redirects when accessing the root path "/"
+  if (nextUrl.pathname === "/") {
+    const user = req.auth.user;
 
-  //     for (const role of req.auth?.user?.role || []) {
-  //       if (roleDashboardMap[role]) {
-  //         return NextResponse.redirect(new URL(roleDashboardMap[role], nextUrl));
-  //       }
-  //     }
-  //   }
+    // For admin users, redirect to admin dashboard
+    if (user.role && Array.isArray(user.role) && user.role.includes("admin")) {
+      console.log("Redirecting admin user to /admin/dashboard");
+      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
+    }
 
-  //   // Role-specific route protection
-  //   const routeRoleMap: Record<string, string> = {
-  //     admin: "/admin",
-  //     staff: "/staff",
-  //     signatory: "/signatory",
-  //     student: "/student",
-  //   };
-
-  //   for (const role in routeRoleMap) {
-  //     if (
-  //       nextUrl.pathname.startsWith(routeRoleMap[role]) &&
-  //       !req.auth?.user?.role?.includes(role)
-  //     ) {
-  //       return NextResponse.redirect(new URL("/", nextUrl));
-  //     }
-  //   }
+    // For staff users, redirect to counter
+    if (user.role && Array.isArray(user.role) && user.role.includes("staff")) {
+      console.log("Redirecting staff user to /staff/counter");
+      return NextResponse.redirect(new URL("/staff/counter", nextUrl));
+    }
+  }
 
   return NextResponse.next();
 });

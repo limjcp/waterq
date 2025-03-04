@@ -1,45 +1,54 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { QueueStatus } from "@prisma/client";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { counterCode } = body;
-    if (!counterCode) {
+    const { serviceCode, isPrioritized } = body;
+    if (!serviceCode) {
       return NextResponse.json(
-        { error: "Missing counterCode" },
+        { error: "Missing serviceCode" },
         { status: 400 }
       );
     }
 
-    // 1. Find the counter
-    const counter = await prisma.counter.findUnique({
-      where: { code: counterCode },
+    // Find the service by its code
+    const service = await prisma.service.findUnique({
+      where: { code: serviceCode },
     });
-    if (!counter) {
-      return NextResponse.json({ error: "Counter not found" }, { status: 404 });
+    if (!service) {
+      return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
 
-    // 2. Find the max ticketNumber for that counter
+    // Find the last ticket for that service to get the next ticket number
     const lastTicket = await prisma.queueTicket.findFirst({
-      where: { counterId: counter.id },
+      where: { serviceId: service.id },
       orderBy: { ticketNumber: "desc" },
     });
     const nextTicketNumber = lastTicket ? lastTicket.ticketNumber + 1 : 1;
 
-    // 3. Create a new ticket
+    // Create new ticket without assigning to any counter
     const newTicket = await prisma.queueTicket.create({
       data: {
         ticketNumber: nextTicketNumber,
-        prefix: counter.code,
-        counter: {
-          connect: { id: counter.id },
-        },
+        prefix: service.code,
+        status: QueueStatus.PENDING,
+        isPrioritized: isPrioritized,
+        service: { connect: { id: service.id } },
+        // No counter connection here
       },
     });
 
+    // Return ticket information
     return NextResponse.json(
-      { ticketNumber: `${newTicket.prefix}${newTicket.ticketNumber}` },
+      {
+        ticketNumber: `${newTicket.prefix}${newTicket.ticketNumber}`,
+        status: newTicket.status,
+        counterId: null,
+        counterName: null,
+        isPrioritized: newTicket.isPrioritized,
+      },
       { status: 200 }
     );
   } catch (error) {

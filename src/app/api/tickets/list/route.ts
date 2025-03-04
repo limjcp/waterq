@@ -1,5 +1,3 @@
-// app/api/tickets/list/route.ts
-
 import { NextResponse } from "next/server";
 import { QueueStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -9,15 +7,34 @@ export async function GET() {
     const tickets = await prisma.queueTicket.findMany({
       where: {
         status: {
-          in: [QueueStatus.PENDING, QueueStatus.CALLED],
+          in: [
+            QueueStatus.PENDING,
+            QueueStatus.SERVING,
+            QueueStatus.CALLED,
+            QueueStatus.LAPSED,
+            QueueStatus.RETURNING,
+          ],
         },
       },
-      orderBy: {
-        createdAt: "asc",
-      },
+      orderBy: [
+        { isPrioritized: "desc" }, // Prioritized tickets come first
+        { createdAt: "asc" }, // Then sorted by creation time
+      ],
       include: {
-        // If you need to fetch related counter info, uncomment below:
-        // counter: true,
+        service: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+        counter: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
     });
     return NextResponse.json(tickets);
