@@ -104,6 +104,14 @@ export default function StaffDashboard() {
     useState<string>("");
   const [ticketToComplete, setTicketToComplete] = useState<string | null>(null);
 
+  // Add new state for profile menu
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Add click handler for sign out
+  const handleSignOut = () => {
+    window.location.href = "/api/auth/signout";
+  };
+
   // Fetch assigned counter ID when session is available
   useEffect(() => {
     async function getAssignedCounter() {
@@ -647,13 +655,30 @@ export default function StaffDashboard() {
 
           {/* User Profile */}
           {session?.user && (
-            <div className="flex items-center">
-              <div className="bg-sky-600 text-white rounded-full w-20 h-20 flex items-center justify-center font-bold text-lg mr-3">
-                {getInitials(session.user.name || "")}
-              </div>
-              <span className="text-sky-800 font-extrabold">
-                {session.user.name || "Staff User"}
-              </span>
+            <div className="flex items-center relative">
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center cursor-pointer"
+              >
+                <div className="bg-sky-600 text-white rounded-full w-20 h-20 flex items-center justify-center font-bold text-lg mr-3">
+                  {getInitials(session.user.name || "")}
+                </div>
+                <span className="text-sky-800 font-extrabold">
+                  {session.user.name || "Staff User"}
+                </span>
+              </button>
+
+              {/* Profile Menu Dropdown */}
+              {isProfileMenuOpen && (
+                <div className="absolute right-0 top-24 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-sky-50 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
