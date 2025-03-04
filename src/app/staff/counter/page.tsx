@@ -436,12 +436,14 @@ export default function StaffDashboard() {
       ticket.counterId === assignedCounterId && ticket.service?.code === "P"
   );
 
-  // Filter active tickets for this counter
+  // Update filter for active tickets to exclude lapsed tickets
   const activeTickets = tickets.filter(
     (ticket) =>
-      ticket.status === "CALLED" || ticket.status === "SERVING"
+      ticket.status !== "LAPSED" &&
+      (ticket.status === "CALLED" || ticket.status === "SERVING"
         ? ticket.counterId === assignedCounterId // For called/serving tickets, only show ones assigned to this counter
-        : ticket.serviceId === assignedCounterService // For pending tickets, show all for this service
+        : ticket.status === "PENDING" &&
+          ticket.serviceId === assignedCounterService) // For pending tickets, show all for this service
   );
 
   const lapsedTickets = tickets.filter((ticket) => ticket.status === "LAPSED");
@@ -457,6 +459,14 @@ export default function StaffDashboard() {
   // Get current serving ticket
   const currentServingTicket = tickets.find(
     (ticket) => ticket.id === servingTicketId
+  );
+
+  // Add a new check for pending tickets
+  const hasPendingTickets = tickets.some(
+    (ticket) =>
+      (ticket.status === "PENDING" &&
+        ticket.serviceId === assignedCounterService) ||
+      (ticket.status === "RETURNING" && !isPaymentCounter)
   );
 
   if (status === "loading" || loading) {
@@ -510,16 +520,6 @@ export default function StaffDashboard() {
             {session?.user?.assignedCounterName ||
               `Counter ID: ${assignedCounterId}`}
           </h2>
-
-          <div className="mb-6">
-            <button
-              onClick={callNextTicket}
-              className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors"
-              disabled={isAnyActive}
-            >
-              Call Next Ticket
-            </button>
-          </div>
 
           {/* Other Counters Status */}
           <h2 className="text-2xl font-bold text-sky-800 mb-4">
@@ -580,43 +580,6 @@ export default function StaffDashboard() {
                     Status: {ticket.status}
                   </p>
                 </div>
-                <div className="mt-4 sm:mt-0">
-                  {ticket.status === "CALLED" && (
-                    <>
-                      <button
-                        onClick={() => startServing(ticket.id)}
-                        className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors mr-2"
-                      >
-                        Start Serving
-                      </button>
-                      <button
-                        onClick={() => markLapsed(ticket.id)}
-                        className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                      >
-                        Mark as Lapsed
-                      </button>
-                    </>
-                  )}
-                  {ticket.status === "SERVING" && (
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => markServed(ticket.id)}
-                        className="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                      >
-                        Mark as Served
-                      </button>
-                      {/* Show transfer button only for Payment counter */}
-                      {isPaymentCounter && (
-                        <button
-                          onClick={() => openTransferModal(ticket.id)}
-                          className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                        >
-                          Transfer to Other Service
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
               </div>
             ))
           ) : (
@@ -643,17 +606,6 @@ export default function StaffDashboard() {
                   <p className="text-sm text-amber-500">
                     Status: {ticket.status}
                   </p>
-                </div>
-                <div className="mt-4 sm:mt-0">
-                  <button
-                    onClick={() => recallTicket(ticket.id)}
-                    className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                    disabled={
-                      calledTicketId !== null || servingTicketId !== null
-                    }
-                  >
-                    Recall Ticket
-                  </button>
                 </div>
               </div>
             ))
@@ -685,17 +637,6 @@ export default function StaffDashboard() {
                       <p className="text-xs text-gray-500">
                         Transferred from Payment
                       </p>
-                    </div>
-                    <div className="mt-4 sm:mt-0">
-                      <button
-                        onClick={() => recallTicket(ticket.id)}
-                        className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded transition-colors"
-                        disabled={
-                          calledTicketId !== null || servingTicketId !== null
-                        }
-                      >
-                        Call Ticket
-                      </button>
                     </div>
                   </div>
                 ))
@@ -758,14 +699,153 @@ export default function StaffDashboard() {
                   )}
                 </div>
               </div>
+            ) : calledTicketId ? (
+              // Called ticket but not serving
+              <div className="flex flex-col items-center">
+                {tickets
+                  .filter((t) => t.id === calledTicketId)
+                  .map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="flex flex-col items-center w-full"
+                    >
+                      <div className="bg-amber-100 rounded-full w-32 h-32 flex items-center justify-center mb-4">
+                        <span className="text-3xl font-bold text-amber-700">
+                          {ticket.prefix}
+                          {ticket.ticketNumber}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-amber-600 mb-1">
+                        {ticket.service?.name || "Unknown Service"}
+                      </p>
+                      {ticket.isPrioritized && (
+                        <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
+                          Priority
+                        </span>
+                      )}
+                      <p className="text-center text-amber-600 mb-4">
+                        Ticket Called
+                      </p>
+                      <div className="mt-4 w-full space-y-2">
+                        <button
+                          onClick={() => startServing(ticket.id)}
+                          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                        >
+                          Start Serving
+                        </button>
+                        <button
+                          onClick={() => markLapsed(ticket.id)}
+                          className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                        >
+                          Mark as Lapsed
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : lapsedTickets.length > 0 || returningTickets.length > 0 ? (
+              // Show options for lapsed or returning tickets - ADDING CALL NEXT BUTTON
+              <div className="flex flex-col items-center">
+                <p className="text-center text-sky-700 mb-4">
+                  Available Actions
+                </p>
+
+                {lapsedTickets.length > 0 && (
+                  <div className="w-full mb-3">
+                    <h3 className="text-sm font-medium text-amber-700 mb-2">
+                      Lapsed Tickets
+                    </h3>
+                    {lapsedTickets.map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="bg-amber-50 p-2 rounded-lg mb-2 flex justify-between items-center"
+                      >
+                        <span>
+                          {ticket.prefix}
+                          {ticket.ticketNumber}
+                        </span>
+                        <button
+                          onClick={() => recallTicket(ticket.id)}
+                          className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
+                        >
+                          Recall
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {returningTickets.length > 0 && (
+                  <div className="w-full mb-4">
+                    <h3 className="text-sm font-medium text-purple-700 mb-2">
+                      Returning Tickets
+                    </h3>
+                    {returningTickets.map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="bg-purple-50 p-2 rounded-lg mb-2 flex justify-between items-center"
+                      >
+                        <span>
+                          {ticket.prefix}
+                          {ticket.ticketNumber}
+                        </span>
+                        <button
+                          onClick={() => recallTicket(ticket.id)}
+                          className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
+                        >
+                          Call
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Call Next Ticket button always */}
+                <div className="w-full mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={callNextTicket}
+                    disabled={!hasPendingTickets}
+                    className={`w-full py-3 px-4 rounded-lg transition-colors text-white font-medium ${
+                      hasPendingTickets
+                        ? "bg-sky-500 hover:bg-sky-600"
+                        : "bg-gray-300 cursor-not-allowed"
+                    }`}
+                  >
+                    Call Next Ticket
+                  </button>
+                  {!hasPendingTickets && (
+                    <p className="text-xs text-gray-500 text-center mt-1">
+                      No pending tickets in queue
+                    </p>
+                  )}
+                </div>
+              </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-6 text-gray-500 flex flex-col items-center">
                 <p>No ticket currently being served</p>
+                <div className="mt-6 w-full">
+                  <button
+                    onClick={callNextTicket}
+                    disabled={!hasPendingTickets}
+                    className={`w-full py-3 px-4 rounded-lg transition-colors text-white font-medium ${
+                      hasPendingTickets
+                        ? "bg-sky-500 hover:bg-sky-600"
+                        : "bg-gray-300 cursor-not-allowed"
+                    }`}
+                  >
+                    Call Next Ticket
+                  </button>
+                  {!hasPendingTickets && (
+                    <p className="text-xs text-gray-500 text-center mt-1">
+                      No pending tickets in queue
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* New User Statistics Card */}
+          {/* User Statistics Card */}
           <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit">
             <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
               Your Statistics
