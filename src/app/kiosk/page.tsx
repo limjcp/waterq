@@ -43,7 +43,7 @@ export default function Kiosk() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPWD, setIsPWD] = useState(false);
-  const [countdown, setCountdown] = useState(999);
+  const [countdown, setCountdown] = useState(5);
 
   const services: ServiceOption[] = [
     {
