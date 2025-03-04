@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-
+import Image from "next/image";
 type Ticket = {
   id: string;
   ticketNumber: number;
@@ -11,6 +11,7 @@ type Ticket = {
   createdAt: string;
   counterId: string | null;
   serviceId: string;
+  servingStart: string | null;
   service?: {
     id: string;
     name: string;
@@ -37,6 +38,19 @@ type UserStatistics = {
   averageServiceTime: number;
 };
 
+// Helper function to get user initials
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    // Get first letter of first name and first letter of last name
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  } else if (parts.length === 1 && parts[0]) {
+    // If only one name, get first letter
+    return parts[0][0].toUpperCase();
+  }
+  return "U"; // Default if no name is available
+}
+
 export default function StaffDashboard() {
   const { data: session, status } = useSession();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -61,7 +75,6 @@ export default function StaffDashboard() {
   // New state for timer
   const [elapsedTime, setElapsedTime] = useState(0);
   const [formattedTime, setFormattedTime] = useState("00:00");
-  const [servingStartTime, setServingStartTime] = useState<Date | null>(null);
 
   // Add new state for user statistics
   const [userStats, setUserStats] = useState<UserStatistics>({
@@ -105,17 +118,18 @@ export default function StaffDashboard() {
     let timerId: NodeJS.Timeout;
 
     if (servingTicketId) {
-      // Start the timer
-      if (!servingStartTime) {
-        setServingStartTime(new Date());
-        setElapsedTime(0);
-      }
+      const currentTicket = tickets.find(
+        (ticket) => ticket.id === servingTicketId
+      );
+      const ticketServingStart = currentTicket?.servingStart
+        ? new Date(currentTicket.servingStart)
+        : null;
 
-      timerId = setInterval(() => {
-        if (servingStartTime) {
+      if (ticketServingStart) {
+        timerId = setInterval(() => {
           const now = new Date();
           const seconds = Math.floor(
-            (now.getTime() - servingStartTime.getTime()) / 1000
+            (now.getTime() - ticketServingStart.getTime()) / 1000
           );
           setElapsedTime(seconds);
 
@@ -127,11 +141,10 @@ export default function StaffDashboard() {
               .toString()
               .padStart(2, "0")}`
           );
-        }
-      }, 1000);
+        }, 1000);
+      }
     } else {
       // Reset the timer when not serving
-      setServingStartTime(null);
       setElapsedTime(0);
       setFormattedTime("00:00");
     }
@@ -139,7 +152,7 @@ export default function StaffDashboard() {
     return () => {
       if (timerId) clearInterval(timerId);
     };
-  }, [servingTicketId, servingStartTime]);
+  }, [servingTicketId, tickets]);
 
   // Fetch available services for transfer (exclude current service)
   useEffect(() => {
@@ -337,9 +350,6 @@ export default function StaffDashboard() {
     });
     setServingTicketId(null);
     setCalledTicketId(null);
-    setServingStartTime(null); // Reset timer when ticket is served
-
-    // Refresh tickets and statistics
     fetchTickets();
 
     // Also refresh user statistics
@@ -370,11 +380,11 @@ export default function StaffDashboard() {
       body: JSON.stringify({
         status: "SERVING",
         counterId: assignedCounterId,
+        servingStart: new Date(), // This sends the timestamp to be saved in the database
       }),
     });
     setCalledTicketId(null);
     setServingTicketId(ticketId);
-    setServingStartTime(new Date()); // Start timer when serving begins
     fetchTickets();
   }
 
@@ -397,8 +407,15 @@ export default function StaffDashboard() {
     setIsTransferModalOpen(true);
   }
 
-  async function handleTransferTicket() {
-    if (!ticketToTransfer || !selectedServiceId) {
+  async function handleTransferTicket(serviceId?: string) {
+    if (!ticketToTransfer) {
+      return;
+    }
+
+    // Use provided serviceId or fall back to the state value
+    const targetServiceId = serviceId || selectedServiceId;
+
+    if (!targetServiceId) {
       return;
     }
 
@@ -409,7 +426,7 @@ export default function StaffDashboard() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            serviceId: selectedServiceId,
+            serviceId: targetServiceId,
           }),
         }
       );
@@ -420,7 +437,6 @@ export default function StaffDashboard() {
         setTicketToTransfer(null);
         setSelectedServiceId("");
         setServingTicketId(null);
-        setServingStartTime(null); // Reset timer when ticket is transferred
         fetchTickets();
       } else {
         console.error("Failed to transfer ticket");
@@ -509,158 +525,206 @@ export default function StaffDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100 p-8">
-      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
-        {/* Main content area */}
-        <div className="flex-1 bg-white rounded-2xl shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-sky-800 mb-2">
-            Staff Dashboard
-          </h1>
-          <h2 className="text-xl font-medium text-sky-600 mb-6">
-            {session?.user?.assignedCounterName ||
-              `Counter ID: ${assignedCounterId}`}
-          </h2>
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100">
+      {/* Full-width header that stretches edge to edge */}
+      <div className="bg-white shadow-lg p-0 mb-8 w-full sticky top-0">
+        <div className="w-full flex justify-between items-center px-8">
+          <div className="flex items-center gap-4">
+            {/* Logo */}
+            <Image src="/wdlogo.png" alt="WD Logo" width={120} height={120} />
 
-          {/* Other Counters Status */}
-          <h2 className="text-2xl font-bold text-sky-800 mb-4">
-            Other {currentServingTicket?.service?.name || ""} Counters
-          </h2>
-          {otherCounterTickets.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-              {otherCounterTickets.map((counter) => (
-                <div
-                  key={counter.counterId}
-                  className="border border-sky-100 rounded-lg p-4 bg-sky-50"
-                >
-                  <p className="font-medium text-sky-700">
-                    {counter.counterName}
-                  </p>
-                  {counter.ticket ? (
-                    <div className="mt-2">
-                      <span className="inline-block bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-medium">
-                        {counter.ticket.prefix}
-                        {counter.ticket.ticketNumber}
-                        {counter.ticket.isPrioritized && " (PWD)"}
-                      </span>
-                      <span className="text-xs text-sky-600 block mt-1">
-                        Status: {counter.ticket.status}
-                      </span>
+            <div>
+              <h1 className="text-3xl font-bold text-sky-800 mb-2">
+                Staff Dashboard
+              </h1>
+              <h2 className="text-xl font-medium text-sky-600">
+                {session?.user?.assignedCounterName ||
+                  `Counter ID: ${assignedCounterId}`}
+              </h2>
+            </div>
+          </div>
+
+          {/* User Profile */}
+          {session?.user && (
+            <div className="flex items-center">
+              <div className="bg-sky-600 text-white rounded-full w-20 h-20 flex items-center justify-center font-bold text-lg mr-3">
+                {getInitials(session.user.name || "")}
+              </div>
+              <span className="text-sky-800 font-extrabold">
+                {session.user.name || "Staff User"}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main content area with sections and sidebar - FULL WIDTH */}
+      <div className="w-full px-8 flex flex-col lg:flex-row gap-6">
+        {/* Main content area - EXPANDED */}
+        <div className="flex-1 space-y-6">
+          {/* Active and Lapsed Tickets side by side */}
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Lapsed Tickets Section - LEFT SIDE */}
+            <div className="bg-white rounded-2xl shadow-2xl p-6 flex-1">
+              <h2 className="text-2xl font-bold text-sky-800 mb-4">
+                Lapsed Tickets
+              </h2>
+              {lapsedTickets.length ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {lapsedTickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="border border-amber-100 rounded-lg p-4 bg-amber-50"
+                    >
+                      <p className="font-medium text-amber-700">
+                        {ticket.isPrioritized ? "PWD-" : ""}
+                        {ticket.service?.code}-{ticket.ticketNumber}
+                      </p>
+                      <p className="text-xs text-amber-600 mt-1">
+                        Status: {ticket.status}
+                      </p>
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-500 mt-2">
-                      No active tickets
-                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-amber-600">No lapsed tickets.</p>
+              )}
+            </div>
+
+            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW ONE TICKET */}
+            <div className="bg-white rounded-2xl shadow-2xl p-6 flex-1">
+              <h2 className="text-2xl font-bold text-sky-800 mb-4">
+                Active Tickets
+              </h2>
+              {activeTickets.length ? (
+                <div className="flex flex-col items-center">
+                  {/* Display just the first active ticket */}
+                  <div className="bg-sky-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
+                    <span className="text-3xl font-bold text-sky-700">
+                      {activeTickets[0].isPrioritized ? "PWD-" : ""}
+                      {activeTickets[0].service?.code}-
+                      {activeTickets[0].ticketNumber}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-sky-600 mb-1">
+                    {activeTickets[0].service?.name || "Unknown Service"}
+                  </p>
+                  {activeTickets[0].isPrioritized && (
+                    <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-2">
+                      Priority
+                    </span>
+                  )}
+                  <p className="text-xs text-sky-600 mt-1">
+                    Status: {activeTickets[0].status}
+                  </p>
+
+                  {/* Show pending count if there are more active tickets */}
+                  {activeTickets.length > 1 && (
+                    <div className="mt-4 bg-sky-50 border border-sky-100 rounded-lg py-2 px-4">
+                      <p className="text-center text-sky-700 font-medium">
+                        Pending: {activeTickets.length - 1} ticket
+                        {activeTickets.length - 1 !== 1 ? "s" : ""}
+                      </p>
+                    </div>
                   )}
                 </div>
-              ))}
+              ) : (
+                <p className="text-center text-sky-600 py-10">
+                  No active tickets available.
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="text-center text-sky-600 mb-8">
-              No other counters with this service.
-            </p>
-          )}
+          </div>
 
-          {/* Active Tickets */}
-          <h2 className="text-2xl font-bold text-sky-800 mb-4">
-            Active Tickets
-          </h2>
-          {activeTickets.length ? (
-            activeTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-sky-100 p-4 rounded-lg mb-4"
-              >
-                <div>
-                  <p className="text-xl font-semibold text-sky-700">
-                    Ticket: {ticket.prefix}
-                    {ticket.ticketNumber}
-                    {ticket.isPrioritized && " (PWD)"}
-                  </p>
-                  <p className="text-sm text-sky-500">
-                    Status: {ticket.status}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-sky-600">
-              No active tickets available.
-            </p>
-          )}
-
-          {/* Lapsed Tickets Section */}
-          <h2 className="text-2xl font-bold text-sky-800 mt-8 mb-4">
-            Lapsed Tickets
-          </h2>
-          {lapsedTickets.length ? (
-            lapsedTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-amber-100 p-4 rounded-lg mb-4"
-              >
-                <div>
-                  <p className="text-xl font-semibold text-amber-700">
-                    Ticket: {ticket.prefix}
-                    {ticket.ticketNumber}
-                  </p>
-                  <p className="text-sm text-amber-500">
-                    Status: {ticket.status}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-amber-600">No lapsed tickets.</p>
-          )}
-
-          {/* Returning Tickets Section - for CW and NSA only */}
+          {/* Returning Tickets Section - EXPANDED GRID */}
           {!isPaymentCounter && (
-            <>
-              <h2 className="text-2xl font-bold text-sky-800 mt-8 mb-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6">
+              <h2 className="text-2xl font-bold text-sky-800 mb-4">
                 Returning Tickets
               </h2>
               {returningTickets.length ? (
-                returningTickets.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-purple-100 p-4 rounded-lg mb-4"
-                  >
-                    <div>
-                      <p className="text-xl font-semibold text-purple-700">
-                        Ticket: {ticket.prefix}
-                        {ticket.ticketNumber}
-                        {ticket.isPrioritized && " (PWD)"}
+                <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {returningTickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="border border-purple-100 rounded-lg p-4 bg-purple-50"
+                    >
+                      <p className="font-medium text-purple-700">
+                        {ticket.isPrioritized ? "PWD-" : ""}
+                        {ticket.service?.code}-{ticket.ticketNumber}
                       </p>
-                      <p className="text-sm text-purple-500">
+                      <p className="text-xs text-purple-600 mt-1">
                         Status: {ticket.status}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mt-1">
                         Transferred from Payment
                       </p>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               ) : (
                 <p className="text-center text-purple-600">
                   No returning tickets.
                 </p>
               )}
-            </>
+            </div>
           )}
+
+          {/* Other Counters Status - EXPANDED GRID */}
+          <div className="bg-white rounded-2xl shadow-2xl p-6">
+            <h2 className="text-2xl font-bold text-sky-800 mb-4">
+              Other {currentServingTicket?.service?.name || ""} Counters
+            </h2>
+            {otherCounterTickets.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {otherCounterTickets.map((counter) => (
+                  <div
+                    key={counter.counterId}
+                    className="border border-sky-100 rounded-lg p-4 bg-sky-50"
+                  >
+                    <p className="font-medium text-sky-700">
+                      {counter.counterName}
+                    </p>
+                    {counter.ticket ? (
+                      <div className="mt-2">
+                        <span className="inline-block bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {counter.ticket.isPrioritized ? "PWD-" : ""}
+                          {counter.ticket.service?.code}-
+                          {counter.ticket.ticketNumber}
+                        </span>
+                        <span className="text-xs text-sky-600 block mt-1">
+                          Status: {counter.ticket.status}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 mt-2">
+                        No active tickets
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-sky-600">
+                No other counters with this service.
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Sidebar section */}
-        <div className="lg:w-80 space-y-6">
+        {/* Sidebar section - MODIFIED FROM VERTICAL TO HORIZONTAL */}
+        <div className="lg:w-auto space-y-0 flex flex-col sm:flex-row gap-6">
           {/* Current serving ticket card */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit sticky top-8">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit">
             <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
               Currently Serving
             </h2>
             {currentServingTicket ? (
               <div className="flex flex-col items-center">
-                <div className="bg-sky-100 rounded-full w-32 h-32 flex items-center justify-center mb-4">
+                <div className="bg-sky-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
                   <span className="text-3xl font-bold text-sky-700">
-                    {currentServingTicket.prefix}
+                    {currentServingTicket.isPrioritized ? "PWD-" : ""}
+                    {currentServingTicket.service?.code}-
                     {currentServingTicket.ticketNumber}
                   </span>
                 </div>
@@ -709,10 +773,10 @@ export default function StaffDashboard() {
                       key={ticket.id}
                       className="flex flex-col items-center w-full"
                     >
-                      <div className="bg-amber-100 rounded-full w-32 h-32 flex items-center justify-center mb-4">
+                      <div className="bg-amber-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
                         <span className="text-3xl font-bold text-amber-700">
-                          {ticket.prefix}
-                          {ticket.ticketNumber}
+                          {ticket.isPrioritized ? "PWD-" : ""}
+                          {ticket.service?.code}-{ticket.ticketNumber}
                         </span>
                       </div>
                       <p className="text-sm font-medium text-amber-600 mb-1">
@@ -761,8 +825,8 @@ export default function StaffDashboard() {
                         className="bg-amber-50 p-2 rounded-lg mb-2 flex justify-between items-center"
                       >
                         <span>
-                          {ticket.prefix}
-                          {ticket.ticketNumber}
+                          {ticket.isPrioritized ? "PWD-" : ""}
+                          {ticket.service?.code}-{ticket.ticketNumber}
                         </span>
                         <button
                           onClick={() => recallTicket(ticket.id)}
@@ -786,8 +850,8 @@ export default function StaffDashboard() {
                         className="bg-purple-50 p-2 rounded-lg mb-2 flex justify-between items-center"
                       >
                         <span>
-                          {ticket.prefix}
-                          {ticket.ticketNumber}
+                          {ticket.isPrioritized ? "PWD-" : ""}
+                          {ticket.service?.code}-{ticket.ticketNumber}
                         </span>
                         <button
                           onClick={() => recallTicket(ticket.id)}
@@ -845,7 +909,7 @@ export default function StaffDashboard() {
             )}
           </div>
 
-          {/* User Statistics Card */}
+          {/* User Statistics Card - NOW SIDE BY SIDE */}
           <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit">
             <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
               Your Statistics
@@ -881,24 +945,29 @@ export default function StaffDashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96 shadow-2xl">
             <h3 className="text-lg font-semibold mb-4">Transfer Ticket</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
                 Select Destination Service
-              </label>
-              <select
-                value={selectedServiceId}
-                onChange={(e) => setSelectedServiceId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                <option value="">Select a service...</option>
+              </p>
+              <div className="space-y-2">
                 {availableServices.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.name}
-                  </option>
+                  <button
+                    key={service.id}
+                    onClick={() => {
+                      setSelectedServiceId(service.id);
+                      handleTransferTicket(service.id);
+                    }}
+                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-between"
+                  >
+                    <span>{service.name}</span>
+                    <span className="text-xs bg-sky-700 px-2 py-1 rounded">
+                      {service.code}
+                    </span>
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end">
               <button
                 onClick={() => {
                   setIsTransferModalOpen(false);
@@ -908,17 +977,6 @@ export default function StaffDashboard() {
                 className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
               >
                 Cancel
-              </button>
-              <button
-                onClick={handleTransferTicket}
-                disabled={!selectedServiceId}
-                className={`px-4 py-2 rounded-md text-white ${
-                  selectedServiceId
-                    ? "bg-sky-500 hover:bg-sky-600"
-                    : "bg-sky-300 cursor-not-allowed"
-                }`}
-              >
-                Transfer
               </button>
             </div>
           </div>
