@@ -43,23 +43,23 @@ export default function Kiosk() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPWD, setIsPWD] = useState(false);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(999);
 
   const services: ServiceOption[] = [
     {
       code: "CW",
       name: "Customer Welfare",
-      description: "Questions, concerns and general inquiries",
+      description: "",
     },
     {
       code: "NSA",
       name: "New Service Application",
-      description: "Apply for new water service connections",
+      description: "",
     },
     {
       code: "P",
       name: "Payment",
-      description: "Bill payments and financial transactions",
+      description: "",
     },
   ];
 
@@ -140,10 +140,13 @@ export default function Kiosk() {
       <div className="flex-1 flex items-center justify-center w-full h-full">
         <div className="w-full h-full bg-white p-6 md:p-8 flex flex-col">
           <div className="text-center mb-6 md:mb-8">
-            <div className="animate-bounce">
-              <TicketIcon className="h-16 w-16 text-sky-500 mx-auto mb-4" />
-            </div>
-            <h1 className="text-9xl md:text-9xl font-bold text-sky-800 mb-2">
+            <img
+              src="/wdlogo.png"
+              alt="Ticket Icon"
+              className="h-96 w-96 text-sky-500 mx-auto mb-1 md:mb-2"
+            />
+
+            <h1 className="text-5xl md:text-8xl font-bold text-sky-800 mb-1 md:mb-2">
               Service Kiosk
             </h1>
 
@@ -176,18 +179,26 @@ export default function Kiosk() {
                     className="flex flex-col items-center justify-center bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
                     <span>
-                      <Accessibility className="h-52 w-52 mx-auto text-white mb-4" />
+                      <img
+                        src="push.png"
+                        alt="Accessibility Icon"
+                        className="h-52 w-52 mx-auto mb-4"
+                      />
                     </span>
                     <span className="text-8xl text-white">PWD</span>
                   </button>
                   <button
                     onClick={() => selectUserType(false)}
-                    className="flex flex-col items-center justify-center bg-white border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                    className="flex flex-col items-center justify-center bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
                     <span>
-                      <User className="h-52 w-52 mx-auto text-sky-500 mb-4" />
+                      <img
+                        src="users.png"
+                        alt="Accessibility Icon"
+                        className="h-52 w-52 mx-auto mb-4"
+                      />
                     </span>
-                    <span className="text-8xl">REGULAR</span>
+                    <span className="text-8xl text-white">REGULAR</span>
                   </button>
                 </div>
               </div>
@@ -198,12 +209,12 @@ export default function Kiosk() {
                 <div className="flex items-center mb-6">
                   <button
                     onClick={goBack}
-                    className="flex items-center text-sky-600 hover:text-sky-800 transition-colors"
+                    className="flex items-center font-bold text-white hover:text-sky-800 transition-colors bg-sky-400 rounded-full p-3"
                   >
                     <ArrowLeftIcon className="h-5 w-5 mr-2" />
                     <span>Back</span>
                   </button>
-                  <h2 className="text-2xl font-semibold text-sky-800 flex-grow text-center pr-10">
+                  <h2 className="text-2xl font-semibold text-white flex-grow text-center pr-10">
                     {isPWD ? "PWD Services" : "Regular Services"}
                   </h2>
                 </div>
@@ -217,14 +228,16 @@ export default function Kiosk() {
                           isPWD ? `PWD-${service.code}` : service.code
                         )
                       }
-                      className="bg-white border border-sky-200 hover:border-sky-500 hover:bg-sky-50 rounded-xl p-6 text-left transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                      className="bg-sky-400 border border-sky-200 hover:border-sky-500 hover:bg-sky-50 rounded-xl p-6 text-left transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                     >
-                      <h3 className="text-xl font-bold text-sky-800 mb-2">
+                      <h3 className="text-7xl font-bold text-white mb-10">
                         {service.name}
                       </h3>
-                      <p className="text-sky-600">{service.description}</p>
+                      <p className="font-bold text-sky-600">
+                        {service.description}
+                      </p>
                       <div className="mt-3 flex justify-end">
-                        <span className="inline-flex items-center px-3 py-1 bg-sky-100 text-sky-800 rounded-full text-sm font-medium">
+                        <span className="inline-flex items-center px-6 py-5 bg-sky-100 text-sky-800 rounded-full text-lg font-bold">
                           {isPWD ? `PWD-${service.code}` : `${service.code}`}
                         </span>
                       </div>
@@ -236,15 +249,15 @@ export default function Kiosk() {
 
             {currentStep === 3 && ticketData && (
               <div className="text-center space-y-6 animate-fade-in flex-1 flex flex-col justify-center">
-                <div className="bg-sky-50 rounded-xl p-8 border border-sky-100">
-                  <h2 className="text-lg font-semibold text-sky-600 mb-4">
+                <div className="bg-sky-50 rounded-xl p-64 border border-sky-100">
+                  <h2 className="text-3xl font-bold text-sky-600 mb-4">
                     YOUR TICKET NUMBER
                   </h2>
-                  <div className="text-6xl font-bold text-sky-800 animate-pop-in mb-4">
+                  <div className="text-9xl font-bold text-sky-800 animate-pop-in mb-4">
                     {formatTicketNumber(ticketData.ticketNumber)}
                   </div>
 
-                  <div className="mt-3 inline-flex items-center px-4 py-2 bg-sky-500 text-white rounded-full text-lg font-medium animate-fade-in">
+                  <div className="mt-3 inline-flex items-center px-4 py-2 bg-sky-500 text-white rounded-full text-2xl font-medium animate-fade-in">
                     {ticketData.isPrioritized
                       ? `PWD-${formatTicketNumber(
                           ticketData.ticketNumber.split("-").pop() ||
@@ -266,7 +279,7 @@ export default function Kiosk() {
                 </div>
                 <button
                   onClick={resetForm}
-                  className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-6 text-xl rounded-lg transition-colors duration-200 focus:ring-4 focus:ring-sky-300 focus:ring-offset-2"
+                  className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-6 text-3xl rounded-lg transition-colors duration-200 focus:ring-4 focus:ring-sky-300 focus:ring-offset-2"
                 >
                   Get Another Ticket ({countdown})
                 </button>
