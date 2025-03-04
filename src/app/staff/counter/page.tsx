@@ -452,14 +452,14 @@ export default function StaffDashboard() {
       ticket.counterId === assignedCounterId && ticket.service?.code === "P"
   );
 
-  // Update filter for active tickets to exclude lapsed tickets
+  // Update filter for active tickets to exclude called and serving tickets
   const activeTickets = tickets.filter(
     (ticket) =>
       ticket.status !== "LAPSED" &&
-      (ticket.status === "CALLED" || ticket.status === "SERVING"
-        ? ticket.counterId === assignedCounterId // For called/serving tickets, only show ones assigned to this counter
-        : ticket.status === "PENDING" &&
-          ticket.serviceId === assignedCounterService) // For pending tickets, show all for this service
+      ticket.status !== "CALLED" &&
+      ticket.status !== "SERVING" &&
+      ticket.status === "PENDING" &&
+      ticket.serviceId === assignedCounterService
   );
 
   const lapsedTickets = tickets.filter((ticket) => ticket.status === "LAPSED");
@@ -591,16 +591,16 @@ export default function StaffDashboard() {
               )}
             </div>
 
-            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW ONE TICKET */}
+            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE */}
             <div className="bg-white rounded-2xl shadow-2xl p-6 flex-1">
               <h2 className="text-2xl font-bold text-sky-800 mb-4">
-                Active Tickets
+                Next in Line
               </h2>
               {activeTickets.length ? (
                 <div className="flex flex-col items-center">
-                  {/* Display just the first active ticket */}
-                  <div className="bg-sky-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
-                    <span className="text-3xl font-bold text-sky-700">
+                  {/* Display just the first waiting ticket */}
+                  <div className="bg-sky-50 rounded-lg w-40 h-20 flex items-center justify-center mb-4">
+                    <span className="text-2xl font-bold text-sky-700">
                       {activeTickets[0].isPrioritized ? "PWD-" : ""}
                       {activeTickets[0].service?.code}-
                       {activeTickets[0].ticketNumber}
@@ -614,15 +614,13 @@ export default function StaffDashboard() {
                       Priority
                     </span>
                   )}
-                  <p className="text-xs text-sky-600 mt-1">
-                    Status: {activeTickets[0].status}
-                  </p>
+                  <p className="text-xs text-sky-600 mt-1">Status: Waiting</p>
 
-                  {/* Show pending count if there are more active tickets */}
+                  {/* Show pending count if there are more waiting tickets */}
                   {activeTickets.length > 1 && (
                     <div className="mt-4 bg-sky-50 border border-sky-100 rounded-lg py-2 px-4">
                       <p className="text-center text-sky-700 font-medium">
-                        Pending: {activeTickets.length - 1} ticket
+                        Waiting: {activeTickets.length - 1} ticket
                         {activeTickets.length - 1 !== 1 ? "s" : ""}
                       </p>
                     </div>
@@ -630,7 +628,7 @@ export default function StaffDashboard() {
                 </div>
               ) : (
                 <p className="text-center text-sky-600 py-10">
-                  No active tickets available.
+                  No tickets waiting in queue
                 </p>
               )}
             </div>
@@ -715,157 +713,181 @@ export default function StaffDashboard() {
         {/* Sidebar section - MODIFIED FROM VERTICAL TO HORIZONTAL */}
         <div className="lg:w-auto space-y-0 flex flex-col sm:flex-row gap-6">
           {/* Current serving ticket card */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 h-[600px] w-[400px]">
             <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
               Currently Serving
             </h2>
-            {currentServingTicket ? (
-              <div className="flex flex-col items-center">
-                <div className="bg-sky-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
-                  <span className="text-3xl font-bold text-sky-700">
-                    {currentServingTicket.isPrioritized ? "PWD-" : ""}
-                    {currentServingTicket.service?.code}-
-                    {currentServingTicket.ticketNumber}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-sky-600 mb-1">
-                  {currentServingTicket.service?.name || "Unknown Service"}
-                </p>
-                {currentServingTicket.isPrioritized && (
-                  <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
-                    Priority
-                  </span>
-                )}
-                <div className="mt-4 w-full">
-                  <p className="text-sm text-gray-500 text-center mb-1">
-                    Transaction Time
+            <div className="h-[520px] flex items-center justify-center">
+              {currentServingTicket ? (
+                <div className="flex flex-col items-center w-full">
+                  <div className="bg-sky-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
+                    <span className="text-3xl font-bold text-sky-700">
+                      {currentServingTicket.isPrioritized ? "PWD-" : ""}
+                      {currentServingTicket.service?.code}-
+                      {currentServingTicket.ticketNumber}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-sky-600 mb-1">
+                    {currentServingTicket.service?.name || "Unknown Service"}
                   </p>
-                  <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-center">
-                    <div className="text-2xl font-mono font-bold text-sky-800">
-                      {formattedTime}
+                  {currentServingTicket.isPrioritized && (
+                    <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
+                      Priority
+                    </span>
+                  )}
+                  <div className="mt-4 w-full">
+                    <p className="text-sm text-gray-500 text-center mb-1">
+                      Transaction Time
+                    </p>
+                    <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-center">
+                      <div className="text-2xl font-mono font-bold text-sky-800">
+                        {formattedTime}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="mt-6 w-full">
-                  <button
-                    onClick={() => markServed(currentServingTicket.id)}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-                  >
-                    Complete Transaction
-                  </button>
-                  {isPaymentCounter && (
+                  <div className="mt-6 w-full">
                     <button
-                      onClick={() => openTransferModal(currentServingTicket.id)}
-                      className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                      onClick={() => markServed(currentServingTicket.id)}
+                      className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
                     >
-                      Transfer Ticket
+                      Complete Transaction
                     </button>
-                  )}
+                    {isPaymentCounter && (
+                      <button
+                        onClick={() =>
+                          openTransferModal(currentServingTicket.id)
+                        }
+                        className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                      >
+                        Transfer Ticket
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ) : calledTicketId ? (
-              // Called ticket but not serving
-              <div className="flex flex-col items-center">
-                {tickets
-                  .filter((t) => t.id === calledTicketId)
-                  .map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      className="flex flex-col items-center w-full"
-                    >
-                      <div className="bg-amber-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
-                        <span className="text-3xl font-bold text-amber-700">
-                          {ticket.isPrioritized ? "PWD-" : ""}
-                          {ticket.service?.code}-{ticket.ticketNumber}
-                        </span>
+              ) : calledTicketId ? (
+                <div className="flex flex-col items-center w-full">
+                  {tickets
+                    .filter((t) => t.id === calledTicketId)
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="flex flex-col items-center w-full"
+                      >
+                        <div className="bg-amber-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
+                          <span className="text-3xl font-bold text-amber-700">
+                            {ticket.isPrioritized ? "PWD-" : ""}
+                            {ticket.service?.code}-{ticket.ticketNumber}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-amber-600 mb-1">
+                          {ticket.service?.name || "Unknown Service"}
+                        </p>
+                        {ticket.isPrioritized && (
+                          <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
+                            Priority
+                          </span>
+                        )}
+                        <p className="text-center text-amber-600 mb-4">
+                          Ticket Called
+                        </p>
+                        <div className="mt-4 w-full space-y-2">
+                          <button
+                            onClick={() => startServing(ticket.id)}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                          >
+                            Start Serving
+                          </button>
+                          <button
+                            onClick={() => markLapsed(ticket.id)}
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                          >
+                            Mark as Lapsed
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-sm font-medium text-amber-600 mb-1">
-                        {ticket.service?.name || "Unknown Service"}
-                      </p>
-                      {ticket.isPrioritized && (
-                        <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
-                          Priority
-                        </span>
-                      )}
-                      <p className="text-center text-amber-600 mb-4">
-                        Ticket Called
-                      </p>
-                      <div className="mt-4 w-full space-y-2">
-                        <button
-                          onClick={() => startServing(ticket.id)}
-                          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                    ))}
+                </div>
+              ) : lapsedTickets.length > 0 || returningTickets.length > 0 ? (
+                <div className="flex flex-col items-center w-full">
+                  <p className="text-center text-sky-700 mb-4">
+                    Available Actions
+                  </p>
+
+                  {lapsedTickets.length > 0 && (
+                    <div className="w-full mb-3">
+                      <h3 className="text-sm font-medium text-amber-700 mb-2">
+                        Lapsed Tickets
+                      </h3>
+                      {lapsedTickets.map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          className="bg-amber-50 p-2 rounded-lg mb-2 flex justify-between items-center"
                         >
-                          Start Serving
-                        </button>
-                        <button
-                          onClick={() => markLapsed(ticket.id)}
-                          className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-                        >
-                          Mark as Lapsed
-                        </button>
-                      </div>
+                          <span>
+                            {ticket.isPrioritized ? "PWD-" : ""}
+                            {ticket.service?.code}-{ticket.ticketNumber}
+                          </span>
+                          <button
+                            onClick={() => recallTicket(ticket.id)}
+                            className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
+                          >
+                            Recall
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-              </div>
-            ) : lapsedTickets.length > 0 || returningTickets.length > 0 ? (
-              // Show options for lapsed or returning tickets - ADDING CALL NEXT BUTTON
-              <div className="flex flex-col items-center">
-                <p className="text-center text-sky-700 mb-4">
-                  Available Actions
-                </p>
+                  )}
 
-                {lapsedTickets.length > 0 && (
-                  <div className="w-full mb-3">
-                    <h3 className="text-sm font-medium text-amber-700 mb-2">
-                      Lapsed Tickets
-                    </h3>
-                    {lapsedTickets.map((ticket) => (
-                      <div
-                        key={ticket.id}
-                        className="bg-amber-50 p-2 rounded-lg mb-2 flex justify-between items-center"
-                      >
-                        <span>
-                          {ticket.isPrioritized ? "PWD-" : ""}
-                          {ticket.service?.code}-{ticket.ticketNumber}
-                        </span>
-                        <button
-                          onClick={() => recallTicket(ticket.id)}
-                          className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
+                  {returningTickets.length > 0 && (
+                    <div className="w-full mb-4">
+                      <h3 className="text-sm font-medium text-purple-700 mb-2">
+                        Returning Tickets
+                      </h3>
+                      {returningTickets.map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          className="bg-purple-50 p-2 rounded-lg mb-2 flex justify-between items-center"
                         >
-                          Recall
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                          <span>
+                            {ticket.isPrioritized ? "PWD-" : ""}
+                            {ticket.service?.code}-{ticket.ticketNumber}
+                          </span>
+                          <button
+                            onClick={() => recallTicket(ticket.id)}
+                            className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
+                          >
+                            Call
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                {returningTickets.length > 0 && (
-                  <div className="w-full mb-4">
-                    <h3 className="text-sm font-medium text-purple-700 mb-2">
-                      Returning Tickets
-                    </h3>
-                    {returningTickets.map((ticket) => (
-                      <div
-                        key={ticket.id}
-                        className="bg-purple-50 p-2 rounded-lg mb-2 flex justify-between items-center"
-                      >
-                        <span>
-                          {ticket.isPrioritized ? "PWD-" : ""}
-                          {ticket.service?.code}-{ticket.ticketNumber}
-                        </span>
-                        <button
-                          onClick={() => recallTicket(ticket.id)}
-                          className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
-                        >
-                          Call
-                        </button>
-                      </div>
-                    ))}
+                  {/* Call Next Ticket button at the bottom */}
+                  <div className="w-full mt-3 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={callNextTicket}
+                      disabled={!hasPendingTickets}
+                      className={`w-full py-3 px-4 rounded-lg transition-colors text-white font-medium ${
+                        hasPendingTickets
+                          ? "bg-sky-500 hover:bg-sky-600"
+                          : "bg-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      Call Next Ticket
+                    </button>
+                    {!hasPendingTickets && (
+                      <p className="text-xs text-gray-500 text-center mt-1">
+                        No pending tickets in queue
+                      </p>
+                    )}
                   </div>
-                )}
-
-                {/* Add Call Next Ticket button always */}
-                <div className="w-full mt-3 pt-3 border-t border-gray-100">
+                </div>
+              ) : (
+                <div className="flex flex-col items-center w-full">
+                  <p className="text-center text-gray-500 mb-6">
+                    No ticket currently being served
+                  </p>
                   <button
                     onClick={callNextTicket}
                     disabled={!hasPendingTickets}
@@ -883,30 +905,8 @@ export default function StaffDashboard() {
                     </p>
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500 flex flex-col items-center">
-                <p>No ticket currently being served</p>
-                <div className="mt-6 w-full">
-                  <button
-                    onClick={callNextTicket}
-                    disabled={!hasPendingTickets}
-                    className={`w-full py-3 px-4 rounded-lg transition-colors text-white font-medium ${
-                      hasPendingTickets
-                        ? "bg-sky-500 hover:bg-sky-600"
-                        : "bg-gray-300 cursor-not-allowed"
-                    }`}
-                  >
-                    Call Next Ticket
-                  </button>
-                  {!hasPendingTickets && (
-                    <p className="text-xs text-gray-500 text-center mt-1">
-                      No pending tickets in queue
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* User Statistics Card - NOW SIDE BY SIDE */}
