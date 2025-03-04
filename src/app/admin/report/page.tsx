@@ -10,6 +10,12 @@ type StaffMember = {
   name: string;
 };
 
+type Service = {
+  id: string;
+  code: string;
+  name: string;
+};
+
 type ReportData = {
   username: string;
   name: string;
@@ -23,13 +29,26 @@ type ReportData = {
     serviceName: string;
     count: number;
   }[];
+  serviceTypesBreakdown: {
+    serviceName: string;
+    types: {
+      typeName: string;
+      count: number;
+    }[];
+  }[];
 };
+
+// Add new type for report mode
+type ReportMode = "staff" | "service";
 
 export default function StaffReports() {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
+  const [reportMode, setReportMode] = useState<ReportMode>("staff");
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string>("");
+  const [selectedService, setSelectedService] = useState<string>("");
   const [startDate, setStartDate] = useState<string>(
     format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")
   );
@@ -39,18 +58,27 @@ export default function StaffReports() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Fetch staff members on mount
+  // Update useEffect to fetch both staff and services
   useEffect(() => {
-    async function fetchStaffMembers() {
+    async function fetchData() {
       if (status === "authenticated") {
         try {
-          const res = await fetch("/api/user/list?role=STAFF");
-          if (res.ok) {
-            const data = await res.json();
-            setStaffMembers(data);
+          const [staffRes, servicesRes] = await Promise.all([
+            fetch("/api/user/list?role=STAFF"),
+            fetch("/api/service/list"),
+          ]);
+
+          if (staffRes.ok) {
+            const staffData = await staffRes.json();
+            setStaffMembers(staffData);
+          }
+
+          if (servicesRes.ok) {
+            const servicesData = await servicesRes.json();
+            setServices(servicesData);
           }
         } catch (error) {
-          console.error("Error fetching staff members:", error);
+          console.error("Error fetching data:", error);
         } finally {
           setLoading(false);
         }
@@ -59,7 +87,7 @@ export default function StaffReports() {
       }
     }
 
-    fetchStaffMembers();
+    fetchData();
   }, [status]);
 
   // Format time (seconds) as MM:SS
@@ -69,15 +97,22 @@ export default function StaffReports() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  // Generate report
+  // Update generate report function
   const generateReport = async () => {
-    if (!selectedStaff) return;
+    if (
+      (reportMode === "staff" && !selectedStaff) ||
+      (reportMode === "service" && !selectedService)
+    )
+      return;
 
     setIsGenerating(true);
     try {
-      const res = await fetch(
-        `/api/reports/staff?username=${selectedStaff}&startDate=${startDate}&endDate=${endDate}`
-      );
+      const endpoint =
+        reportMode === "staff"
+          ? `/api/reports/staff?username=${selectedStaff}&startDate=${startDate}&endDate=${endDate}`
+          : `/api/reports/service?serviceId=${selectedService}&startDate=${startDate}&endDate=${endDate}`;
+
+      const res = await fetch(endpoint);
 
       if (res.ok) {
         const data = await res.json();
@@ -96,7 +131,6 @@ export default function StaffReports() {
   const exportReport = () => {
     if (!reportData) return;
 
-    // Create CSV content
     let csvContent = "data:text/csv;charset=utf-8,";
 
     // Add header
@@ -117,10 +151,14 @@ export default function StaffReports() {
       csvContent += `${day.date},${day.count}\r\n`;
     });
 
-    csvContent += "\r\nService Type Breakdown\r\n";
-    csvContent += "Service,Tickets Served\r\n";
-    reportData.serviceByType.forEach((service) => {
-      csvContent += `${service.serviceName},${service.count}\r\n`;
+    // Add service type breakdown
+    csvContent += "\r\nDetailed Service Type Breakdown\r\n";
+    reportData.serviceTypesBreakdown.forEach((service) => {
+      csvContent += `\r\n${service.serviceName}\r\n`;
+      csvContent += "Service Type,Tickets Served\r\n";
+      service.types.forEach((type) => {
+        csvContent += `${type.typeName},${type.count}\r\n`;
+      });
     });
 
     // Create download link
@@ -166,30 +204,62 @@ export default function StaffReports() {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
           <h1 className="text-3xl font-bold text-sky-800 mb-6">
-            Staff Performance Reports
+            Performance Reports
           </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Staff Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {/* Report Type Selection */}
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
-                Select Staff Member
+                Report Type
               </label>
               <select
-                value={selectedStaff}
-                onChange={(e) => setSelectedStaff(e.target.value)}
+                value={reportMode}
+                onChange={(e) => {
+                  setReportMode(e.target.value as ReportMode);
+                  setSelectedStaff("");
+                  setSelectedService("");
+                  setReportData(null);
+                }}
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
               >
-                <option value="">Select a staff member...</option>
-                {staffMembers.map((staff) => (
-                  <option key={staff.id} value={staff.username}>
-                    {staff.name}
-                  </option>
-                ))}
+                <option value="staff">Staff Report</option>
+                <option value="service">Service Report</option>
               </select>
             </div>
 
-            {/* Date Range */}
+            {/* Staff/Service Selection */}
+            <div>
+              <label className="block text-sm font-medium text-sky-700 mb-2">
+                {reportMode === "staff"
+                  ? "Select Staff Member"
+                  : "Select Service"}
+              </label>
+              <select
+                value={reportMode === "staff" ? selectedStaff : selectedService}
+                onChange={(e) =>
+                  reportMode === "staff"
+                    ? setSelectedStaff(e.target.value)
+                    : setSelectedService(e.target.value)
+                }
+                className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="">Select...</option>
+                {reportMode === "staff"
+                  ? staffMembers.map((staff) => (
+                      <option key={staff.id} value={staff.username}>
+                        {staff.name}
+                      </option>
+                    ))
+                  : services.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name}
+                      </option>
+                    ))}
+              </select>
+            </div>
+
+            {/* Existing date inputs */}
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
                 Start Date
@@ -218,9 +288,13 @@ export default function StaffReports() {
           <div className="flex justify-center">
             <button
               onClick={generateReport}
-              disabled={!selectedStaff || isGenerating}
+              disabled={
+                (reportMode === "staff" ? !selectedStaff : !selectedService) ||
+                isGenerating
+              }
               className={`px-8 py-3 rounded-lg transition-colors text-white font-medium ${
-                !selectedStaff || isGenerating
+                (reportMode === "staff" ? !selectedStaff : !selectedService) ||
+                isGenerating
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-sky-500 hover:bg-sky-600"
               }`}
@@ -299,32 +373,39 @@ export default function StaffReports() {
               </table>
             </div>
 
-            {/* Service Type Breakdown */}
+            {/* Service Type Detailed Breakdown */}
             <h3 className="text-xl font-bold text-sky-800 mb-4">
               Service Type Breakdown
             </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-sky-100">
-                <thead>
-                  <tr className="bg-sky-50">
-                    <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                      Service Type
-                    </th>
-                    <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                      Tickets Served
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportData.serviceByType.map((service, index) => (
-                    <tr key={index} className="border-b border-sky-50">
-                      <td className="py-3 px-4">{service.serviceName}</td>
-                      <td className="py-3 px-4">{service.count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {reportData.serviceTypesBreakdown.map((service, serviceIndex) => (
+              <div key={serviceIndex} className="mb-8">
+                <h4 className="text-lg font-semibold text-sky-700 mb-3">
+                  {service.serviceName}
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white border border-sky-100">
+                    <thead>
+                      <tr className="bg-sky-50">
+                        <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                          Service Type
+                        </th>
+                        <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                          Tickets Served
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {service.types.map((type, typeIndex) => (
+                        <tr key={typeIndex} className="border-b border-sky-50">
+                          <td className="py-3 px-4">{type.typeName}</td>
+                          <td className="py-3 px-4">{type.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

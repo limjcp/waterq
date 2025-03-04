@@ -19,6 +19,12 @@ type Ticket = {
   service?: {
     name: string;
   };
+  serviceType?: {
+    name: string;
+    service: {
+      name: string;
+    };
+  };
 };
 
 export async function GET(request: NextRequest) {
@@ -66,9 +72,6 @@ export async function GET(request: NextRequest) {
     const tickets = (await prisma.queueTicket.findMany({
       where: {
         status: QueueStatus.SERVED,
-        // Since we don't have a servedBy field, we'll need to adapt this query
-        // For example, we might need to check if the ticket was assigned to a counter
-        // that the user was assigned to during the serving time
         counterId: user.assignedCounterId,
         updatedAt: {
           gte: startDateTime,
@@ -78,6 +81,14 @@ export async function GET(request: NextRequest) {
       include: {
         service: {
           select: { name: true },
+        },
+        serviceType: {
+          select: {
+            name: true,
+            service: {
+              select: { name: true },
+            },
+          },
         },
       },
     })) as Ticket[];
@@ -138,7 +149,32 @@ export async function GET(request: NextRequest) {
       ([serviceName, count]) => ({ serviceName, count })
     );
 
-    // Prepare response
+    // Update service type grouping to include detailed breakdown
+    const serviceBreakdownMap = new Map<string, Map<string, number>>();
+
+    tickets.forEach((ticket: Ticket) => {
+      const serviceName = ticket.service?.name || "Unknown";
+      const serviceTypeName = ticket.serviceType?.name || "Unspecified";
+
+      if (!serviceBreakdownMap.has(serviceName)) {
+        serviceBreakdownMap.set(serviceName, new Map<string, number>());
+      }
+
+      const typeMap = serviceBreakdownMap.get(serviceName)!;
+      typeMap.set(serviceTypeName, (typeMap.get(serviceTypeName) || 0) + 1);
+    });
+
+    const serviceTypesBreakdown = Array.from(serviceBreakdownMap.entries()).map(
+      ([serviceName, typeMap]) => ({
+        serviceName,
+        types: Array.from(typeMap.entries()).map(([typeName, count]) => ({
+          typeName,
+          count,
+        })),
+      })
+    );
+
+    // Prepare response with new data
     const reportData = {
       username: user.username,
       name: `${user.firstName} ${user.lastName || ""}`.trim(),
@@ -146,6 +182,7 @@ export async function GET(request: NextRequest) {
       averageServiceTime,
       serviceByDay,
       serviceByType,
+      serviceTypesBreakdown,
     };
 
     return NextResponse.json(reportData);

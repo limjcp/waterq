@@ -12,7 +12,13 @@ type Ticket = {
   counterId: string | null;
   serviceId: string;
   servingStart: string | null;
+  serviceTypeId: string | null;
   service?: {
+    id: string;
+    name: string;
+    code: string;
+  };
+  serviceType?: {
     id: string;
     name: string;
     code: string;
@@ -36,6 +42,14 @@ type UserStatistics = {
   totalServed: number;
   todayServed: number;
   averageServiceTime: number;
+};
+
+// Add ServiceType type
+type ServiceType = {
+  id: string;
+  name: string;
+  code: string;
+  serviceId: string;
 };
 
 // Helper function to get user initials
@@ -82,6 +96,13 @@ export default function StaffDashboard() {
     todayServed: 0,
     averageServiceTime: 0,
   });
+
+  // Add new state for service types and modal
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [isServiceTypeModalOpen, setIsServiceTypeModalOpen] = useState(false);
+  const [selectedServiceTypeId, setSelectedServiceTypeId] =
+    useState<string>("");
+  const [ticketToComplete, setTicketToComplete] = useState<string | null>(null);
 
   // Fetch assigned counter ID when session is available
   useEffect(() => {
@@ -189,6 +210,29 @@ export default function StaffDashboard() {
       return () => clearInterval(interval);
     }
   }, [assignedCounterId, assignedCounterService]);
+
+  // Add useEffect to fetch service types
+  useEffect(() => {
+    async function fetchServiceTypes() {
+      if (assignedCounterService) {
+        try {
+          const res = await fetch(
+            `/api/servicetypes?serviceId=${assignedCounterService}`
+          );
+          if (res.ok) {
+            const types = await res.json();
+            setServiceTypes(types);
+          }
+        } catch (error) {
+          console.error("Error fetching service types:", error);
+        }
+      }
+    }
+
+    if (assignedCounterService) {
+      fetchServiceTypes();
+    }
+  }, [assignedCounterService]);
 
   async function fetchTickets() {
     if (!assignedCounterId || !assignedCounterService) return;
@@ -342,6 +386,63 @@ export default function StaffDashboard() {
       fetchTickets();
     }
   }
+
+  // Modify markServed to open service type modal first
+  function openServiceTypeModal(ticketId: string) {
+    setTicketToComplete(ticketId);
+    setIsServiceTypeModalOpen(true);
+  }
+
+  // New function to complete transaction with service type
+  async function completeTransaction(serviceTypeId: string) {
+    if (!ticketToComplete || !serviceTypeId) {
+      console.error("Missing required data:", {
+        ticketToComplete,
+        serviceTypeId,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tickets/${ticketToComplete}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "SERVED",
+          serviceTypeId: serviceTypeId,
+          servingEnd: new Date(), // Add serving end time
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error completing transaction:", errorData);
+        return;
+      }
+
+      // Reset states and refresh data
+      setIsServiceTypeModalOpen(false);
+      setTicketToComplete(null);
+      setSelectedServiceTypeId("");
+      setServingTicketId(null);
+      setCalledTicketId(null);
+      fetchTickets();
+
+      // Refresh user statistics
+      if (session?.user) {
+        const res = await fetch(
+          `/api/user/statistics?username=${session.user.username}`
+        );
+        if (res.ok) {
+          const stats = await res.json();
+          setUserStats(stats);
+        }
+      }
+    } catch (error) {
+      console.error("Error completing transaction:", error);
+    }
+  }
+
   async function markServed(ticketId: string) {
     await fetch(`/api/tickets/${ticketId}`, {
       method: "PUT",
@@ -747,7 +848,9 @@ export default function StaffDashboard() {
                   </div>
                   <div className="mt-6 w-full">
                     <button
-                      onClick={() => markServed(currentServingTicket.id)}
+                      onClick={() =>
+                        openServiceTypeModal(currentServingTicket.id)
+                      }
                       className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
                     >
                       Complete Transaction
@@ -973,6 +1076,46 @@ export default function StaffDashboard() {
                   setIsTransferModalOpen(false);
                   setTicketToTransfer(null);
                   setSelectedServiceId("");
+                }}
+                className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-2xl">
+            <h3 className="text-lg font-semibold mb-4">Select Service Type</h3>
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service provided
+              </p>
+              <div className="space-y-2">
+                {serviceTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    onClick={() => completeTransaction(type.id)}
+                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-between"
+                  >
+                    <span>{type.name}</span>
+                    <span className="text-xs bg-sky-700 px-2 py-1 rounded">
+                      {type.code}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setIsServiceTypeModalOpen(false);
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
                 }}
                 className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
               >

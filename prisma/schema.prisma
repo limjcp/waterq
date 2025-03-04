@@ -11,13 +11,14 @@ generator client {
 
 // Represents a type of service (e.g., Customer Welfare, New Service Application, Payment)
 model Service {
-  id        String        @id @default(cuid())
-  code      String        @unique
-  name      String
-  counters  Counter[]
-  tickets   QueueTicket[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String
+  counters     Counter[]
+  tickets      QueueTicket[]
+  serviceTypes ServiceType[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 // Each counter is physically a window/desk and is linked to a Service.
@@ -36,22 +37,25 @@ model Counter {
 
 // Represents each ticket in the queue
 model QueueTicket {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   ticketNumber  Int
   prefix        String
-  status        QueueStatus @default(PENDING)
+  status        QueueStatus  @default(PENDING)
   // Each ticket is created for a particular service.
   serviceId     String
-  service       Service     @relation(fields: [serviceId], references: [id])
+  service       Service      @relation(fields: [serviceId], references: [id])
   // Once called, a ticket is assigned to a counter.
   counterId     String?
-  counter       Counter?    @relation(fields: [counterId], references: [id])
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  counter       Counter?     @relation(fields: [counterId], references: [id])
+  // Add service type relation
+  serviceTypeId String?
+  serviceType   ServiceType? @relation(fields: [serviceTypeId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   // Add fields to track serving start and end times
   servingStart  DateTime?
   servingEnd    DateTime?
-  isPrioritized Boolean     @default(false)
+  isPrioritized Boolean      @default(false)
 }
 
 // Represents a user in the system. Staff members (role: staff) can be assigned to a counter.
@@ -89,4 +93,16 @@ enum Role {
   unverified
   staff
   admin
+}
+
+// New model for service types
+model ServiceType {
+  id        String        @id @default(cuid())
+  name      String
+  code      String        @unique
+  serviceId String // Link to specific service
+  service   Service       @relation(fields: [serviceId], references: [id])
+  tickets   QueueTicket[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }

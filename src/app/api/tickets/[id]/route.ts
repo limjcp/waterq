@@ -35,10 +35,10 @@ export async function PUT(
   const { id } = await context.params;
 
   try {
-    const { status, counterId } = await request.json();
+    const data = await request.json();
 
     // Validate status provided and allowed update (e.g. to CALLED, SERVING, LAPSED, etc.)
-    if (!status || !Object.values(QueueStatus).includes(status)) {
+    if (!data.status || !Object.values(QueueStatus).includes(data.status)) {
       return new NextResponse(
         JSON.stringify({ error: "Invalid or missing status" }),
         { status: 400 }
@@ -46,10 +46,10 @@ export async function PUT(
     }
 
     // If a counterId is provided, verify that the counter belongs to the same service as the ticket.
-    if (counterId) {
+    if (data.counterId) {
       const [ticket, counter] = await Promise.all([
         prisma.queueTicket.findUnique({ where: { id } }),
-        prisma.counter.findUnique({ where: { id: counterId } }),
+        prisma.counter.findUnique({ where: { id: data.counterId } }),
       ]);
       if (!ticket || !counter) {
         return new NextResponse(
@@ -69,7 +69,7 @@ export async function PUT(
     }
 
     // If status is LAPSED, enforce max of 2 lapsed tickets by cancelling the oldest if needed.
-    if (status === QueueStatus.LAPSED) {
+    if (data.status === QueueStatus.LAPSED) {
       const ticketRecord = await prisma.queueTicket.findUnique({
         where: { id },
       });
@@ -94,22 +94,20 @@ export async function PUT(
       }
     }
 
-    const data: {
-      status: QueueStatus;
-      servingStart?: Date;
-      servingEnd?: Date;
-    } = { status };
-    if (status === QueueStatus.SERVING) {
-      data.servingStart = new Date();
-    } else if (status === QueueStatus.SERVED) {
-      data.servingEnd = new Date();
-    }
-
     const updatedTicket = await prisma.queueTicket.update({
       where: { id },
       data: {
-        ...data,
-        ...(counterId ? { counter: { connect: { id: counterId } } } : {}),
+        status: data.status,
+        serviceTypeId: data.serviceTypeId,
+        servingEnd: data.servingEnd ? new Date(data.servingEnd) : undefined,
+        counterId: data.counterId,
+        servingStart: data.servingStart
+          ? new Date(data.servingStart)
+          : undefined,
+      },
+      include: {
+        service: true,
+        serviceType: true,
       },
     });
 
@@ -117,7 +115,10 @@ export async function PUT(
 
     return NextResponse.json(updatedTicket);
   } catch (error) {
-    console.error(error);
-    return new NextResponse("Server error", { status: 500 });
+    console.error("Error updating ticket:", error);
+    return NextResponse.json(
+      { error: "Failed to update ticket" },
+      { status: 500 }
+    );
   }
 }
