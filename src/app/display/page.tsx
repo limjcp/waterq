@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
 
 type DisplayCounter = {
   id: string;
@@ -15,9 +16,22 @@ export default function DisplayBoard() {
   const router = useRouter();
 
   useEffect(() => {
+    // Initial fetch
     fetchCounters();
-    const interval = setInterval(fetchCounters, 5000); // poll every 5s
-    return () => clearInterval(interval);
+
+    // Set up Socket.IO connection
+    const socket = io();
+
+    // Listen for ticket updates
+    socket.on("ticket:update", () => {
+      console.log("Ticket updated, refreshing counters");
+      fetchCounters();
+    });
+
+    return () => {
+      // Clean up socket connection on unmount
+      socket.disconnect();
+    };
   }, []);
 
   async function fetchCounters() {

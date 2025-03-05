@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { QueueStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getIO } from "@/lib/socket-io";
 
 // GET a single ticket by ID
 export async function GET(
@@ -27,12 +28,12 @@ export async function GET(
   }
 }
 
-// Update a ticket’s status via PUT (manual re‑call)
+// Update a ticket's status via PUT (manual re‑call)
 export async function PUT(
   request: NextRequest,
   context: { params: { id: string } }
 ) {
-  const { id } = await context.params;
+  const { id } = context.params;
 
   try {
     const data = await request.json();
@@ -61,7 +62,7 @@ export async function PUT(
       if (serviceMismatch) {
         return new NextResponse(
           JSON.stringify({
-            error: "The provided counter does not match the ticket’s service.",
+            error: "The provided counter does not match the ticket's service.",
           }),
           { status: 400 }
         );
@@ -111,7 +112,22 @@ export async function PUT(
       },
     });
 
-    // (Optional) Trigger a manual display update (e.g. beep/re‑announce ticket) here
+    // Get the Socket.IO instance and emit events
+    const io = getIO();
+    if (io) {
+      // Emit to all clients
+      io.emit("ticket:update", updatedTicket);
+
+      // Emit to specific counter room if assigned
+      if (updatedTicket.counterId) {
+        io.to(`counter:${updatedTicket.counterId}`).emit(
+          "counter:ticket",
+          updatedTicket
+        );
+      }
+
+      console.log(`Socket event emitted for ticket ${id} update`);
+    }
 
     return NextResponse.json(updatedTicket);
   } catch (error) {

@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
+import { io } from "socket.io-client";
+import { Socket } from "socket.io-client";
 
 type Service = {
   id: string;
@@ -32,6 +34,8 @@ export default function CounterDisplayPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prevStatusRef = useRef<string | null>(null);
   const beepIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const [userInteracted, setUserInteracted] = useState(false);
 
   async function fetchTicket() {
     try {
@@ -43,10 +47,48 @@ export default function CounterDisplayPage() {
     }
   }
 
+  // Setup Socket.IO connection
   useEffect(() => {
+    // Initial data fetch
     fetchTicket();
-    const interval = setInterval(fetchTicket, 5000); // poll every 5 seconds
-    return () => clearInterval(interval);
+
+    // Connect to Socket.IO server
+    const socket = io();
+    socketRef.current = socket;
+
+    // Log connection status
+    socket.on("connect", () => {
+      console.log("Socket connected", socket.id);
+
+      // Join a room for this specific counter
+      socket.emit("joinCounter", counterId);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+    });
+
+    // Listen for ticket updates
+    socket.on("ticket:update", () => {
+      console.log("Received general ticket update");
+      fetchTicket();
+    });
+
+    // Listen for updates specific to this counter
+    socket.on("counter:ticket", (ticketData) => {
+      console.log("Received counter-specific update for", counterId);
+      if (ticketData.counterId === counterId) {
+        // Update directly from socket data or refetch
+        fetchTicket();
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
   }, [counterId]);
 
   // Initialize audio element once on component mount
@@ -66,6 +108,24 @@ export default function CounterDisplayPage() {
     };
   }, []);
 
+  // Listen for any user interaction
+  useEffect(() => {
+    const handleInteraction = () => {
+      setUserInteracted(true);
+    };
+
+    // Add event listeners for common user interactions
+    window.addEventListener("click", handleInteraction);
+    window.addEventListener("touchstart", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
+
+    return () => {
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("touchstart", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
+  }, []);
+
   // Play sound when status changes to "called"
   useEffect(() => {
     const currentStatus = data?.ticket?.status?.toLowerCase();
@@ -81,10 +141,12 @@ export default function CounterDisplayPage() {
     // 1. There is a ticket
     // 2. Status is "called"
     // 3. This is a transition from another status to "called" or we're seeing this called ticket for the first time
+    // 4. User has interacted with the page
     if (
       data?.ticket &&
       currentStatus === "called" &&
-      (previousStatus !== "called" || previousStatus === null)
+      (previousStatus !== "called" || previousStatus === null) &&
+      userInteracted // Only play if user has interacted
     ) {
       // Play sound immediately
       if (audioRef.current) {
@@ -115,7 +177,7 @@ export default function CounterDisplayPage() {
         beepIntervalRef.current = null;
       }
     };
-  }, [data?.ticket?.status]);
+  }, [data?.ticket?.status, userInteracted]);
 
   const ticket = data?.ticket;
   const counter = data?.counter;

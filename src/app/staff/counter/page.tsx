@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import io from "socket.io-client";
+
 type Ticket = {
   id: string;
   ticketNumber: number;
@@ -106,6 +108,9 @@ export default function StaffDashboard() {
 
   // Add new state for profile menu
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Add a new state to trigger refreshes from socket events
+  const [socketUpdateTrigger, setSocketUpdateTrigger] = useState(0);
 
   // Add click handler for sign out
   const handleSignOut = () => {
@@ -242,6 +247,67 @@ export default function StaffDashboard() {
     }
   }, [assignedCounterService]);
 
+  // Define functions inside component body
+  async function fetchUserStatistics() {
+    if (session?.user) {
+      try {
+        const res = await fetch(
+          `/api/user/statistics?username=${session.user.username}`
+        );
+        if (res.ok) {
+          const stats = await res.json();
+          setUserStats(stats);
+        }
+      } catch (error) {
+        console.error("Error fetching user statistics:", error);
+      }
+    }
+  }
+
+  // Socket.IO setup effect
+  useEffect(() => {
+    const socket = io();
+
+    socket.on("ticket:update", () => {
+      console.log("Ticket updated via Socket.IO");
+      // Instead of calling fetch functions directly, update the trigger
+      setSocketUpdateTrigger((prev) => prev + 1);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Data fetching effect triggered by socket updates
+  useEffect(() => {
+    if (socketUpdateTrigger > 0) {
+      // Skip initial render
+      fetchTickets();
+      if (status === "authenticated") {
+        fetchUserStatistics();
+      }
+    }
+  }, [socketUpdateTrigger, status]);
+
+  // Regular polling effect (as a backup)
+  useEffect(() => {
+    if (assignedCounterId) {
+      fetchTickets();
+      const intervalTickets = setInterval(fetchTickets, 5000);
+      return () => clearInterval(intervalTickets);
+    }
+  }, [assignedCounterId, assignedCounterService]);
+
+  // User stats polling effect (as a backup)
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchUserStatistics();
+      const intervalStats = setInterval(fetchUserStatistics, 60000);
+      return () => clearInterval(intervalStats);
+    }
+  }, [status, session]);
+
   async function fetchTickets() {
     if (!assignedCounterId || !assignedCounterService) return;
 
@@ -325,32 +391,6 @@ export default function StaffDashboard() {
       console.error("Error fetching tickets:", error);
     }
   }
-
-  // Fetch user statistics when session is available
-  useEffect(() => {
-    async function fetchUserStatistics() {
-      if (session?.user) {
-        try {
-          const res = await fetch(
-            `/api/user/statistics?username=${session.user.username}`
-          );
-          if (res.ok) {
-            const stats = await res.json();
-            setUserStats(stats);
-          }
-        } catch (error) {
-          console.error("Error fetching user statistics:", error);
-        }
-      }
-    }
-
-    if (status === "authenticated") {
-      fetchUserStatistics();
-      // Refresh stats every minute
-      const interval = setInterval(fetchUserStatistics, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [session, status]);
 
   // Add function to format average time
   function formatAverageTime(seconds: number): string {
