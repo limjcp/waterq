@@ -21,6 +21,7 @@ type Ticket = {
   prefix: string;
   status: string;
   service?: Service;
+  isPrioritized: boolean;
 };
 
 type DisplayData = {
@@ -204,6 +205,22 @@ export default function CounterDisplayPage() {
 
         {ticket && ticket.id ? (
           <>
+            {/* Status indicators */}
+            <div className="flex gap-4 mb-4">
+              {ticket.prefix.includes("PWD") && (
+                <div className="px-6 py-2 bg-blue-100 rounded-full">
+                  <p className="text-3xl font-semibold text-blue-800">PWD</p>
+                </div>
+              )}
+              {ticket.isPrioritized && (
+                <div className="px-6 py-2 bg-red-100 rounded-full">
+                  <p className="text-3xl font-semibold text-red-800">
+                    Priority
+                  </p>
+                </div>
+              )}
+            </div>
+
             <p
               className={`text-9xl font-bold ${
                 ticket.status.toLowerCase() === "called"
@@ -211,8 +228,12 @@ export default function CounterDisplayPage() {
                   : "text-sky-800"
               }`}
             >
-              {ticket.prefix}
-              {ticket.ticketNumber}
+              {/* Format ticket number with PWD prefix for prioritized tickets */}
+              {ticket.prefix && ticket.ticketNumber
+                ? `${ticket.isPrioritized ? "PWD-" : ""}${ticket.prefix}-${
+                    ticket.ticketNumber
+                  }`
+                : ticket.ticketNumber}
             </p>
 
             {/* Add status indicator */}

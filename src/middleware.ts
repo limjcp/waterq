@@ -20,7 +20,9 @@ export default auth((req) => {
     nextUrl.pathname.startsWith("/api/tickets") ||
     nextUrl.pathname.startsWith("/display") ||
     nextUrl.pathname.startsWith("/api/display") ||
-    nextUrl.pathname === "/admin/register"
+    nextUrl.pathname === "/admin/register" ||
+    nextUrl.pathname === "/push.png" ||
+    nextUrl.pathname === "/users.png"
   ) {
     return NextResponse.next();
   }
