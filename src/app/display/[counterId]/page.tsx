@@ -35,7 +35,6 @@ export default function CounterDisplayPage() {
   const prevStatusRef = useRef<string | null>(null);
   const beepIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const socketRef = useRef<Socket | null>(null);
-  const [userInteracted, setUserInteracted] = useState(false);
 
   async function fetchTicket() {
     try {
@@ -93,36 +92,24 @@ export default function CounterDisplayPage() {
 
   // Initialize audio element once on component mount
   useEffect(() => {
-    audioRef.current = new Audio("/beep.mp3"); // You'll need to place this file in your public directory
+    const audio = new Audio("/beep.mp3");
+    audio.preload = "auto";
+    // Set volume to ensure it's audible
+    audio.volume = 1.0;
+    audioRef.current = audio;
+
+    // Load the audio file
+    audio.load();
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
-
-      // Clear any existing intervals when unmounting
       if (beepIntervalRef.current) {
         clearInterval(beepIntervalRef.current);
         beepIntervalRef.current = null;
       }
-    };
-  }, []);
-
-  // Listen for any user interaction
-  useEffect(() => {
-    const handleInteraction = () => {
-      setUserInteracted(true);
-    };
-
-    // Add event listeners for common user interactions
-    window.addEventListener("click", handleInteraction);
-    window.addEventListener("touchstart", handleInteraction);
-    window.addEventListener("keydown", handleInteraction);
-
-    return () => {
-      window.removeEventListener("click", handleInteraction);
-      window.removeEventListener("touchstart", handleInteraction);
-      window.removeEventListener("keydown", handleInteraction);
     };
   }, []);
 
@@ -131,53 +118,54 @@ export default function CounterDisplayPage() {
     const currentStatus = data?.ticket?.status?.toLowerCase();
     const previousStatus = prevStatusRef.current;
 
-    // Clear any existing beep interval
     if (beepIntervalRef.current) {
       clearInterval(beepIntervalRef.current);
       beepIntervalRef.current = null;
     }
 
-    // Only play beep if:
-    // 1. There is a ticket
-    // 2. Status is "called"
-    // 3. This is a transition from another status to "called" or we're seeing this called ticket for the first time
-    // 4. User has interacted with the page
+    const playBeep = async () => {
+      if (!audioRef.current) return;
+
+      try {
+        audioRef.current.currentTime = 0;
+        const playPromise = audioRef.current.play();
+
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.error("Audio play error:", err);
+            // Retry once
+            setTimeout(() => {
+              if (audioRef.current) {
+                audioRef.current
+                  .play()
+                  .catch((e) => console.error("Retry failed:", e));
+              }
+            }, 100);
+          });
+        }
+      } catch (err) {
+        console.error("Error in playBeep:", err);
+      }
+    };
+
     if (
       data?.ticket &&
       currentStatus === "called" &&
-      (previousStatus !== "called" || previousStatus === null) &&
-      userInteracted // Only play if user has interacted
+      (previousStatus !== "called" || previousStatus === null)
     ) {
-      // Play sound immediately
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current
-          .play()
-          .catch((err) => console.error("Error playing audio:", err));
-
-        // Set up interval to repeat beep every 3 seconds while status remains "called"
-        beepIntervalRef.current = setInterval(() => {
-          if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current
-              .play()
-              .catch((err) => console.error("Error playing audio:", err));
-          }
-        }, 3000);
-      }
+      playBeep();
+      beepIntervalRef.current = setInterval(playBeep, 3000);
     }
 
-    // Update the previous status reference
     prevStatusRef.current = currentStatus || null;
 
-    // Clean up on unmount or status change
     return () => {
       if (beepIntervalRef.current) {
         clearInterval(beepIntervalRef.current);
         beepIntervalRef.current = null;
       }
     };
-  }, [data?.ticket?.status, userInteracted]);
+  }, [data?.ticket?.status]);
 
   const ticket = data?.ticket;
   const counter = data?.counter;
