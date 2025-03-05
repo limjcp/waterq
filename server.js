@@ -4,11 +4,11 @@ const next = require("next");
 const { Server } = require("socket.io");
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = "0.0.0.0";
 const port = 3000;
 
 // Initialize Next.js
-const app = next({ dev, hostname, port });
+const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -63,6 +63,10 @@ app.prepare().then(() => {
   server.listen(port, hostname, (err) => {
     if (err) throw err;
     console.log(`> Ready on http://${hostname}:${port}`);
+    console.log(
+      "> To access from other devices, use your computer's IP address"
+    );
+    console.log(`> For example: http://<your-ip-address>:${port}`);
     console.log("> Socket.IO server initialized");
   });
 });

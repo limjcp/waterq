@@ -32,7 +32,11 @@ export default auth((req) => {
 
   // Role-based redirects when accessing the root path "/"
   if (nextUrl.pathname === "/") {
-    const user = req.auth.user;
+    const user = req.auth?.user;
+
+    if (!user) {
+      return NextResponse.redirect(new URL("/auth/signin", nextUrl));
+    }
 
     // For admin users, redirect to admin dashboard
     if (user.role && Array.isArray(user.role) && user.role.includes("admin")) {
