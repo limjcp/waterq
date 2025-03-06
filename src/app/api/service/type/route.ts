@@ -60,3 +60,58 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Add DELETE handler
+export async function DELETE(request: Request) {
+  try {
+    // Check authentication
+    const session = await auth();
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Parse query parameters
+    const url = new URL(request.url);
+    const serviceId = url.searchParams.get("serviceId");
+    const typeId = url.searchParams.get("typeId");
+
+    // Validate parameters
+    if (!serviceId || !typeId) {
+      return NextResponse.json(
+        { error: "Missing required parameters" },
+        { status: 400 }
+      );
+    }
+
+    // Check if service type exists and belongs to the specified service
+    const serviceType = await prisma.serviceType.findFirst({
+      where: {
+        id: typeId,
+        serviceId: serviceId,
+      },
+    });
+
+    if (!serviceType) {
+      return NextResponse.json(
+        {
+          error:
+            "Service type not found or doesn't belong to the specified service",
+        },
+        { status: 404 }
+      );
+    }
+
+    // Delete the service type
+    await prisma.serviceType.delete({
+      where: { id: typeId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting service type:", error);
+    return NextResponse.json(
+      { error: "Failed to delete service type" },
+      { status: 500 }
+    );
+  }
+}
