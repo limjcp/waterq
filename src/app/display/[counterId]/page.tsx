@@ -191,16 +191,27 @@ export default function CounterDisplayPage() {
         }
       `}</style>
 
+      {/* Header Section */}
+      <header className="w-full flex items-center justify-between p-4 bg-sky-700 text-white shadow-lg fixed top-0 left-0 right-0">
+        <div className="flex items-center">
+          <img src="/WDlogo.png" alt="Logo" className="h-24 w-24 mr-3" />
+          <h1 className="text-6xl font-bold">
+            GENERAL SANTOS CITY WATER DISTRICT
+          </h1>
+        </div>
+      </header>
+
       <div className="w-full flex flex-col items-center justify-center">
         {/* Display counter name at the top */}
-        <div className="absolute top-6 left-0 right-0 text-center">
+        {/* <div className="absolute top-6 left-0 right-0 text-center">
           <h2 className="text-4xl font-bold text-sky-700">
             {counter?.name || "Counter Display"}
           </h2>
-        </div>
+        </div> */}
 
-        <h1 className="text-5xl font-bold mb-8 text-sky-800">
-          {ticket?.service?.name}
+        <h1 className="text-8xl font-bold mb-0 mt-20 text-sky-800">
+          {/* {ticket?.service?.name} */}
+          {counter?.name || "Counter Display"}
         </h1>
 
         {ticket && ticket.id ? (
@@ -222,7 +233,7 @@ export default function CounterDisplayPage() {
             </div>
 
             <p
-              className={`text-9xl font-bold ${
+              className={`text-[18rem] font-bold ${
                 ticket.status.toLowerCase() === "called"
                   ? "blink-animation"
                   : "text-sky-800"
@@ -250,10 +261,10 @@ export default function CounterDisplayPage() {
               </p>
             </div>
 
-            <p className="mt-4 text-2xl text-gray-600">Currently Serving</p>
+            <p className="mt-4 text-5xl text-gray-600">Currently Serving</p>
             {ticket.service && (
               <p className="mt-2 text-2xl text-gray-700">
-                Service: {ticket.service.name}
+                {/* Service: {ticket.service.name} */}
               </p>
             )}
           </>
