@@ -112,6 +112,11 @@ export default function StaffDashboard() {
   // Add a new state to trigger refreshes from socket events
   const [socketUpdateTrigger, setSocketUpdateTrigger] = useState(0);
 
+  // Add new state for lapsed confirmation modal
+  const [isLapsedConfirmModalOpen, setIsLapsedConfirmModalOpen] =
+    useState(false);
+  const [ticketToLapse, setTicketToLapse] = useState<string | null>(null);
+
   // Add click handler for sign out
   const handleSignOut = () => {
     window.location.href = "/api/auth/signout";
@@ -513,7 +518,11 @@ export default function StaffDashboard() {
     }
   }
 
+  // Modify markLapsed to work with the new confirmation modal
   async function markLapsed(ticketId: string) {
+    setIsLapsedConfirmModalOpen(false);
+    setTicketToLapse(null);
+
     await fetch(`/api/tickets/${ticketId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -633,6 +642,12 @@ export default function StaffDashboard() {
         ticket.serviceId === assignedCounterService) ||
       (ticket.status === "RETURNING" && !isPaymentCounter)
   );
+
+  // Add the function to handle opening the lapsed confirmation modal
+  function openLapsedConfirmModal(ticketId: string) {
+    setTicketToLapse(ticketId);
+    setIsLapsedConfirmModalOpen(true);
+  }
 
   if (status === "loading" || loading) {
     return (
@@ -941,7 +956,7 @@ export default function StaffDashboard() {
                         key={ticket.id}
                         className="flex flex-col items-center w-full"
                       >
-                        <div className="bg-amber-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
+                        <div className="bg-amber-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4 shadow-md">
                           <span className="text-3xl font-bold text-amber-700">
                             {ticket.isPrioritized ? "PWD-" : ""}
                             {ticket.service?.code}-{ticket.ticketNumber}
@@ -955,20 +970,53 @@ export default function StaffDashboard() {
                             Priority
                           </span>
                         )}
-                        <p className="text-center text-amber-600 mb-4">
+                        <p className="text-center text-amber-600 mb-4 animate-pulse font-medium">
                           Ticket Called
                         </p>
                         <div className="mt-4 w-full space-y-2">
                           <button
-                            onClick={() => startServing(ticket.id)}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                            onClick={() => {
+                              // Add visual feedback when clicked
+                              const btn =
+                                document.activeElement as HTMLButtonElement;
+                              btn?.classList.add("scale-95", "opacity-80");
+                              setTimeout(() => {
+                                btn?.classList.remove("scale-95", "opacity-80");
+                                startServing(ticket.id);
+                              }, 150);
+                            }}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center"
                           >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 mr-2"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
                             Start Serving
                           </button>
                           <button
-                            onClick={() => markLapsed(ticket.id)}
-                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                            onClick={() => openLapsedConfirmModal(ticket.id)}
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center"
                           >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 mr-2"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
                             Mark as Lapsed
                           </button>
                         </div>
@@ -1014,16 +1062,31 @@ export default function StaffDashboard() {
                       {returningTickets.map((ticket) => (
                         <div
                           key={ticket.id}
-                          className="bg-purple-50 p-2 rounded-lg mb-2 flex justify-between items-center"
+                          className="bg-purple-50 p-2 rounded-lg mb-2 flex justify-between items-center hover:bg-purple-100 transition-colors border border-purple-100"
                         >
-                          <span>
+                          <span className="font-medium">
                             {ticket.isPrioritized ? "PWD-" : ""}
                             {ticket.service?.code}-{ticket.ticketNumber}
                           </span>
                           <button
-                            onClick={() => recallTicket(ticket.id)}
-                            className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
+                            onClick={(e) => {
+                              const btn = e.currentTarget;
+                              btn.classList.add("scale-95");
+                              btn.innerText = "Calling...";
+                              setTimeout(() => {
+                                recallTicket(ticket.id);
+                              }, 200);
+                            }}
+                            className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-1 px-3 rounded text-sm transition-all transform active:scale-95 active:bg-purple-700 flex items-center"
                           >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 mr-1"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                            </svg>
                             Call
                           </button>
                         </div>
@@ -1034,14 +1097,34 @@ export default function StaffDashboard() {
                   {/* Call Next Ticket button at the bottom */}
                   <div className="w-full mt-3 pt-3 border-t border-gray-100">
                     <button
-                      onClick={callNextTicket}
+                      onClick={(e) => {
+                        if (!hasPendingTickets) return;
+                        const btn = e.currentTarget;
+                        btn.innerText = "Calling...";
+                        btn.classList.add("scale-95", "bg-sky-700");
+                        btn.disabled = true;
+                        setTimeout(() => {
+                          callNextTicket();
+                          // Button will be unmounted/remounted when state changes
+                        }, 300);
+                      }}
                       disabled={!hasPendingTickets}
-                      className={`w-full py-3 px-4 rounded-lg transition-colors text-white font-medium ${
+                      className={`w-full py-3 px-4 rounded-lg transition-all transform font-medium flex items-center justify-center ${
                         hasPendingTickets
-                          ? "bg-sky-500 hover:bg-sky-600"
-                          : "bg-gray-300 cursor-not-allowed"
+                          ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >
+                      {hasPendingTickets && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                        </svg>
+                      )}
                       Call Next Ticket
                     </button>
                     {!hasPendingTickets && (
@@ -1057,14 +1140,33 @@ export default function StaffDashboard() {
                     No ticket currently being served
                   </p>
                   <button
-                    onClick={callNextTicket}
+                    onClick={(e) => {
+                      if (!hasPendingTickets) return;
+                      const btn = e.currentTarget;
+                      btn.innerText = "Calling...";
+                      btn.classList.add("scale-95", "bg-sky-700");
+                      btn.disabled = true;
+                      setTimeout(() => {
+                        callNextTicket();
+                      }, 300);
+                    }}
                     disabled={!hasPendingTickets}
-                    className={`w-full py-3 px-4 rounded-lg transition-colors text-white font-medium ${
+                    className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium ${
                       hasPendingTickets
-                        ? "bg-sky-500 hover:bg-sky-600"
-                        : "bg-gray-300 cursor-not-allowed"
+                        ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
+                    {hasPendingTickets && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                      </svg>
+                    )}
                     Call Next Ticket
                   </button>
                   {!hasPendingTickets && (
@@ -1185,6 +1287,89 @@ export default function StaffDashboard() {
                 className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen && ticketToLapse && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-2xl transform transition-all animate-fade-in-down">
+            <div className="flex items-center mb-4 text-amber-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 mr-3"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <h3 className="text-xl font-bold text-gray-800">
+                Confirm Action
+              </h3>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to mark this ticket as lapsed? This action
+                indicates the customer did not respond when called.
+              </p>
+
+              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4">
+                {tickets
+                  .filter((t) => t.id === ticketToLapse)
+                  .map((ticket) => (
+                    <div key={ticket.id} className="text-center">
+                      <span className="text-xl font-bold text-amber-700 block">
+                        {ticket.isPrioritized ? "PWD-" : ""}
+                        {ticket.service?.code}-{ticket.ticketNumber}
+                      </span>
+                      <span className="text-sm text-amber-600 block mt-1">
+                        {ticket.service?.name}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setIsLapsedConfirmModalOpen(false);
+                  setTicketToLapse(null);
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const ticketId = ticketToLapse;
+                  if (ticketId) {
+                    markLapsed(ticketId);
+                  }
+                }}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md transition-colors flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Confirm
               </button>
             </div>
           </div>
