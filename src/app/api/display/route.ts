@@ -18,6 +18,9 @@ export async function GET() {
           orderBy: {
             updatedAt: "desc",
           },
+          include: {
+            service: true,
+          },
         });
 
         return {
@@ -25,7 +28,12 @@ export async function GET() {
           name: counter.name,
           code: counter.code,
           currentTicket: lastCalled
-            ? `${lastCalled.prefix}${lastCalled.ticketNumber}`
+            ? {
+                number: lastCalled.ticketNumber,
+                prefix: lastCalled.prefix,
+                isPrioritized: lastCalled.isPrioritized,
+                status: lastCalled.status, // Include the status in response
+              }
             : null,
         };
       })

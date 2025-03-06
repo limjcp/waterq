@@ -4,11 +4,22 @@ import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import Image from "next/image";
 
+type Service = {
+  id: string;
+  name: string;
+};
+
 type DisplayCounter = {
   id: string;
   name: string;
   code: string;
-  currentTicket?: string; // e.g. "CW12"
+  currentTicket?: {
+    number: number;
+    prefix: string;
+    isPrioritized: boolean;
+    status: string;
+    service?: Service;
+  } | null;
 };
 
 // Component for water drop animation
@@ -264,6 +275,15 @@ export default function DisplayBoard() {
     });
   };
 
+  // Format ticket names to display as SERVICE-NUMBER or PWD-SERVICE-NUMBER for priority
+  const formatTicketName = (ticket?: DisplayCounter["currentTicket"]) => {
+    if (!ticket) return "---";
+
+    return ticket.isPrioritized
+      ? `PWD-${ticket.prefix}-${ticket.number}`
+      : `${ticket.prefix}-${ticket.number}`;
+  };
+
   // Filter counters based on selection
   const displayedCounters =
     selectedCounterIds.size > 0
@@ -310,6 +330,24 @@ export default function DisplayBoard() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start p-0 relative overflow-hidden">
+      {/* Add blinking animation style */}
+      <style jsx global>{`
+        @keyframes blink {
+          0% {
+            color: rgb(7, 89, 133);
+          } /* text-sky-800 */
+          50% {
+            color: rgb(220, 38, 38);
+          } /* text-red-600 */
+          100% {
+            color: rgb(7, 89, 133);
+          } /* text-sky-800 */
+        }
+        .blink-animation {
+          animation: blink 1s infinite;
+        }
+      `}</style>
+
       {/* Background image with blur effect - stretched to fill the entire screen */}
       <div className="fixed inset-0 z-0 w-full h-full">
         <Image
@@ -422,13 +460,25 @@ export default function DisplayBoard() {
                           {c.name}
                         </h2>
                         <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-white/80 to-cyan-50/80 rounded-xl p-6 shadow-inner border border-blue-50">
-                          <p className="text-4xl font-bold text-black">
-                            {c.currentTicket || "---"}
+                          <p
+                            className={`text-4xl font-bold ${
+                              c.currentTicket?.status?.toLowerCase() ===
+                              "called"
+                                ? "blink-animation"
+                                : "text-sky-800"
+                            }`}
+                          >
+                            {formatTicketName(c.currentTicket)}
                           </p>
                         </div>
                         <p className="text-sm text-cyan-700 mt-3 text-center font-medium">
                           {c.currentTicket
-                            ? "Currently Serving"
+                            ? c.currentTicket.status?.toLowerCase() === "called"
+                              ? "Now Calling"
+                              : c.currentTicket.status?.toLowerCase() ===
+                                "serving"
+                              ? "Currently Serving"
+                              : c.currentTicket.status
                             : "No ticket called yet"}
                         </p>
                       </div>

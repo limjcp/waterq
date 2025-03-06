@@ -1,8 +1,9 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { Socket } from "socket.io-client";
+import Image from "next/image";
 
 type Service = {
   id: string;
@@ -37,7 +38,7 @@ export default function CounterDisplayPage() {
   const beepIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  async function fetchTicket() {
+  const fetchTicket = useCallback(async () => {
     try {
       const res = await fetch(`/api/display/${counterId}`);
       const responseData = await res.json();
@@ -45,7 +46,7 @@ export default function CounterDisplayPage() {
     } catch (error) {
       console.error(error);
     }
-  }
+  }, [counterId]);
 
   // Setup Socket.IO connection
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function CounterDisplayPage() {
         socketRef.current.disconnect();
       }
     };
-  }, [counterId]);
+  }, [counterId, fetchTicket]);
 
   // Initialize audio element once on component mount
   useEffect(() => {
@@ -166,7 +167,7 @@ export default function CounterDisplayPage() {
         beepIntervalRef.current = null;
       }
     };
-  }, [data?.ticket?.status]);
+  }, [data?.ticket]);
 
   const ticket = data?.ticket;
   const counter = data?.counter;
@@ -194,7 +195,7 @@ export default function CounterDisplayPage() {
       {/* Header Section */}
       <header className="w-full flex items-center justify-between p-4 bg-sky-700 text-white shadow-lg fixed top-0 left-0 right-0">
         <div className="flex items-center">
-          <img src="/WDlogo.png" alt="Logo" className="h-24 w-24 mr-3" />
+          <Image width={100} height={100} src="/wdlogo.png" alt="Logo" />
           <h1 className="text-6xl font-bold">
             GENERAL SANTOS CITY WATER DISTRICT
           </h1>
@@ -218,16 +219,9 @@ export default function CounterDisplayPage() {
           <>
             {/* Status indicators */}
             <div className="flex gap-4 mb-4">
-              {ticket.prefix.includes("PWD") && (
+              {ticket.isPrioritized && (
                 <div className="px-6 py-2 bg-blue-100 rounded-full">
                   <p className="text-3xl font-semibold text-blue-800">PWD</p>
-                </div>
-              )}
-              {ticket.isPrioritized && (
-                <div className="">
-                  {/* <p className="text-3xl font-semibold text-red-800">
-                    Priority
-                  </p> */}
                 </div>
               )}
             </div>
@@ -240,11 +234,9 @@ export default function CounterDisplayPage() {
               }`}
             >
               {/* Format ticket number with PWD prefix for prioritized tickets */}
-              {ticket.prefix && ticket.ticketNumber
-                ? `${ticket.isPrioritized ? "PWD-" : ""}${ticket.prefix}-${
-                    ticket.ticketNumber
-                  }`
-                : ticket.ticketNumber}
+              {`${ticket.isPrioritized ? "PWD-" : ""}${ticket.prefix}-${
+                ticket.ticketNumber
+              }`}
             </p>
 
             {/* Add status indicator */}
