@@ -731,7 +731,7 @@ export default function StaffDashboard() {
           {/* Active and Lapsed Tickets side by side */}
           <div className="flex flex-col md:flex-row gap-6">
             {/* Lapsed Tickets Section - LEFT SIDE */}
-            <div className="bg-white rounded-2xl shadow-2xl p-6 flex-1">
+            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1">
               <h2 className="text-2xl font-bold text-sky-800 mb-4">
                 Lapsed Tickets
               </h2>
@@ -758,7 +758,7 @@ export default function StaffDashboard() {
             </div>
 
             {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE */}
-            <div className="bg-white rounded-2xl shadow-2xl p-6 flex-1">
+            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1">
               <h2 className="text-2xl font-bold text-sky-800 mb-4">
                 Next in Line
               </h2>
@@ -802,7 +802,7 @@ export default function StaffDashboard() {
 
           {/* Returning Tickets Section - EXPANDED GRID */}
           {!isPaymentCounter && (
-            <div className="bg-white rounded-2xl shadow-2xl p-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-sky-800 mb-4">
                 Returning Tickets
               </h2>
@@ -835,7 +835,7 @@ export default function StaffDashboard() {
           )}
 
           {/* Other Counters Status - EXPANDED GRID */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-sky-800 mb-4">
               Other {currentServingTicket?.service?.name || ""} Counters
             </h2>
