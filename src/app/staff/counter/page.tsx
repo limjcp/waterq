@@ -772,35 +772,35 @@ export default function StaffDashboard() {
               )}
             </div>
 
-            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1">
-              <h2 className="text-2xl font-bold text-sky-800 mb-4">
+            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE - LARGER TEXT */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 flex-1">
+              <h2 className="text-3xl font-bold text-sky-800 mb-6">
                 Next in Line
               </h2>
               {activeTickets.length ? (
                 <div className="flex flex-col items-center">
-                  {/* Display just the first waiting ticket */}
-                  <div className="bg-sky-50 rounded-lg w-40 h-20 flex items-center justify-center mb-4">
-                    <span className="text-2xl font-bold text-sky-700">
+                  {/* Display just the first waiting ticket - LARGER SIZE */}
+                  <div className="bg-sky-50 rounded-lg w-56 h-28 flex items-center justify-center mb-6">
+                    <span className="text-4xl font-bold text-sky-700">
                       {activeTickets[0].isPrioritized ? "PWD-" : ""}
                       {activeTickets[0].service?.code}-
                       {activeTickets[0].ticketNumber}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-sky-600 mb-1">
+                  <p className="text-xl font-medium text-sky-600 mb-2">
                     {activeTickets[0].service?.name || "Unknown Service"}
                   </p>
                   {activeTickets[0].isPrioritized && (
-                    <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-2">
+                    <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
                       Priority
                     </span>
                   )}
-                  <p className="text-xs text-sky-600 mt-1">Status: Waiting</p>
+                  <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
 
                   {/* Show pending count if there are more waiting tickets */}
                   {activeTickets.length > 1 && (
-                    <div className="mt-4 bg-sky-50 border border-sky-100 rounded-lg py-2 px-4">
-                      <p className="text-center text-sky-700 font-medium">
+                    <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
+                      <p className="text-center text-sky-700 font-medium text-xl">
                         Waiting: {activeTickets.length - 1} ticket
                         {activeTickets.length - 1 !== 1 ? "s" : ""}
                       </p>
@@ -808,7 +808,7 @@ export default function StaffDashboard() {
                   )}
                 </div>
               ) : (
-                <p className="text-center text-sky-600 py-10">
+                <p className="text-center text-sky-600 py-10 text-xl">
                   No tickets waiting in queue
                 </p>
               )}
@@ -893,45 +893,45 @@ export default function StaffDashboard() {
 
         {/* Sidebar section - MODIFIED FROM VERTICAL TO HORIZONTAL */}
         <div className="lg:w-auto space-y-0 flex flex-col sm:flex-row gap-6">
-          {/* Current serving ticket card */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6 h-[600px] w-[400px]">
-            <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
+          {/* Current serving ticket card - INCREASED SIZE */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 h-[650px] w-[450px]">
+            <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
               Currently Serving
             </h2>
             <div className="h-[520px] flex items-center justify-center">
               {currentServingTicket ? (
                 <div className="flex flex-col items-center w-full">
-                  <div className="bg-sky-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4">
-                    <span className="text-3xl font-bold text-sky-700">
+                  <div className="bg-sky-100 rounded-lg w-64 h-64 flex items-center justify-center mb-6">
+                    <span className="text-5xl font-bold text-sky-700">
                       {currentServingTicket.isPrioritized ? "PWD-" : ""}
                       {currentServingTicket.service?.code}-
                       {currentServingTicket.ticketNumber}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-sky-600 mb-1">
+                  <p className="text-xl font-medium text-sky-600 mb-2">
                     {currentServingTicket.service?.name || "Unknown Service"}
                   </p>
                   {currentServingTicket.isPrioritized && (
-                    <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
+                    <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-4">
                       Priority
                     </span>
                   )}
-                  <div className="mt-4 w-full">
-                    <p className="text-sm text-gray-500 text-center mb-1">
+                  <div className="mt-6 w-full">
+                    <p className="text-lg text-gray-500 text-center mb-2">
                       Transaction Time
                     </p>
-                    <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-center">
-                      <div className="text-2xl font-mono font-bold text-sky-800">
+                    <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
+                      <div className="text-4xl font-mono font-bold text-sky-800">
                         {formattedTime}
                       </div>
                     </div>
                   </div>
-                  <div className="mt-6 w-full">
+                  <div className="mt-8 w-full">
                     <button
                       onClick={() =>
                         openServiceTypeModal(currentServingTicket.id)
                       }
-                      className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                      className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
                     >
                       Complete Transaction
                     </button>
@@ -940,7 +940,7 @@ export default function StaffDashboard() {
                         onClick={() =>
                           openTransferModal(currentServingTicket.id)
                         }
-                        className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                        className="w-full mt-3 bg-purple-500 hover:bg-purple-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
                       >
                         Transfer Ticket
                       </button>
@@ -956,27 +956,26 @@ export default function StaffDashboard() {
                         key={ticket.id}
                         className="flex flex-col items-center w-full"
                       >
-                        <div className="bg-amber-100 rounded-lg w-48 h-48 flex items-center justify-center mb-4 shadow-md">
-                          <span className="text-3xl font-bold text-amber-700">
+                        <div className="bg-amber-100 rounded-lg w-64 h-64 flex items-center justify-center mb-6 shadow-md">
+                          <span className="text-5xl font-bold text-amber-700">
                             {ticket.isPrioritized ? "PWD-" : ""}
                             {ticket.service?.code}-{ticket.ticketNumber}
                           </span>
                         </div>
-                        <p className="text-sm font-medium text-amber-600 mb-1">
+                        <p className="text-xl font-medium text-amber-600 mb-2">
                           {ticket.service?.name || "Unknown Service"}
                         </p>
                         {ticket.isPrioritized && (
-                          <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium mb-4">
+                          <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-4">
                             Priority
                           </span>
                         )}
-                        <p className="text-center text-amber-600 mb-4 animate-pulse font-medium">
+                        <p className="text-center text-amber-600 mb-4 animate-pulse font-medium text-2xl">
                           Ticket Called
                         </p>
-                        <div className="mt-4 w-full space-y-2">
+                        <div className="mt-6 w-full space-y-4">
                           <button
                             onClick={() => {
-                              // Add visual feedback when clicked
                               const btn =
                                 document.activeElement as HTMLButtonElement;
                               btn?.classList.add("scale-95", "opacity-80");
@@ -985,11 +984,11 @@ export default function StaffDashboard() {
                                 startServing(ticket.id);
                               }, 150);
                             }}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center"
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 mr-2"
+                              className="h-7 w-7 mr-3"
                               viewBox="0 0 20 20"
                               fill="currentColor"
                             >
@@ -1003,11 +1002,11 @@ export default function StaffDashboard() {
                           </button>
                           <button
                             onClick={() => openLapsedConfirmModal(ticket.id)}
-                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center"
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 mr-2"
+                              className="h-7 w-7 mr-3"
                               viewBox="0 0 20 20"
                               fill="currentColor"
                             >
@@ -1180,28 +1179,28 @@ export default function StaffDashboard() {
           </div>
 
           {/* User Statistics Card - NOW SIDE BY SIDE */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6 h-fit">
-            <h2 className="text-xl font-bold text-sky-800 mb-4 text-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 h-fit">
+            <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
               Your Statistics
             </h2>
-            <div className="space-y-4">
-              <div className="bg-sky-50 rounded-lg p-3">
-                <p className="text-sm text-sky-700 font-medium">Total Served</p>
-                <p className="text-2xl font-bold text-sky-800">
+            <div className="space-y-6">
+              <div className="bg-sky-50 rounded-lg p-5">
+                <p className="text-lg text-sky-700 font-medium">Total Served</p>
+                <p className="text-3xl font-bold text-sky-800">
                   {userStats.totalServed}
                 </p>
               </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-sm text-green-700 font-medium">Today</p>
-                <p className="text-2xl font-bold text-green-800">
+              <div className="bg-green-50 rounded-lg p-5">
+                <p className="text-lg text-green-700 font-medium">Today</p>
+                <p className="text-3xl font-bold text-green-800">
                   {userStats.todayServed}
                 </p>
               </div>
-              <div className="bg-amber-50 rounded-lg p-3">
-                <p className="text-sm text-amber-700 font-medium">
+              <div className="bg-amber-50 rounded-lg p-5">
+                <p className="text-lg text-amber-700 font-medium">
                   Avg. Service Time
                 </p>
-                <p className="text-2xl font-bold text-amber-800">
+                <p className="text-3xl font-bold text-amber-800">
                   {formatAverageTime(userStats.averageServiceTime)}
                 </p>
               </div>
@@ -1295,12 +1294,12 @@ export default function StaffDashboard() {
 
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen && ticketToLapse && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-2xl transform transition-all animate-fade-in-down">
-            <div className="flex items-center mb-4 text-amber-500">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+            <div className="flex items-center mb-6 text-amber-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 mr-3"
+                className="h-12 w-12 mr-4"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -1310,27 +1309,27 @@ export default function StaffDashboard() {
                   clipRule="evenodd"
                 />
               </svg>
-              <h3 className="text-xl font-bold text-gray-800">
+              <h3 className="text-2xl font-bold text-gray-800">
                 Confirm Action
               </h3>
             </div>
 
-            <div className="mb-6">
-              <p className="text-gray-700 mb-4">
+            <div className="mb-8">
+              <p className="text-lg text-gray-700 mb-6">
                 Are you sure you want to mark this ticket as lapsed? This action
                 indicates the customer did not respond when called.
               </p>
 
-              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4">
+              <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
                 {tickets
                   .filter((t) => t.id === ticketToLapse)
                   .map((ticket) => (
                     <div key={ticket.id} className="text-center">
-                      <span className="text-xl font-bold text-amber-700 block">
+                      <span className="text-3xl font-bold text-amber-700 block">
                         {ticket.isPrioritized ? "PWD-" : ""}
                         {ticket.service?.code}-{ticket.ticketNumber}
                       </span>
-                      <span className="text-sm text-amber-600 block mt-1">
+                      <span className="text-xl text-amber-600 block mt-2">
                         {ticket.service?.name}
                       </span>
                     </div>
@@ -1338,13 +1337,13 @@ export default function StaffDashboard() {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-4">
               <button
                 onClick={() => {
                   setIsLapsedConfirmModalOpen(false);
                   setTicketToLapse(null);
                 }}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors"
+                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors text-lg"
               >
                 Cancel
               </button>
@@ -1355,11 +1354,11 @@ export default function StaffDashboard() {
                     markLapsed(ticketId);
                   }
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md transition-colors flex items-center"
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="h-6 w-6 mr-2"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
