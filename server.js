@@ -9,6 +9,11 @@ const os = require("os");
 
 // Function to get local IP address
 const getLocalIpAddress = () => {
+  // First check if HOST_IP environment variable is set
+  if (process.env.HOST_IP) {
+    return process.env.HOST_IP;
+  }
+
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
@@ -22,11 +27,14 @@ const getLocalIpAddress = () => {
 };
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = getLocalIpAddress();
+// Get the public hostname for URLs
+const publicHostname = getLocalIpAddress();
+// Use 0.0.0.0 for binding (listen on all network interfaces)
+const listenHostname = "0.0.0.0";
 const port = 3000;
 
 // Dynamically set auth URLs based on host IP
-const baseUrl = `http://${hostname}:${port}`;
+const baseUrl = `http://${publicHostname}:${port}`;
 process.env.AUTH_URL = baseUrl;
 process.env.NEXTAUTH_URL = baseUrl;
 
@@ -82,10 +90,11 @@ app.prepare().then(() => {
     });
   });
 
-  // Start the server
-  server.listen(port, hostname, (err) => {
+  // Start the server - LISTEN ON ALL INTERFACES (0.0.0.0)
+  server.listen(port, listenHostname, (err) => {
     if (err) throw err;
-    console.log(`> Ready on http://${hostname}:${port}`);
+    console.log(`> Server listening on ${listenHostname}:${port}`);
+    console.log(`> Public URL: http://${publicHostname}:${port}`);
     console.log(`> AUTH_URL set to: ${process.env.AUTH_URL}`);
     console.log(`> NEXTAUTH_URL set to: ${process.env.NEXTAUTH_URL}`);
     console.log("> Socket.IO server initialized");

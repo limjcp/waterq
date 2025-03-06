@@ -4,6 +4,12 @@ const path = require("path");
 
 // Get local IP address
 function getLocalIpAddress() {
+  // First check if HOST_IP environment variable is set
+  if (process.env.HOST_IP) {
+    console.log(`Using HOST_IP environment variable: ${process.env.HOST_IP}`);
+    return process.env.HOST_IP;
+  }
+
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {

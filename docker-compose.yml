@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Explicitly map the port
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - HOST_IP=192.168.50.241 # Use your actual IP here
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
