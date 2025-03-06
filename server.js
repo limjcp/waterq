@@ -1,11 +1,34 @@
+// First, run the update-env script to update environment variables with host IP
+require("./update-env");
+
 const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const { Server } = require("socket.io");
+const os = require("os");
+
+// Function to get local IP address
+const getLocalIpAddress = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      // Skip over non-IPv4 and internal (loopback) addresses
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return "0.0.0.0"; // Fallback if no suitable interface found
+};
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "0.0.0.0";
+const hostname = getLocalIpAddress();
 const port = 3000;
+
+// Dynamically set auth URLs based on host IP
+const baseUrl = `http://${hostname}:${port}`;
+process.env.AUTH_URL = baseUrl;
+process.env.NEXTAUTH_URL = baseUrl;
 
 // Initialize Next.js
 const app = next({ dev });
@@ -63,10 +86,8 @@ app.prepare().then(() => {
   server.listen(port, hostname, (err) => {
     if (err) throw err;
     console.log(`> Ready on http://${hostname}:${port}`);
-    console.log(
-      "> To access from other devices, use your computer's IP address"
-    );
-    console.log(`> For example: http://<your-ip-address>:${port}`);
+    console.log(`> AUTH_URL set to: ${process.env.AUTH_URL}`);
+    console.log(`> NEXTAUTH_URL set to: ${process.env.NEXTAUTH_URL}`);
     console.log("> Socket.IO server initialized");
   });
 });
