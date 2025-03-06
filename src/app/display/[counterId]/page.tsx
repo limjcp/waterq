@@ -224,10 +224,10 @@ export default function CounterDisplayPage() {
                 </div>
               )}
               {ticket.isPrioritized && (
-                <div className="px-6 py-2 bg-red-100 rounded-full">
-                  <p className="text-3xl font-semibold text-red-800">
+                <div className="">
+                  {/* <p className="text-3xl font-semibold text-red-800">
                     Priority
-                  </p>
+                  </p> */}
                 </div>
               )}
             </div>
@@ -269,7 +269,7 @@ export default function CounterDisplayPage() {
             )}
           </>
         ) : (
-          <p className="text-3xl text-gray-600">No ticket called yet</p>
+          <p className="text-3xl mt-10 text-gray-600">No ticket called yet</p>
         )}
       </div>
     </div>
