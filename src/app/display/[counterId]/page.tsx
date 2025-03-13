@@ -210,7 +210,7 @@ export default function CounterDisplayPage() {
           </h2>
         </div> */}
 
-        <h1 className="text-8xl font-bold mb-0 mt-20 text-sky-800">
+        <h1 className="text-9xl font-bold mb-0 mt-20 text-sky-800">
           {/* {ticket?.service?.name} */}
           {counter?.name || "Counter Display"}
         </h1>
@@ -218,16 +218,16 @@ export default function CounterDisplayPage() {
         {ticket && ticket.id ? (
           <>
             {/* Status indicators */}
-            <div className="flex gap-4 mb-4">
+            {/* <div className="flex gap-4 mb-4">
               {ticket.isPrioritized && (
                 <div className="px-6 py-2 bg-blue-100 rounded-full">
                   <p className="text-3xl font-semibold text-blue-800">PWD</p>
                 </div>
               )}
-            </div>
+            </div> */}
 
             <p
-              className={`text-[18rem] font-bold ${
+              className={`text-[25rem] font-bold ${
                 ticket.status.toLowerCase() === "called"
                   ? "blink-animation"
                   : "text-sky-800"
@@ -240,7 +240,7 @@ export default function CounterDisplayPage() {
             </p>
 
             {/* Add status indicator */}
-            <div
+            {/* <div
               className={`mt-4 px-6 py-2 rounded-full ${
                 ticket.status.toLowerCase() === "called"
                   ? "bg-yellow-100 text-yellow-800"
@@ -251,7 +251,7 @@ export default function CounterDisplayPage() {
                 {ticket.status.charAt(0).toUpperCase() +
                   ticket.status.slice(1).toLowerCase()}
               </p>
-            </div>
+            </div> */}
 
             <p className="mt-4 text-5xl text-gray-600">Currently Serving</p>
             {ticket.service && (

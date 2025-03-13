@@ -147,7 +147,7 @@ export default function Kiosk() {
             />
 
             <h1 className="text-5xl md:text-8xl font-bold text-sky-800 mb-1 md:mb-2">
-              Service Kiosk
+              Customer Kiosk
             </h1>
 
             <p className="text-sky-600 text-lg md:text-xl">
@@ -176,29 +176,21 @@ export default function Kiosk() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
                   <button
                     onClick={() => selectUserType(true)}
-                    className="flex flex-col items-center justify-center bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                    className="flex flex-col items-center justify-center text-white bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 hover:text-black font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
                     <span>
-                      <img
-                        src="push.png"
-                        alt="Accessibility Icon"
-                        className="h-52 w-52 mx-auto mb-4"
-                      />
+                      <Accessibility size={300} />
                     </span>
-                    <span className="text-8xl text-white">PWD</span>
+                    <span className="text-8xl ">PWD</span>
                   </button>
                   <button
                     onClick={() => selectUserType(false)}
-                    className="flex flex-col items-center justify-center bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 text-sky-800 font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                    className="flex flex-col items-center justify-center text-white bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 hover:text-black font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
                     <span>
-                      <img
-                        src="users.png"
-                        alt="Accessibility Icon"
-                        className="h-52 w-52 mx-auto mb-4"
-                      />
+                      <User size={300} />
                     </span>
-                    <span className="text-8xl text-white">REGULAR</span>
+                    <span className="text-8xl ">REGULAR</span>
                   </button>
                 </div>
               </div>
@@ -228,9 +220,9 @@ export default function Kiosk() {
                           isPWD ? `PWD-${service.code}` : service.code
                         )
                       }
-                      className="bg-sky-400 border border-sky-200 hover:border-sky-500 hover:bg-sky-50 rounded-xl p-6 text-left transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                      className="bg-sky-400 border text-white border-sky-200 hover:border-sky-500 hover:text-black hover:bg-sky-50 rounded-xl p-6 text-left transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                     >
-                      <h3 className="text-7xl font-bold text-white mb-10">
+                      <h3 className="text-7xl font-bold mb-10">
                         {service.name}
                       </h3>
                       <p className="font-bold text-sky-600">
