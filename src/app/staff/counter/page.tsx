@@ -117,6 +117,12 @@ export default function StaffDashboard() {
     useState(false);
   const [ticketToLapse, setTicketToLapse] = useState<string | null>(null);
 
+  // Add new state for search query
+  const [serviceTypeSearchQuery, setServiceTypeSearchQuery] = useState("");
+
+  // Add new state for counter service information
+  const [counterServiceCode, setCounterServiceCode] = useState("");
+
   // Add click handler for sign out
   const handleSignOut = () => {
     window.location.href = "/api/auth/signout";
@@ -319,10 +325,10 @@ export default function StaffDashboard() {
     try {
       // First, get the counter info to reliably determine service type
       const counterRes = await fetch(`/api/counter/${assignedCounterId}`);
-      let counterServiceCode = "";
       if (counterRes.ok) {
         const counterData = await counterRes.json();
-        counterServiceCode = counterData.service?.code || "";
+        // Store the service code in state so we can use it throughout the component
+        setCounterServiceCode(counterData.service?.code || "");
       }
 
       // Fetch all tickets
@@ -605,10 +611,7 @@ export default function StaffDashboard() {
   }
 
   // Get the counter service code
-  const isPaymentCounter = tickets.some(
-    (ticket) =>
-      ticket.counterId === assignedCounterId && ticket.service?.code === "P"
-  );
+  const isPaymentCounter = counterServiceCode === "P";
 
   // Update filter for active tickets to exclude called and serving tickets
   const activeTickets = tickets.filter(
@@ -901,8 +904,8 @@ export default function StaffDashboard() {
             <div className="h-[520px] flex items-center justify-center">
               {currentServingTicket ? (
                 <div className="flex flex-col items-center w-full">
-                  <div className="bg-sky-100 rounded-lg w-64 h-64 flex items-center justify-center mb-6">
-                    <span className="text-5xl font-bold text-sky-700">
+                  <div className="bg-sky-100 rounded-lg w-56 h-56 flex items-center justify-center mb-1">
+                    <span className="text-4xl font-bold text-sky-700">
                       {currentServingTicket.isPrioritized ? "PWD-" : ""}
                       {currentServingTicket.service?.code}-
                       {currentServingTicket.ticketNumber}
@@ -912,11 +915,11 @@ export default function StaffDashboard() {
                     {currentServingTicket.service?.name || "Unknown Service"}
                   </p>
                   {currentServingTicket.isPrioritized && (
-                    <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-4">
+                    <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-1">
                       Priority
                     </span>
                   )}
-                  <div className="mt-6 w-full">
+                  <div className="mt-1 w-full">
                     <p className="text-lg text-gray-500 text-center mb-2">
                       Transaction Time
                     </p>
@@ -926,7 +929,7 @@ export default function StaffDashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-8 w-full">
+                  <div className="mt-2 w-full">
                     <button
                       onClick={() =>
                         openServiceTypeModal(currentServingTicket.id)
@@ -956,8 +959,8 @@ export default function StaffDashboard() {
                         key={ticket.id}
                         className="flex flex-col items-center w-full"
                       >
-                        <div className="bg-amber-100 rounded-lg w-64 h-64 flex items-center justify-center mb-6 shadow-md">
-                          <span className="text-5xl font-bold text-amber-700">
+                        <div className="bg-amber-100 rounded-lg w-60 h-60 flex items-center justify-center mb-6 shadow-md">
+                          <span className="text-4xl font-bold text-amber-700">
                             {ticket.isPrioritized ? "PWD-" : ""}
                             {ticket.service?.code}-{ticket.ticketNumber}
                           </span>
@@ -1255,33 +1258,89 @@ export default function StaffDashboard() {
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-2xl">
-            <h3 className="text-lg font-semibold mb-4">Select Service Type</h3>
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">Select Service Type</h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) => setServiceTypeSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
             <div className="mb-6">
               <p className="block text-sm font-medium text-gray-700 mb-3">
                 Choose the type of service provided
               </p>
-              <div className="space-y-2">
-                {serviceTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => completeTransaction(type.id)}
-                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-between"
-                  >
-                    <span>{type.name}</span>
-                    <span className="text-xs bg-sky-700 px-2 py-1 rounded">
-                      {type.code}
-                    </span>
-                  </button>
-                ))}
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(serviceTypeSearchQuery.toLowerCase()) ||
+                      type.code
+                        .toLowerCase()
+                        .includes(serviceTypeSearchQuery.toLowerCase())
+                  )
+                  .map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => completeTransaction(type.id)}
+                      className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors flex flex-col items-start"
+                    >
+                      <span className="font-semibold text-sky-900 mb-1">
+                        {type.name}
+                      </span>
+                      <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                        {type.code}
+                      </span>
+                    </button>
+                  ))}
               </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(serviceTypeSearchQuery.toLowerCase()) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(serviceTypeSearchQuery.toLowerCase())
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
             </div>
+
             <div className="flex justify-end">
               <button
                 onClick={() => {
                   setIsServiceTypeModalOpen(false);
                   setTicketToComplete(null);
                   setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
                 }}
                 className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
               >

@@ -55,7 +55,7 @@ export default function SigninPage() {
             <img
               src="/wdlogo.png"
               alt="Logo"
-              className="h-20 w-22 mx-auto mb-4"
+              className="h-36 w-36 mx-auto mb-4"
             />
 
             <h1 className="text-3xl font-bold text-sky-800 mb-2">Login</h1>
@@ -82,6 +82,7 @@ export default function SigninPage() {
                   required
                   className="w-full px-4 py-3 border border-sky-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all pl-12"
                   placeholder="Enter your username"
+                  autoComplete="username"
                 />
                 <UserCircleIcon className="h-5 w-5 text-sky-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
               </div>
@@ -100,6 +101,7 @@ export default function SigninPage() {
                   required
                   className="w-full px-4 py-3 border border-sky-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all pl-12"
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                 />
                 <LockClosedIcon className="h-5 w-5 text-sky-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
               </div>

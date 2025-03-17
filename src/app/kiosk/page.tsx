@@ -178,19 +178,27 @@ export default function Kiosk() {
                     onClick={() => selectUserType(true)}
                     className="flex flex-col items-center justify-center text-white bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 hover:text-black font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
-                    <span>
-                      <Accessibility size={300} />
-                    </span>
-                    <span className="text-8xl ">PWD</span>
+                    <div className="flex-1 flex items-center justify-center mb-6">
+                      <Accessibility size={350} />
+                    </div>
+                    <div className="text-center">
+                      <span className="text-7xl block">PWD</span>
+                      <span className="text-7xl block">PREGNANT</span>
+                      <span className="text-7xl block">SENIOR CITIZEN</span>
+                    </div>
                   </button>
                   <button
                     onClick={() => selectUserType(false)}
                     className="flex flex-col items-center justify-center text-white bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 hover:text-black font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                   >
-                    <span>
-                      <User size={300} />
-                    </span>
-                    <span className="text-8xl ">REGULAR</span>
+                    <div className="flex-1 flex items-center justify-center mb-6">
+                      <User size={350} />
+                    </div>
+                    <div className="text-center">
+                      <span className="text-7xl block">REGULAR</span>
+                      <span className="text-7xl invisible block">SPACER</span>
+                      <span className="text-7xl invisible block">SPACER</span>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -220,15 +228,19 @@ export default function Kiosk() {
                           isPWD ? `PWD-${service.code}` : service.code
                         )
                       }
-                      className="bg-sky-400 border text-white border-sky-200 hover:border-sky-500 hover:text-black hover:bg-sky-50 rounded-xl p-6 text-left transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                      className="bg-sky-400 border text-white border-sky-200 hover:border-sky-500 hover:text-black hover:bg-sky-50 rounded-xl p-6 flex flex-col h-64 transition-all duration-200 focus:ring-4 focus:ring-sky-300"
                     >
-                      <h3 className="text-7xl font-bold mb-10">
-                        {service.name}
-                      </h3>
-                      <p className="font-bold text-sky-600">
-                        {service.description}
-                      </p>
-                      <div className="mt-3 flex justify-end">
+                      <div className="flex-1 flex items-center justify-center">
+                        <h3 className="text-7xl font-bold text-center">
+                          {service.name}
+                        </h3>
+                      </div>
+                      {service.description && (
+                        <p className="font-bold text-sky-600 text-center mb-4">
+                          {service.description}
+                        </p>
+                      )}
+                      <div className="flex justify-center">
                         <span className="inline-flex items-center px-6 py-5 bg-sky-100 text-sky-800 rounded-full text-lg font-bold">
                           {isPWD ? `PWD-${service.code}` : `${service.code}`}
                         </span>

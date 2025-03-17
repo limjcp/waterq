@@ -1,6 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 
 type Service = {
   id: string;
@@ -16,7 +21,7 @@ type ServiceType = {
 };
 
 export default function ServicesManagement() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<string>("");
@@ -29,6 +34,8 @@ export default function ServicesManagement() {
   const [deletingTypeId, setDeletingTypeId] = useState<string | null>(null);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleteServiceId, setDeleteServiceId] = useState<string>("");
+  const [expandedService, setExpandedService] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Generate code based on service and type name
   const generateTypeCode = (serviceId: string, typeName: string) => {
@@ -193,6 +200,20 @@ export default function ServicesManagement() {
     setDeleteConfirmVisible(true);
   };
 
+  const toggleService = (serviceId: string) => {
+    setExpandedService(expandedService === serviceId ? null : serviceId);
+    setSearchQuery(""); // Reset search when toggling
+  };
+
+  const filterServiceTypes = (types: ServiceType[]) => {
+    if (!searchQuery) return types;
+    return types.filter(
+      (type) =>
+        type.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        type.code.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100 p-8 flex items-center justify-center">
@@ -226,7 +247,7 @@ export default function ServicesManagement() {
             </h1>
             <button
               onClick={() => setIsAddingType(true)}
-              className="bg-sky-500 hover:bg-sky-600 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+              className="bg-sky-500 hover:bg-sky-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
               Add Service Type
             </button>
@@ -254,37 +275,86 @@ export default function ServicesManagement() {
                     <td className="py-3 px-4">{service.name}</td>
                     <td className="py-3 px-4">{service.code}</td>
                     <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-2">
-                        {service.serviceTypes.map((type) => (
-                          <div
-                            key={type.id}
-                            className="bg-sky-100 text-sky-700 px-2 py-1 rounded-full text-sm flex items-center gap-2"
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-sky-600">
+                            {service.serviceTypes.length} types
+                          </span>
+                          <button
+                            onClick={() => toggleService(service.id)}
+                            className="text-sky-600 hover:text-sky-700 flex items-center gap-1"
                           >
-                            <span>{type.name}</span>
-                            <button
-                              onClick={() =>
-                                confirmDeleteType(service.id, type.id)
-                              }
-                              className="text-red-500 hover:text-red-700 focus:outline-none"
-                              title="Delete service type"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
+                            {expandedService === service.id ? (
+                              <>
+                                <span className="text-sm">Hide</span>
+                                <ChevronUpIcon className="h-4 w-4" />
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-sm">View More</span>
+                                <ChevronDownIcon className="h-4 w-4" />
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {expandedService === service.id && (
+                          <div className="mt-2 space-y-2">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search types..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-8 pr-4 py-2 border border-sky-200 rounded-lg text-sm"
+                              />
+                              <MagnifyingGlassIcon className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                            </div>
+                            <div className="max-h-48 overflow-y-auto">
+                              <div className="flex flex-wrap gap-2 p-2">
+                                {filterServiceTypes(service.serviceTypes).map(
+                                  (type) => (
+                                    <div
+                                      key={type.id}
+                                      className="bg-sky-100 text-sky-700 px-3 py-1.5 rounded-full text-sm flex items-center gap-2"
+                                    >
+                                      <div>
+                                        <div className="font-medium">
+                                          {type.name}
+                                        </div>
+                                        <div className="text-xs text-sky-600">
+                                          {type.code}
+                                        </div>
+                                      </div>
+                                      <button
+                                        onClick={() =>
+                                          confirmDeleteType(service.id, type.id)
+                                        }
+                                        className="text-red-500 hover:text-red-700 focus:outline-none ml-2"
+                                        title="Delete service type"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          className="h-4 w-4"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M6 18L18 6M6 6l12 12"
+                                          />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        ))}
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -359,6 +429,7 @@ export default function ServicesManagement() {
                       onChange={handleServiceChange}
                       className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                       required
+                      aria-label="Select service"
                     >
                       <option value="">Select a service...</option>
                       {services.map((service) => (
@@ -378,6 +449,8 @@ export default function ServicesManagement() {
                       onChange={handleTypeNameChange}
                       className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                       required
+                      placeholder="Enter type name"
+                      aria-label="Type name"
                     />
                   </div>
                   <div className="mb-6">
@@ -389,6 +462,8 @@ export default function ServicesManagement() {
                       value={newServiceType.code}
                       readOnly
                       className="w-full px-4 py-2 bg-gray-50 border border-sky-200 rounded-lg text-gray-600"
+                      aria-label="Type code"
+                      title="Auto-generated code"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Code is automatically generated based on service and type

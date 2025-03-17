@@ -32,10 +32,10 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/auth/signin", nextUrl));
   }
 
+  const user = req.auth?.user;
+
   // Role-based redirects when accessing the root path "/"
   if (nextUrl.pathname === "/") {
-    const user = req.auth?.user;
-
     if (!user) {
       return NextResponse.redirect(new URL("/auth/signin", nextUrl));
     }
@@ -50,6 +50,33 @@ export default auth((req) => {
     if (user.role && Array.isArray(user.role) && user.role.includes("staff")) {
       console.log("Redirecting staff user to /staff/counter");
       return NextResponse.redirect(new URL("/staff/counter", nextUrl));
+    }
+  }
+
+  // Restrict access to admin routes
+  if (
+    nextUrl.pathname.startsWith("/admin/") &&
+    nextUrl.pathname !== "/admin/register"
+  ) {
+    if (
+      !user?.role ||
+      !Array.isArray(user.role) ||
+      !user.role.includes("admin")
+    ) {
+      console.log("Unauthorized access to admin route");
+      return NextResponse.redirect(new URL("/", nextUrl));
+    }
+  }
+
+  // Restrict access to staff routes
+  if (nextUrl.pathname.startsWith("/staff/")) {
+    if (
+      !user?.role ||
+      !Array.isArray(user.role) ||
+      !user.role.includes("staff")
+    ) {
+      console.log("Unauthorized access to staff route");
+      return NextResponse.redirect(new URL("/", nextUrl));
     }
   }
 

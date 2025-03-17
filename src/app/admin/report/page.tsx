@@ -1,7 +1,227 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { format } from "date-fns";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFDownloadLink,
+  Image,
+} from "@react-pdf/renderer";
+
+// Format time (seconds) as MM:SS
+const formatTime = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+};
+
+// Add type for ReportDocument props
+type ReportDocumentProps = {
+  reportData: ReportData;
+  startDate: string;
+  endDate: string;
+  reportMode: ReportMode;
+};
+
+// Enhanced styles for better design
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: "column",
+    backgroundColor: "#ffffff",
+    padding: 30,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    borderBottom: "2 solid #2563eb",
+    paddingBottom: 15,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginRight: 15,
+  },
+  headerText: {
+    flex: 1,
+  },
+  organizationName: {
+    fontSize: 20,
+    color: "#1e40af",
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  reportTitle: {
+    fontSize: 24,
+    color: "#2563eb",
+    fontWeight: "bold",
+  },
+  subheader: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: "#1e40af",
+    fontWeight: "bold",
+  },
+  reportInfo: {
+    fontSize: 12,
+    color: "#4b5563",
+    marginBottom: 20,
+    backgroundColor: "#f3f4f6",
+    padding: 10,
+    borderRadius: 4,
+  },
+  section: {
+    margin: 10,
+    padding: 10,
+    backgroundColor: "#ffffff",
+    borderRadius: 4,
+    border: "1 solid #e5e7eb",
+  },
+  table: {
+    width: "auto",
+    marginVertical: 10,
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    borderBottomStyle: "solid",
+    alignItems: "center",
+    minHeight: 28,
+  },
+  tableHeader: {
+    backgroundColor: "#f8fafc",
+  },
+  tableCell: {
+    flex: 1,
+    padding: 8,
+  },
+  text: {
+    fontSize: 11,
+    color: "#374151",
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+  statContainer: {
+    backgroundColor: "#f0f9ff",
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 4,
+    border: "1 solid #bae6fd",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#0369a1",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    color: "#0284c7",
+    fontWeight: "bold",
+  },
+});
+
+// PDF Document Component
+const ReportDocument = ({
+  reportData,
+  startDate,
+  endDate,
+  reportMode,
+}: ReportDocumentProps) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.headerContainer}>
+        <Image src="/wdlogo.png" style={styles.logo} />
+        <View style={styles.headerText}>
+          <Text style={styles.organizationName}>
+            General Santos City Water District
+          </Text>
+          <Text style={styles.reportTitle}>
+            {reportMode === "staff"
+              ? "Staff Performance Report"
+              : "Service Report"}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.reportInfo}>
+        <Text style={styles.text}>Report for: {reportData.name}</Text>
+        <Text style={styles.text}>
+          Period: {startDate} to {endDate}
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Summary Statistics</Text>
+        <View style={styles.statContainer}>
+          <Text style={styles.statLabel}>Total Tickets Served</Text>
+          <Text style={styles.statValue}>{reportData.ticketsServed}</Text>
+        </View>
+        <View style={styles.statContainer}>
+          <Text style={styles.statLabel}>Average Service Time</Text>
+          <Text style={styles.statValue}>
+            {formatTime(reportData.averageServiceTime)}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Daily Performance</Text>
+        <View style={styles.table}>
+          <View style={[styles.tableRow, styles.tableHeader]}>
+            <Text style={[styles.tableCell, styles.text, styles.bold]}>
+              Date
+            </Text>
+            <Text style={[styles.tableCell, styles.text, styles.bold]}>
+              Tickets
+            </Text>
+          </View>
+          {reportData.serviceByDay.map((day, index) => (
+            <View key={index} style={styles.tableRow}>
+              <Text style={[styles.tableCell, styles.text]}>{day.date}</Text>
+              <Text style={[styles.tableCell, styles.text]}>{day.count}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Service Type Analysis</Text>
+        {reportData.serviceTypesBreakdown.map((service, index) => (
+          <View key={index} style={{ marginBottom: 15 }}>
+            <Text
+              style={[
+                styles.text,
+                styles.bold,
+                { marginVertical: 5, color: "#1e40af" },
+              ]}
+            >
+              {service.serviceName}
+            </Text>
+            <View style={styles.table}>
+              {service.types.map((type, typeIndex) => (
+                <View key={typeIndex} style={styles.tableRow}>
+                  <Text style={[styles.tableCell, styles.text]}>
+                    {type.typeName}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.text]}>
+                    {type.count}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+      </View>
+    </Page>
+  </Document>
+);
 
 // Types
 type StaffMember = {
@@ -42,7 +262,7 @@ type ReportData = {
 type ReportMode = "staff" | "service";
 
 export default function StaffReports() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [loading, setLoading] = useState(true);
   const [reportMode, setReportMode] = useState<ReportMode>("staff");
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
@@ -90,13 +310,6 @@ export default function StaffReports() {
     fetchData();
   }, [status]);
 
-  // Format time (seconds) as MM:SS
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.round(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
-
   // Update generate report function
   const generateReport = async () => {
     if (
@@ -125,55 +338,6 @@ export default function StaffReports() {
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  // Export report as CSV
-  const exportReport = () => {
-    if (!reportData) return;
-
-    let csvContent = "data:text/csv;charset=utf-8,";
-
-    // Add header
-    csvContent += "Staff Report for " + reportData.name + "\r\n";
-    csvContent += "Period: " + startDate + " to " + endDate + "\r\n\r\n";
-
-    // Add summary
-    csvContent += "Total Tickets Served," + reportData.ticketsServed + "\r\n";
-    csvContent +=
-      "Average Service Time," +
-      formatTime(reportData.averageServiceTime) +
-      "\r\n\r\n";
-
-    // Add daily breakdown
-    csvContent += "Daily Breakdown\r\n";
-    csvContent += "Date,Tickets Served\r\n";
-    reportData.serviceByDay.forEach((day) => {
-      csvContent += `${day.date},${day.count}\r\n`;
-    });
-
-    // Add service type breakdown
-    csvContent += "\r\nDetailed Service Type Breakdown\r\n";
-    reportData.serviceTypesBreakdown.forEach((service) => {
-      csvContent += `\r\n${service.serviceName}\r\n`;
-      csvContent += "Service Type,Tickets Served\r\n";
-      service.types.forEach((type) => {
-        csvContent += `${type.typeName},${type.count}\r\n`;
-      });
-    });
-
-    // Create download link
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `staff_report_${reportData.username}_${startDate}_${endDate}.csv`
-    );
-    document.body.appendChild(link);
-
-    // Trigger download and clean up
-    link.click();
-    document.body.removeChild(link);
   };
 
   if (status === "loading" || loading) {
@@ -222,6 +386,7 @@ export default function StaffReports() {
                   setReportData(null);
                 }}
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                aria-label="Select report type"
               >
                 <option value="staff">Staff Report</option>
                 <option value="service">Service Report</option>
@@ -243,6 +408,11 @@ export default function StaffReports() {
                     : setSelectedService(e.target.value)
                 }
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                aria-label={
+                  reportMode === "staff"
+                    ? "Select staff member"
+                    : "Select service"
+                }
               >
                 <option value="">Select...</option>
                 {reportMode === "staff"
@@ -269,6 +439,8 @@ export default function StaffReports() {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                aria-label="Start date"
+                title="Start date"
               />
             </div>
 
@@ -281,6 +453,8 @@ export default function StaffReports() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                aria-label="End date"
+                title="End date"
               />
             </div>
           </div>
@@ -317,12 +491,22 @@ export default function StaffReports() {
               <h2 className="text-2xl font-bold text-sky-800">
                 Report for {reportData.name}
               </h2>
-              <button
-                onClick={exportReport}
-                className="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+              <PDFDownloadLink
+                document={
+                  <ReportDocument
+                    reportData={reportData}
+                    startDate={startDate}
+                    endDate={endDate}
+                    reportMode={reportMode}
+                  />
+                }
+                fileName={`${reportMode}_report_${reportData.name}_${startDate}_${endDate}.pdf`}
+                className="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center"
               >
-                Export CSV
-              </button>
+                {({ loading }) =>
+                  loading ? "Preparing PDF..." : "Download PDF Report"
+                }
+              </PDFDownloadLink>
             </div>
 
             {/* Summary Statistics */}
