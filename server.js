@@ -37,7 +37,9 @@ const port = 3000;
 let baseUrl;
 if (process.env.VERCEL === "1") {
   // When running on Vercel
-  baseUrl = "https://waterq.vercel.app";
+  baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://waterq.vercel.app";
 } else {
   // When running locally
   baseUrl = `http://${publicHostname}:${port}`;
