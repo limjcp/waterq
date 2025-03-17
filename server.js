@@ -33,8 +33,16 @@ const publicHostname = getLocalIpAddress();
 const listenHostname = "0.0.0.0";
 const port = 3000;
 
-// Dynamically set auth URLs based on host IP
-const baseUrl = `http://${publicHostname}:${port}`;
+// Dynamically set auth URLs based on environment
+let baseUrl;
+if (process.env.VERCEL === "1") {
+  // When running on Vercel
+  baseUrl = "https://waterq.vercel.app";
+} else {
+  // When running locally
+  baseUrl = `http://${publicHostname}:${port}`;
+}
+
 process.env.AUTH_URL = baseUrl;
 process.env.NEXTAUTH_URL = baseUrl;
 
