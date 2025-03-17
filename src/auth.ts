@@ -4,6 +4,8 @@ import { prisma } from "./lib/prisma";
 import Credentials from "@auth/core/providers/credentials";
 import bcrypt from "bcryptjs";
 
+export const runtime = "nodejs";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
