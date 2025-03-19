@@ -67,6 +67,39 @@ function getInitials(name: string): string {
   return "U"; // Default if no name is available
 }
 
+// Helper function to get the display service code for tickets
+function getTicketDisplayCode(ticket: Ticket): string {
+  // If the ticket is RETURNING and has an original service code stored in the prefix
+  if (ticket.status === "RETURNING" && ticket.prefix.startsWith("ORIG:")) {
+    // Extract the original service code from the prefix
+    return ticket.prefix.substring(5); // Remove "ORIG:" prefix
+  }
+
+  // Otherwise, use the current service code
+  return ticket.service?.code || "";
+}
+
+// Format ticket number with leading zeros
+function formatTicketNumber(number: number): string {
+  return String(number).padStart(3, "0");
+}
+
+// Add a new function to determine text size class based on ticket number length
+function getTicketTextSizeClass(ticket: Ticket): string {
+  const displayCode = getTicketDisplayCode(ticket);
+  const ticketText = `${
+    ticket.isPrioritized ? "PWD-" : ""
+  }${displayCode}-${formatTicketNumber(ticket.ticketNumber)}`;
+
+  if (ticketText.length > 12) {
+    return "text-2xl";
+  } else if (ticketText.length > 9) {
+    return "text-3xl";
+  } else {
+    return "text-4xl";
+  }
+}
+
 export default function StaffDashboard() {
   const { data: session, status } = useSession();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -348,14 +381,21 @@ export default function StaffDashboard() {
           ticket.counterId === null
       );
 
-      // For Customer Welfare or New Service Application, also get returning tickets
+      // For non-payment counters, also get returning tickets
       let returningTickets: Ticket[] = [];
-      if (["CW", "NSA"].includes(counterServiceCode)) {
-        const returningRes = await fetch(
-          `/api/tickets/returning?serviceId=${assignedCounterService}`
-        );
+      if (counterServiceCode !== "P") {
+        // All non-payment counters
+        // For returning tickets, we just want to fetch ALL returning tickets
+        // that have the same service type as this counter
+        const returningRes = await fetch(`/api/tickets/list`);
         if (returningRes.ok) {
-          returningTickets = await returningRes.json();
+          const allReturnableTickets = await returningRes.json();
+          // Filter returning tickets for this service at the client side
+          returningTickets = allReturnableTickets.filter(
+            (ticket: Ticket) =>
+              ticket.status === "RETURNING" &&
+              ticket.serviceId === assignedCounterService
+          );
         }
       }
 
@@ -627,7 +667,11 @@ export default function StaffDashboard() {
 
   // For Customer Welfare and New Service Application, filter returning tickets
   const returningTickets = !isPaymentCounter
-    ? tickets.filter((ticket) => ticket.status === "RETURNING")
+    ? tickets.filter(
+        (ticket) =>
+          ticket.status === "RETURNING" &&
+          ticket.serviceId === assignedCounterService
+      )
     : [];
 
   // Disable if a ticket is already in CALLED or SERVING
@@ -762,7 +806,8 @@ export default function StaffDashboard() {
                     >
                       <p className="font-medium text-amber-700">
                         {ticket.isPrioritized ? "PWD-" : ""}
-                        {ticket.service?.code}-{ticket.ticketNumber}
+                        {getTicketDisplayCode(ticket)}-
+                        {formatTicketNumber(ticket.ticketNumber)}
                       </p>
                       <p className="text-xs text-amber-600 mt-1">
                         Status: {ticket.status}
@@ -775,19 +820,23 @@ export default function StaffDashboard() {
               )}
             </div>
 
-            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE - LARGER TEXT */}
+            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE - RESPONSIVE TEXT SIZE */}
             <div className="bg-white rounded-2xl shadow-lg p-8 flex-1">
               <h2 className="text-3xl font-bold text-sky-800 mb-6">
                 Next in Line
               </h2>
               {activeTickets.length ? (
                 <div className="flex flex-col items-center">
-                  {/* Display just the first waiting ticket - LARGER SIZE */}
+                  {/* Display just the first waiting ticket - RESPONSIVE SIZE */}
                   <div className="bg-sky-50 rounded-lg w-56 h-28 flex items-center justify-center mb-6">
-                    <span className="text-4xl font-bold text-sky-700">
+                    <span
+                      className={`${getTicketTextSizeClass(
+                        activeTickets[0]
+                      )} font-bold text-sky-700 text-center px-2 break-all`}
+                    >
                       {activeTickets[0].isPrioritized ? "PWD-" : ""}
-                      {activeTickets[0].service?.code}-
-                      {activeTickets[0].ticketNumber}
+                      {getTicketDisplayCode(activeTickets[0])}-
+                      {formatTicketNumber(activeTickets[0].ticketNumber)}
                     </span>
                   </div>
                   <p className="text-xl font-medium text-sky-600 mb-2">
@@ -833,7 +882,8 @@ export default function StaffDashboard() {
                     >
                       <p className="font-medium text-purple-700">
                         {ticket.isPrioritized ? "PWD-" : ""}
-                        {ticket.service?.code}-{ticket.ticketNumber}
+                        {getTicketDisplayCode(ticket)}-
+                        {formatTicketNumber(ticket.ticketNumber)}
                       </p>
                       <p className="text-xs text-purple-600 mt-1">
                         Status: {ticket.status}
@@ -871,8 +921,8 @@ export default function StaffDashboard() {
                       <div className="mt-2">
                         <span className="inline-block bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-medium">
                           {counter.ticket.isPrioritized ? "PWD-" : ""}
-                          {counter.ticket.service?.code}-
-                          {counter.ticket.ticketNumber}
+                          {getTicketDisplayCode(counter.ticket)}-
+                          {formatTicketNumber(counter.ticket.ticketNumber)}
                         </span>
                         <span className="text-xs text-sky-600 block mt-1">
                           Status: {counter.ticket.status}
@@ -896,7 +946,7 @@ export default function StaffDashboard() {
 
         {/* Sidebar section - MODIFIED FROM VERTICAL TO HORIZONTAL */}
         <div className="lg:w-auto space-y-0 flex flex-col sm:flex-row gap-6">
-          {/* Current serving ticket card - INCREASED SIZE */}
+          {/* Current serving ticket card - INCREASED SIZE WITH RESPONSIVE TEXT */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 h-[650px] w-[450px]">
             <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
               Currently Serving
@@ -905,10 +955,14 @@ export default function StaffDashboard() {
               {currentServingTicket ? (
                 <div className="flex flex-col items-center w-full">
                   <div className="bg-sky-100 rounded-lg w-56 h-56 flex items-center justify-center mb-1">
-                    <span className="text-4xl font-bold text-sky-700">
+                    <span
+                      className={`${getTicketTextSizeClass(
+                        currentServingTicket
+                      )} font-bold text-sky-700 text-center px-2 break-all`}
+                    >
                       {currentServingTicket.isPrioritized ? "PWD-" : ""}
-                      {currentServingTicket.service?.code}-
-                      {currentServingTicket.ticketNumber}
+                      {getTicketDisplayCode(currentServingTicket)}-
+                      {formatTicketNumber(currentServingTicket.ticketNumber)}
                     </span>
                   </div>
                   <p className="text-xl font-medium text-sky-600 mb-2">
@@ -960,9 +1014,14 @@ export default function StaffDashboard() {
                         className="flex flex-col items-center w-full"
                       >
                         <div className="bg-amber-100 rounded-lg w-60 h-60 flex items-center justify-center mb-6 shadow-md">
-                          <span className="text-4xl font-bold text-amber-700">
+                          <span
+                            className={`${getTicketTextSizeClass(
+                              ticket
+                            )} font-bold text-amber-700 text-center px-2 break-all`}
+                          >
                             {ticket.isPrioritized ? "PWD-" : ""}
-                            {ticket.service?.code}-{ticket.ticketNumber}
+                            {getTicketDisplayCode(ticket)}-
+                            {formatTicketNumber(ticket.ticketNumber)}
                           </span>
                         </div>
                         <p className="text-xl font-medium text-amber-600 mb-2">
@@ -1043,7 +1102,8 @@ export default function StaffDashboard() {
                         >
                           <span>
                             {ticket.isPrioritized ? "PWD-" : ""}
-                            {ticket.service?.code}-{ticket.ticketNumber}
+                            {getTicketDisplayCode(ticket)}-
+                            {formatTicketNumber(ticket.ticketNumber)}
                           </span>
                           <button
                             onClick={() => recallTicket(ticket.id)}
@@ -1068,7 +1128,8 @@ export default function StaffDashboard() {
                         >
                           <span className="font-medium">
                             {ticket.isPrioritized ? "PWD-" : ""}
-                            {ticket.service?.code}-{ticket.ticketNumber}
+                            {getTicketDisplayCode(ticket)}-
+                            {formatTicketNumber(ticket.ticketNumber)}
                           </span>
                           <button
                             onClick={(e) => {
@@ -1386,7 +1447,8 @@ export default function StaffDashboard() {
                     <div key={ticket.id} className="text-center">
                       <span className="text-3xl font-bold text-amber-700 block">
                         {ticket.isPrioritized ? "PWD-" : ""}
-                        {ticket.service?.code}-{ticket.ticketNumber}
+                        {getTicketDisplayCode(ticket)}-
+                        {formatTicketNumber(ticket.ticketNumber)}
                       </span>
                       <span className="text-xl text-amber-600 block mt-2">
                         {ticket.service?.name}
@@ -1423,7 +1485,7 @@ export default function StaffDashboard() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
                     clipRule="evenodd"
                   />
                 </svg>

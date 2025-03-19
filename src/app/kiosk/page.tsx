@@ -7,8 +7,19 @@ import { Accessibility, User } from "lucide-react";
 function formatTicketNumber(ticketNumber: string): string {
   if (!ticketNumber) return "";
 
-  // If already has a dash, return as is
-  if (ticketNumber.includes("-")) return ticketNumber;
+  // If already has a dash, we need to reformat it
+  if (ticketNumber.includes("-")) {
+    // Split by dash
+    const parts = ticketNumber.split("-");
+    const prefix = parts[0];
+    const number = parts[1];
+
+    if (number && !isNaN(parseInt(number))) {
+      // Pad with leading zeros to make it 3 digits
+      return `${prefix}-${number.padStart(3, "0")}`;
+    }
+    return ticketNumber;
+  }
 
   // Find where the numbers start
   const numberIndex = ticketNumber.search(/\d/);
@@ -18,7 +29,8 @@ function formatTicketNumber(ticketNumber: string): string {
   const prefix = ticketNumber.substring(0, numberIndex);
   const number = ticketNumber.substring(numberIndex);
 
-  return `${prefix}-${number}`;
+  // Pad with leading zeros to make it 3 digits
+  return `${prefix}-${number.padStart(3, "0")}`;
 }
 
 type TicketResponse = {

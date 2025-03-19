@@ -40,11 +40,18 @@ export async function PUT(
       );
     }
 
-    // Update the ticket to be transferred
+    // Store the original service code in the prefix field if this is the first transfer
+    // We use format "ORIG:P" where P is the original service code
+    const originalPrefix = ticket.prefix.startsWith("ORIG:")
+      ? ticket.prefix // keep existing original prefix if already set
+      : `ORIG:${ticket.service.code}`; // set new original prefix
+
+    // Update the ticket to be transferred, preserving original service code
     const updatedTicket = await prisma.queueTicket.update({
       where: { id },
       data: {
         status: QueueStatus.RETURNING,
+        prefix: originalPrefix,
         service: { connect: { id: serviceId } },
         counter: { disconnect: true }, // Disconnect from current counter
       },

@@ -21,25 +21,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
 
-    // Get current date at midnight (start of day) for comparison
+    // Get today's date with time set to beginning of day for comparison
     const today = new Date();
-    const todayString = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
 
-    // Get tickets created today for this service
-    const todayTickets = await prisma.queueTicket.findMany({
+    // Get the latest ticket for this service from today
+    const latestTicket = await prisma.queueTicket.findFirst({
       where: {
         serviceId: service.id,
         createdAt: {
-          gte: new Date(todayString), // Start of today
+          gte: startOfDay,
         },
       },
       orderBy: { ticketNumber: "desc" },
     });
 
-    // If there are tickets created today, get the highest number and increment
-    // Otherwise start from 1 (it's a new day)
-    const nextTicketNumber =
-      todayTickets.length > 0 ? todayTickets[0].ticketNumber + 1 : 1;
+    // Log for debugging
+    console.log("Latest ticket found:", latestTicket);
+
+    let nextTicketNumber = 1; // Default for a new day
+
+    if (latestTicket) {
+      // If today's ticket exists, increment the number
+      nextTicketNumber = latestTicket.ticketNumber + 1;
+      console.log("Using next ticket number:", nextTicketNumber);
+    } else {
+      // No ticket today yet, starting from 1
+      console.log("No tickets found today, starting from 1");
+    }
 
     // Create new ticket without assigning to any counter
     const newTicket = await prisma.queueTicket.create({
@@ -53,10 +66,17 @@ export async function POST(request: Request) {
       },
     });
 
+    console.log("Created new ticket:", newTicket);
+
+    // Format ticket number with leading zeros
+    const formattedTicketNumber = `${newTicket.prefix}-${String(
+      newTicket.ticketNumber
+    ).padStart(3, "0")}`;
+
     // Return ticket information
     return NextResponse.json(
       {
-        ticketNumber: `${newTicket.prefix}${newTicket.ticketNumber}`,
+        ticketNumber: formattedTicketNumber,
         status: newTicket.status,
         counterId: null,
         counterName: null,
@@ -65,7 +85,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error(error);
+    console.error("Error generating ticket:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
