@@ -69,14 +69,8 @@ function getInitials(name: string): string {
 
 // Helper function to get the display service code for tickets
 function getTicketDisplayCode(ticket: Ticket): string {
-  // If the ticket is RETURNING and has an original service code stored in the prefix
-  if (ticket.status === "RETURNING" && ticket.prefix.startsWith("ORIG:")) {
-    // Extract the original service code from the prefix
-    return ticket.prefix.substring(5); // Remove "ORIG:" prefix
-  }
-
-  // Otherwise, use the current service code
-  return ticket.service?.code || "";
+  // Use the ticket's prefix instead of service code
+  return ticket.prefix || ticket.service?.code || "";
 }
 
 // Format ticket number with leading zeros

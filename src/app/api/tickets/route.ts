@@ -29,10 +29,11 @@ export async function POST(request: Request) {
       today.getDate()
     );
 
-    // Get the latest ticket for this service from today
+    // Get the latest ticket with the same prefix from today
+    // Note: Using prefix instead of serviceId for ticket numbering
     const latestTicket = await prisma.queueTicket.findFirst({
       where: {
-        serviceId: service.id,
+        prefix: service.code, // Using prefix instead of serviceId
         createdAt: {
           gte: startOfDay,
         },
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     });
 
     // Log for debugging
-    console.log("Latest ticket found:", latestTicket);
+    console.log("Latest ticket found with prefix:", latestTicket);
 
     let nextTicketNumber = 1; // Default for a new day
 
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
       console.log("Using next ticket number:", nextTicketNumber);
     } else {
       // No ticket today yet, starting from 1
-      console.log("No tickets found today, starting from 1");
+      console.log("No tickets found today with this prefix, starting from 1");
     }
 
     // Create new ticket without assigning to any counter

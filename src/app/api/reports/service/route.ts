@@ -122,7 +122,27 @@ export async function GET(request: NextRequest) {
       },
     ];
 
-    // Prepare response
+    // Create detailed ticket information
+    const ticketDetails = tickets.map((ticket) => {
+      // Calculate service time for this ticket
+      let serviceTime = 0;
+      if (ticket.servingStart && ticket.servingEnd) {
+        serviceTime = Math.floor(
+          (ticket.servingEnd.getTime() - ticket.servingStart.getTime()) / 1000
+        );
+      }
+
+      return {
+        ticketNumber: ticket.ticketNumber.toString(),
+        prefix: ticket.prefix,
+        serviceName: ticket.service?.name || "Unknown",
+        serviceTypeName: ticket.serviceType?.name || "Unspecified",
+        dateTime: ticket.updatedAt.toLocaleString(), // Format as readable date and time
+        serviceTime: serviceTime,
+      };
+    });
+
+    // Prepare response with added ticket details
     const reportData = {
       username: service.code,
       name: service.name,
@@ -130,6 +150,7 @@ export async function GET(request: NextRequest) {
       averageServiceTime,
       serviceByDay,
       serviceTypesBreakdown,
+      ticketDetails, // Add detailed ticket information
     };
 
     return NextResponse.json(reportData);

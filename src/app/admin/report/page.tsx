@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import {
@@ -11,6 +11,7 @@ import {
   StyleSheet,
   PDFDownloadLink,
   Image,
+  pdf,
 } from "@react-pdf/renderer";
 
 // Format time (seconds) as MM:SS
@@ -219,6 +220,101 @@ const ReportDocument = ({
           </View>
         ))}
       </View>
+
+      {/* New section for detailed ticket information */}
+      {reportData.ticketDetails && reportData.ticketDetails.length > 0 && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.headerContainer}>
+            <Image src="/wdlogo.png" style={styles.logo} />
+            <View style={styles.headerText}>
+              <Text style={styles.organizationName}>
+                General Santos City Water District
+              </Text>
+              <Text style={styles.reportTitle}>
+                Detailed Ticket Information
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.subheader}>All Tickets</Text>
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader]}>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.text,
+                    styles.bold,
+                    { flex: 0.8 },
+                  ]}
+                >
+                  Ticket #
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.text,
+                    styles.bold,
+                    { flex: 1.2 },
+                  ]}
+                >
+                  Service
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.text,
+                    styles.bold,
+                    { flex: 1.2 },
+                  ]}
+                >
+                  Service Type
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.text,
+                    styles.bold,
+                    { flex: 1.5 },
+                  ]}
+                >
+                  Date & Time
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.text,
+                    styles.bold,
+                    { flex: 0.8 },
+                  ]}
+                >
+                  Service Time
+                </Text>
+              </View>
+
+              {reportData.ticketDetails.map((ticket, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={[styles.tableCell, styles.text, { flex: 0.8 }]}>
+                    {ticket.prefix}-{ticket.ticketNumber}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.text, { flex: 1.2 }]}>
+                    {ticket.serviceName}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.text, { flex: 1.2 }]}>
+                    {ticket.serviceTypeName}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.text, { flex: 1.5 }]}>
+                    {ticket.dateTime}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.text, { flex: 0.8 }]}>
+                    {formatTime(ticket.serviceTime)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </Page>
+      )}
     </Page>
   </Document>
 );
@@ -234,6 +330,15 @@ type Service = {
   id: string;
   code: string;
   name: string;
+};
+
+type TicketDetail = {
+  ticketNumber: string;
+  prefix: string;
+  serviceName: string;
+  serviceTypeName: string;
+  dateTime: string;
+  serviceTime: number;
 };
 
 type ReportData = {
@@ -256,6 +361,7 @@ type ReportData = {
       count: number;
     }[];
   }[];
+  ticketDetails: TicketDetail[]; // Added field for individual ticket details
 };
 
 // Add new type for report mode
@@ -277,6 +383,12 @@ export default function StaffReports() {
   );
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState(null);
+
+  // Add pagination for tickets display to improve performance
+  const [currentPage, setCurrentPage] = useState(1);
+  const ticketsPerPage = 50; // Limit number of tickets shown per page
 
   // Update useEffect to fetch both staff and services
   useEffect(() => {
@@ -340,6 +452,69 @@ export default function StaffReports() {
     }
   };
 
+  // Add cleanup function for PDF URL
+  useEffect(() => {
+    if (pdfUrl) {
+      // Your existing pdfUrl handling code
+    }
+  }, [pdfUrl]);
+
+  // New function for server-side PDF generation
+  const downloadPdf = async () => {
+    if (!reportData) return;
+
+    setIsDownloadingPdf(true);
+
+    try {
+      const response = await fetch("/api/reports/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reportData,
+          startDate,
+          endDate,
+          reportMode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      // Get the PDF blob from the response
+      const blob = await response.blob();
+
+      // Create a download link and trigger download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${reportMode}_report_${startDate}_${endDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to generate PDF. Please try again later.");
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  // Calculate pagination for ticket display
+  const indexOfLastTicket = currentPage * ticketsPerPage;
+  const indexOfFirstTicket = indexOfLastTicket - ticketsPerPage;
+  const currentTickets = reportData?.ticketDetails
+    ? reportData.ticketDetails.slice(indexOfFirstTicket, indexOfLastTicket)
+    : [];
+  const totalPages = reportData?.ticketDetails
+    ? Math.ceil(reportData.ticketDetails.length / ticketsPerPage)
+    : 0;
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100 p-8 flex items-center justify-center">
@@ -370,7 +545,6 @@ export default function StaffReports() {
           <h1 className="text-3xl font-bold text-sky-800 mb-6">
             Performance Reports
           </h1>
-
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {/* Report Type Selection */}
             <div>
@@ -392,7 +566,6 @@ export default function StaffReports() {
                 <option value="service">Service Report</option>
               </select>
             </div>
-
             {/* Staff/Service Selection */}
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
@@ -428,7 +601,6 @@ export default function StaffReports() {
                     ))}
               </select>
             </div>
-
             {/* Existing date inputs */}
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
@@ -443,7 +615,6 @@ export default function StaffReports() {
                 title="Start date"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
                 End Date
@@ -458,7 +629,6 @@ export default function StaffReports() {
               />
             </div>
           </div>
-
           <div className="flex justify-center">
             <button
               onClick={generateReport}
@@ -484,31 +654,27 @@ export default function StaffReports() {
             </button>
           </div>
         </div>
-
         {reportData && (
           <div className="bg-white rounded-2xl shadow-2xl p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-sky-800">
                 Report for {reportData.name}
               </h2>
-              <PDFDownloadLink
-                document={
-                  <ReportDocument
-                    reportData={reportData}
-                    startDate={startDate}
-                    endDate={endDate}
-                    reportMode={reportMode}
-                  />
-                }
-                fileName={`${reportMode}_report_${reportData.name}_${startDate}_${endDate}.pdf`}
-                className="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center"
+              <button
+                onClick={downloadPdf}
+                disabled={isDownloadingPdf}
+                className="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center disabled:bg-gray-400"
               >
-                {({ loading }) =>
-                  loading ? "Preparing PDF..." : "Download PDF Report"
-                }
-              </PDFDownloadLink>
+                {isDownloadingPdf ? (
+                  <>
+                    <span className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Preparing PDF...
+                  </>
+                ) : (
+                  "Download PDF Report"
+                )}
+              </button>
             </div>
-
             {/* Summary Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-sky-50 rounded-lg p-6">
@@ -519,7 +685,6 @@ export default function StaffReports() {
                   {reportData.ticketsServed}
                 </p>
               </div>
-
               <div className="bg-sky-50 rounded-lg p-6">
                 <h3 className="text-lg font-medium text-sky-700 mb-3">
                   Average Service Time
@@ -529,7 +694,6 @@ export default function StaffReports() {
                 </p>
               </div>
             </div>
-
             {/* Daily Breakdown */}
             <h3 className="text-xl font-bold text-sky-800 mb-4">
               Daily Breakdown
@@ -556,7 +720,6 @@ export default function StaffReports() {
                 </tbody>
               </table>
             </div>
-
             {/* Service Type Detailed Breakdown */}
             <h3 className="text-xl font-bold text-sky-800 mb-4">
               Service Type Breakdown
@@ -590,6 +753,105 @@ export default function StaffReports() {
                 </div>
               </div>
             ))}
+            {/* Modified detailed ticket information section with pagination */}
+            {reportData.ticketDetails &&
+              reportData.ticketDetails.length > 0 && (
+                <div className="mt-10">
+                  <h3 className="text-xl font-bold text-sky-800 mb-4">
+                    Detailed Ticket Information
+                    <span className="text-sm font-normal ml-2 text-sky-600">
+                      (Showing {indexOfFirstTicket + 1}-
+                      {Math.min(
+                        indexOfLastTicket,
+                        reportData.ticketDetails.length
+                      )}{" "}
+                      of {reportData.ticketDetails.length})
+                    </span>
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-sky-100">
+                      <thead>
+                        <tr className="bg-sky-50">
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Ticket #
+                          </th>
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Service
+                          </th>
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Service Type
+                          </th>
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Date & Time
+                          </th>
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Service Time
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentTickets.map((ticket, index) => (
+                          <tr key={index} className="border-b border-sky-50">
+                            <td className="py-3 px-4">
+                              {ticket.prefix}-{ticket.ticketNumber}
+                            </td>
+                            <td className="py-3 px-4">{ticket.serviceName}</td>
+                            <td className="py-3 px-4">
+                              {ticket.serviceTypeName}
+                            </td>
+                            <td className="py-3 px-4">{ticket.dateTime}</td>
+                            <td className="py-3 px-4">
+                              {formatTime(ticket.serviceTime)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Pagination controls */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-4 gap-2">
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                      >
+                        First
+                      </button>
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                      >
+                        Prev
+                      </button>
+                      <div className="px-3 py-1">
+                        Page {currentPage} of {totalPages}
+                      </div>
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                      >
+                        Next
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                      >
+                        Last
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
         )}
       </div>
