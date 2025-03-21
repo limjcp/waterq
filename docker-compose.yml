@@ -3,15 +3,34 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: waterq-app
     ports:
-      - "3000:3000" # Explicitly map the port
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
+      # Update to use container name instead of localhost
+      - DATABASE_URL=postgresql://klwj:123@waterq:5432/waterqdb
       - AUTH_SECRET=${AUTH_SECRET}
-      - HOST_IP=192.168.50.241 # Use your actual IP here
+      - HOST_IP=192.168.50.240
+    networks:
+      - postgres-network
     restart: unless-stopped
+    # Remove the depends_on entry since waterq is external
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
-  app-network:
-    driver: bridge
+  postgres-network:
+    external: true
+    name: postgres-network

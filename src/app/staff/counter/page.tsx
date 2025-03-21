@@ -755,6 +755,45 @@ export default function StaffDashboard() {
     }
   }
 
+  // Add this function with your other handler functions
+  async function handleTransferTicket(confirmed: boolean = false) {
+    if (!confirmed || !ticketToTransfer || !serviceToConfirm) {
+      // If not confirmed or missing data, just close modals and reset state
+      setIsTransferConfirmModalOpen(false);
+      setServiceToConfirm(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/tickets/${ticketToTransfer}/transfer`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            serviceId: serviceToConfirm.id,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error transferring ticket:", errorData);
+        return;
+      }
+
+      // Reset states and refresh data
+      setIsTransferConfirmModalOpen(false);
+      setServiceToConfirm(null);
+      setTicketToTransfer(null);
+      setSelectedServiceId("");
+      setServingTicketId(null);
+      fetchTickets();
+    } catch (error) {
+      console.error("Error transferring ticket:", error);
+    }
+  }
+
   // Get the counter service code
   const isPaymentCounter = counterServiceCode === "P";
 
