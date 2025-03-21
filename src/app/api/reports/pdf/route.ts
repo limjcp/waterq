@@ -44,6 +44,26 @@ const formatTime = (seconds: number): string => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 };
 
+// Function to format datetime to show AM/PM
+const formatDateTime = (dateTimeStr: string): string => {
+  if (!dateTimeStr || dateTimeStr.length < 16) return dateTimeStr;
+
+  // Extract date and time parts
+  const datePart = dateTimeStr.substring(0, 10);
+  const timePart = dateTimeStr.substring(11, 16);
+
+  // Parse the time
+  const [hours, minutes] = timePart.split(":").map(Number);
+
+  // Convert to 12-hour format with AM/PM
+  const period = hours >= 12 ? "PM" : "AM";
+  const formattedHours = hours % 12 || 12; // Convert 0 to 12
+
+  return `${datePart} ${formattedHours}:${minutes
+    .toString()
+    .padStart(2, "0")} ${period}`;
+};
+
 // Function to generate filename based on filters
 const generateFileName = (
   reportMode: string,
@@ -288,22 +308,11 @@ export async function POST(request: NextRequest) {
         y += 40;
       }
 
-      // Service category with background
-      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2], 0.1);
-      doc.roundedRect(
-        marginLeft - 5,
-        y - 5,
-        doc.internal.pageSize.width - marginLeft * 2 + 10,
-        20,
-        3,
-        3,
-        "F"
-      );
-
+      // Service name as header - simple styling without background
       doc.setFontSize(14);
       doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.text(service.serviceName, marginLeft, y + 8);
-      y += 25;
+      doc.text(service.serviceName, marginLeft, y);
+      y += 15;
 
       // Table headers with background
       doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
@@ -352,21 +361,6 @@ export async function POST(request: NextRequest) {
           y += 40;
 
           // Repeat service category on new page
-          doc.setFillColor(
-            primaryColor[0],
-            primaryColor[1],
-            primaryColor[2],
-            0.1
-          );
-          doc.roundedRect(
-            marginLeft - 5,
-            y - 5,
-            doc.internal.pageSize.width - marginLeft * 2 + 10,
-            20,
-            3,
-            3,
-            "F"
-          );
           doc.setFontSize(14);
           doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
           doc.text(`${service.serviceName} (continued)`, marginLeft, y + 8);
@@ -445,119 +439,188 @@ export async function POST(request: NextRequest) {
       const tableWidth = doc.internal.pageSize.width - marginLeft * 2;
 
       // Calculate column widths based on content needs
-      const ticketColWidth = tableWidth * 0.15; // 15%
-      const serviceColWidth = tableWidth * 0.25; // 25%
-      const typeColWidth = tableWidth * 0.25; // 25%
-      const dateColWidth = tableWidth * 0.2; // 20%
-      const timeColWidth = tableWidth * 0.15; // 15%
+      const ticketColWidth = tableWidth * 0.2; // 20%
+      const typeColWidth = tableWidth * 0.3; // 30%
+      const dateColWidth = tableWidth * 0.3; // 30%
+      const timeColWidth = tableWidth * 0.2; // 20%
 
-      // Table headers with background
-      doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-      doc.rect(marginLeft, y - 5, tableWidth, 10, "F");
+      // Function to truncate text if it's too long
+      const truncateText = (text: string, maxLength: number) => {
+        if (!text) return "";
+        return text.length > maxLength
+          ? text.substring(0, maxLength - 3) + "..."
+          : text;
+      };
 
-      // Table header text
-      doc.setFontSize(10);
-      doc.setTextColor(255, 255, 255);
-      const col1 = marginLeft + 5;
-      const col2 = col1 + ticketColWidth;
-      const col3 = col2 + serviceColWidth;
-      const col4 = col3 + typeColWidth;
-      const col5 = col4 + dateColWidth;
-
-      doc.text("Ticket #", col1, y);
-      doc.text("Service", col2, y);
-      doc.text("Service Type", col3, y);
-      doc.text("Date & Time", col4, y);
-      doc.text("Service Time", col5, y);
-      y += 10;
-
-      // Process tickets with alternating row colors
+      // Group tickets by service name and service type
       const MAX_TICKETS = 500; // Limit for performance
       const ticketsToProcess = reportData.ticketDetails.slice(0, MAX_TICKETS);
 
-      let rowCount = 0;
+      // Sort tickets by date and time
+      ticketsToProcess.sort((a, b) => {
+        return a.dateTime.localeCompare(b.dateTime);
+      });
+
+      // Create a map to group tickets: Service -> ServiceType -> Tickets[]
+      const groupedTickets = new Map<string, Map<string, TicketDetail[]>>();
+
+      // Group the tickets
       ticketsToProcess.forEach((ticket) => {
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-
-          // Add consistent header on new page
-          doc.addImage(
-            `data:image/png;base64,${logoBase64}`,
-            "PNG",
-            marginLeft,
-            y,
-            20,
-            20
+        if (!groupedTickets.has(ticket.serviceName)) {
+          groupedTickets.set(
+            ticket.serviceName,
+            new Map<string, TicketDetail[]>()
           );
+        }
+
+        const serviceGroup = groupedTickets.get(ticket.serviceName);
+        if (!serviceGroup!.has(ticket.serviceTypeName)) {
+          serviceGroup!.set(ticket.serviceTypeName, []);
+        }
+
+        serviceGroup!.get(ticket.serviceTypeName)!.push(ticket);
+      });
+
+      // Function to add table headers for ticket details
+      const addTicketTableHeaders = () => {
+        doc.setFillColor(
+          secondaryColor[0],
+          secondaryColor[1],
+          secondaryColor[2]
+        );
+        doc.rect(marginLeft, y - 5, tableWidth, 10, "F");
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+
+        const col1 = marginLeft + 5;
+        const col2 = col1 + ticketColWidth;
+        const col3 = col2 + typeColWidth;
+        const col4 = col3 + dateColWidth;
+
+        doc.text("Ticket #", col1, y);
+        doc.text("Service Type", col2, y);
+        doc.text("Date & Time", col3, y);
+        doc.text("Service Time", col4, y);
+
+        y += 10;
+        return { col1, col2, col3, col4 };
+      };
+
+      // Function to add consistent header on new pages
+      const addPageHeader = () => {
+        doc.addPage();
+        y = 20;
+
+        // Add logo and branding
+        doc.addImage(
+          `data:image/png;base64,${logoBase64}`,
+          "PNG",
+          marginLeft,
+          y,
+          20,
+          20
+        );
+        doc.setFontSize(12);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text("General Santos City Water District", marginLeft + 25, y + 7);
+        doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
+        doc.line(
+          marginLeft,
+          y + 25,
+          doc.internal.pageSize.width - marginLeft,
+          y + 25
+        );
+        y += 40;
+      };
+
+      // Process each service and its types
+      for (const [serviceName, serviceTypes] of groupedTickets.entries()) {
+        // Check if we need a new page
+        if (y > 250) {
+          addPageHeader();
+        }
+
+        // Service name as header - simple styling without background
+        doc.setFontSize(14);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text(serviceName, marginLeft, y);
+        y += 15;
+
+        // Process each service type within this service
+        for (const [serviceTypeName, tickets] of serviceTypes.entries()) {
+          // Check if we need a new page
+          if (y > 250) {
+            addPageHeader();
+
+            // Repeat service header on new page - simple styling without background
+            doc.setFontSize(14);
+            doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+            doc.text(`${serviceName} (continued)`, marginLeft, y);
+            y += 15;
+          }
+
+          // Service type subheader
           doc.setFontSize(12);
-          doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-          doc.text(
-            "General Santos City Water District",
-            marginLeft + 25,
-            y + 7
-          );
-          doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
-          doc.line(
-            marginLeft,
-            y + 25,
-            doc.internal.pageSize.width - marginLeft,
-            y + 25
-          );
-          y += 40;
-
-          // Repeat table headers on new page
-          doc.setFillColor(
+          doc.setTextColor(
             secondaryColor[0],
             secondaryColor[1],
             secondaryColor[2]
           );
-          doc.rect(marginLeft, y - 5, tableWidth, 10, "F");
-          doc.setFontSize(10);
-          doc.setTextColor(255, 255, 255);
-          doc.text("Ticket #", col1, y);
-          doc.text("Service", col2, y);
-          doc.text("Service Type", col3, y);
-          doc.text("Date & Time", col4, y);
-          doc.text("Service Time", col5, y);
+          doc.text(`Type: ${serviceTypeName}`, marginLeft, y);
           y += 10;
 
-          doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-          rowCount = 0;
+          // Table headers
+          const { col1, col2, col3, col4 } = addTicketTableHeaders();
+
+          // Display ticket rows with alternating colors
+          let rowCount = 0;
+          tickets.forEach((ticket) => {
+            if (y > 270) {
+              addPageHeader();
+
+              // Repeat service and type headers on new page
+              doc.setFontSize(14);
+              doc.setTextColor(
+                primaryColor[0],
+                primaryColor[1],
+                primaryColor[2]
+              );
+              doc.text(
+                `${serviceName} - ${serviceTypeName} (continued)`,
+                marginLeft,
+                y
+              );
+              y += 15;
+
+              // Repeat table headers
+              const columns = addTicketTableHeaders();
+              Object.assign({ col1, col2, col3, col4 }, columns);
+              rowCount = 0;
+            }
+
+            // Alternate row background
+            if (rowCount % 2 === 0) {
+              doc.setFillColor(245, 245, 245);
+              doc.rect(marginLeft, y - 4, tableWidth, 7, "F");
+            }
+
+            // Render each column
+            doc.setFontSize(8);
+            doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+
+            doc.text(`${ticket.prefix}-${ticket.ticketNumber}`, col1, y);
+            doc.text(truncateText(ticket.serviceTypeName, 30), col2, y);
+            doc.text(formatDateTime(ticket.dateTime), col3, y);
+            doc.text(formatTime(ticket.serviceTime), col4, y);
+
+            y += 7;
+            rowCount++;
+          });
+
+          // Add space after each service type table
+          y += 15;
         }
-
-        // Alternate row background for better readability
-        if (rowCount % 2 === 0) {
-          doc.setFillColor(245, 245, 245);
-          doc.rect(marginLeft, y - 4, tableWidth, 7, "F");
-        }
-
-        // Function to truncate and add ellipsis if text is too long
-        const truncateText = (text: string, maxLength: number) => {
-          if (!text) return "";
-          return text.length > maxLength
-            ? text.substring(0, maxLength - 3) + "..."
-            : text;
-        };
-
-        doc.setFontSize(8);
-        doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-
-        // Render each column with proper positioning and truncation
-        doc.text(`${ticket.prefix}-${ticket.ticketNumber}`, col1, y);
-
-        // For the service name and type, handle them specifically to avoid overflow
-        const serviceName = truncateText(ticket.serviceName, 30);
-        const serviceTypeName = truncateText(ticket.serviceTypeName, 30);
-
-        doc.text(serviceName, col2, y);
-        doc.text(serviceTypeName, col3, y);
-        doc.text(ticket.dateTime.substring(0, 16), col4, y);
-        doc.text(formatTime(ticket.serviceTime), col5, y);
-
-        y += 7;
-        rowCount++;
-      });
+      }
 
       if (reportData.ticketDetails.length > MAX_TICKETS) {
         y += 10;
