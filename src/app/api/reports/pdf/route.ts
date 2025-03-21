@@ -25,6 +25,8 @@ type TicketDetail = {
   serviceName: string;
   serviceTypeName: string;
   dateTime: string;
+  servingStart: string;
+  servingEnd: string;
   serviceTime: number;
 };
 
@@ -50,10 +52,10 @@ const formatDateTime = (dateTimeStr: string): string => {
 
   // Extract date and time parts
   const datePart = dateTimeStr.substring(0, 10);
-  const timePart = dateTimeStr.substring(11, 16);
+  const timePart = dateTimeStr.substring(11, 19); // Include seconds by getting 19 characters
 
   // Parse the time
-  const [hours, minutes] = timePart.split(":").map(Number);
+  const [hours, minutes, seconds] = timePart.split(":").map(Number);
 
   // Convert to 12-hour format with AM/PM
   const period = hours >= 12 ? "PM" : "AM";
@@ -61,7 +63,7 @@ const formatDateTime = (dateTimeStr: string): string => {
 
   return `${datePart} ${formattedHours}:${minutes
     .toString()
-    .padStart(2, "0")} ${period}`;
+    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")} ${period}`;
 };
 
 // Function to generate filename based on filters
@@ -207,8 +209,8 @@ export async function POST(request: NextRequest) {
     // Table header text
     doc.setFontSize(11);
     doc.setTextColor(255, 255, 255); // White text for contrast
-    doc.text("Date", marginLeft + 10, y);
-    doc.text("Tickets", marginLeft + 90, y);
+    doc.text("Date Range", marginLeft + 10, y);
+    doc.text("Tickets", marginLeft + 120, y);
     y += 10;
 
     // Table rows with alternating colors
@@ -231,8 +233,8 @@ export async function POST(request: NextRequest) {
         doc.rect(marginLeft, y - 5, 160, 10, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(11);
-        doc.text("Date", marginLeft + 10, y);
-        doc.text("Tickets", marginLeft + 90, y);
+        doc.text("Date Range", marginLeft + 10, y);
+        doc.text("Tickets", marginLeft + 120, y);
         y += 10;
         doc.setTextColor(textColor[0], textColor[1], textColor[2]);
         rowCount = 0;
@@ -244,8 +246,9 @@ export async function POST(request: NextRequest) {
         doc.rect(marginLeft, y - 5, 160, 8, "F");
       }
 
-      doc.text(day.date, marginLeft + 10, y);
-      doc.text(day.count.toString(), marginLeft + 90, y);
+      const [startDate, endDate] = day.date.split("to").map((d) => d.trim());
+      doc.text(`${startDate} - ${endDate}`, marginLeft + 10, y);
+      doc.text(day.count.toString(), marginLeft + 120, y);
       y += 8;
       rowCount++;
     });
@@ -441,8 +444,8 @@ export async function POST(request: NextRequest) {
       // Calculate column widths based on content needs
       const ticketColWidth = tableWidth * 0.2; // 20%
       const typeColWidth = tableWidth * 0.3; // 30%
-      const dateColWidth = tableWidth * 0.3; // 30%
-      const timeColWidth = tableWidth * 0.2; // 20%
+      const startColWidth = tableWidth * 0.25; // 25%
+      const endColWidth = tableWidth * 0.25; // 25%
 
       // Function to truncate text if it's too long
       const truncateText = (text: string, maxLength: number) => {
@@ -495,12 +498,12 @@ export async function POST(request: NextRequest) {
         const col1 = marginLeft + 5;
         const col2 = col1 + ticketColWidth;
         const col3 = col2 + typeColWidth;
-        const col4 = col3 + dateColWidth;
+        const col4 = col3 + startColWidth;
 
         doc.text("Ticket #", col1, y);
         doc.text("Service Type", col2, y);
-        doc.text("Date & Time", col3, y);
-        doc.text("Service Time", col4, y);
+        doc.text("Service Start", col3, y);
+        doc.text("Service End", col4, y);
 
         y += 10;
         return { col1, col2, col3, col4 };
@@ -610,8 +613,20 @@ export async function POST(request: NextRequest) {
 
             doc.text(`${ticket.prefix}-${ticket.ticketNumber}`, col1, y);
             doc.text(truncateText(ticket.serviceTypeName, 30), col2, y);
-            doc.text(formatDateTime(ticket.dateTime), col3, y);
-            doc.text(formatTime(ticket.serviceTime), col4, y);
+            doc.text(
+              ticket.servingStart === "-"
+                ? "-"
+                : formatDateTime(ticket.servingStart),
+              col3,
+              y
+            );
+            doc.text(
+              ticket.servingEnd === "-"
+                ? "-"
+                : formatDateTime(ticket.servingEnd),
+              col4,
+              y
+            );
 
             y += 7;
             rowCount++;
@@ -638,7 +653,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Add a footer with page number on each page
-      const totalPages = doc.internal.getNumberOfPages();
+      const totalPages = doc.internal.pages.length - 1;
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);

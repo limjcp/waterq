@@ -89,13 +89,13 @@ export async function GET(request: NextRequest) {
         ? Math.round(totalServiceTime / ticketsWithServiceTime)
         : 0;
 
-    // Group by day
-    const serviceByDay = [];
+    // Group by day range
+    const serviceByDay: { date: string; count: number }[] = [];
     const dayMap = new Map<string, number>();
 
-    tickets.forEach((ticket) => {
-      const date = ticket.updatedAt.toISOString().split("T")[0];
-      dayMap.set(date, (dayMap.get(date) || 0) + 1);
+    tickets.forEach(() => {
+      const dateKey = `${startDate} to ${endDate}`; // Group all tickets in the date range
+      dayMap.set(dateKey, (dayMap.get(dateKey) || 0) + 1);
     });
 
     dayMap.forEach((count, date) => {
@@ -138,6 +138,8 @@ export async function GET(request: NextRequest) {
         serviceName: ticket.service?.name || "Unknown",
         serviceTypeName: ticket.serviceType?.name || "Unspecified",
         dateTime: ticket.updatedAt.toLocaleString(), // Format as readable date and time
+        servingStart: ticket.servingStart?.toLocaleString() || "-",
+        servingEnd: ticket.servingEnd?.toLocaleString() || "-",
         serviceTime: serviceTime,
       };
     });

@@ -115,24 +115,23 @@ export async function GET(request: NextRequest) {
         ? Math.round(totalServiceTime / ticketsWithServiceTime)
         : 0;
 
-    // Group by day
+    // Group by day range
     const serviceByDay: { date: string; count: number }[] = [];
     const dayMap = new Map<string, number>();
 
-    tickets.forEach((ticket: Ticket) => {
-      const date = ticket.updatedAt.toISOString().split("T")[0];
-      if (dayMap.has(date)) {
-        dayMap.set(date, dayMap.get(date)! + 1);
+    tickets.forEach(() => {
+      const dateKey = `${startDate} to ${endDate}`; // Group all tickets in the date range
+      if (dayMap.has(dateKey)) {
+        dayMap.set(dateKey, dayMap.get(dateKey)! + 1);
       } else {
-        dayMap.set(date, 1);
+        dayMap.set(dateKey, 1);
       }
     });
 
-    // Convert map to array and sort by date
+    // Convert map to array
     dayMap.forEach((count, date) => {
       serviceByDay.push({ date, count });
     });
-    serviceByDay.sort((a, b) => a.date.localeCompare(b.date));
 
     // Group by service type
     const serviceTypeMap = new Map<string, number>();
@@ -189,7 +188,9 @@ export async function GET(request: NextRequest) {
         prefix: ticket.prefix,
         serviceName: ticket.service?.name || "Unknown",
         serviceTypeName: ticket.serviceType?.name || "Unspecified",
-        dateTime: ticket.updatedAt.toLocaleString(), // Format as readable date and time
+        dateTime: ticket.updatedAt.toLocaleString(),
+        servingStart: ticket.servingStart?.toLocaleString() || "-",
+        servingEnd: ticket.servingEnd?.toLocaleString() || "-",
         serviceTime: serviceTime,
       };
     });
