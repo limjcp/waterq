@@ -168,6 +168,18 @@ export default function StaffDashboard() {
     null
   );
 
+  // Add this near the other state variables
+  const [showConfirmations, setShowConfirmations] = useState(true);
+
+  // Add this useEffect to load the saved preference
+  useEffect(() => {
+    // Load saved confirmation preference when component mounts
+    const savedPreference = localStorage.getItem("showConfirmations");
+    if (savedPreference !== null) {
+      setShowConfirmations(savedPreference === "true");
+    }
+  }, []);
+
   // Fetch assigned counter ID when session is available
   useEffect(() => {
     async function getAssignedCounter() {
@@ -501,9 +513,42 @@ export default function StaffDashboard() {
 
   // New function to complete transaction with service type
   function openServiceTypeConfirmation(serviceType: ServiceType) {
-    setServiceTypeToConfirm(serviceType);
-    setIsServiceTypeConfirmModalOpen(true);
-    setIsServiceTypeModalOpen(false); // Close the selection modal
+    if (showConfirmations) {
+      setServiceTypeToConfirm(serviceType);
+      setIsServiceTypeConfirmModalOpen(true);
+      setIsServiceTypeModalOpen(false); // Close the selection modal
+    } else {
+      // Skip confirmation and complete transaction directly
+      if (ticketToComplete) {
+        const ticketId = ticketToComplete;
+
+        // Direct completion with the selected service type
+        (async () => {
+          try {
+            const response = await fetch(`/api/tickets/${ticketId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                status: "SERVED",
+                serviceTypeId: serviceType.id,
+                servingEnd: new Date(),
+              }),
+            });
+
+            if (response.ok) {
+              setIsServiceTypeModalOpen(false);
+              setTicketToComplete(null);
+              setServingTicketId(null);
+              setCalledTicketId(null);
+              fetchTickets();
+              fetchUserStatistics();
+            }
+          } catch (error) {
+            console.error("Error completing transaction:", error);
+          }
+        })();
+      }
+    }
   }
 
   // New function to actually complete the transaction after confirmation
@@ -628,45 +673,48 @@ export default function StaffDashboard() {
 
   // New function to open transfer confirmation
   function openTransferConfirmation(service: Service) {
-    setServiceToConfirm(service);
-    setIsTransferConfirmModalOpen(true);
-    setIsTransferModalOpen(false); // Close the selection modal
+    if (showConfirmations) {
+      setServiceToConfirm(service);
+      setIsTransferConfirmModalOpen(true);
+      setIsTransferModalOpen(false);
+    } else {
+      // Skip confirmation and transfer directly
+      if (ticketToTransfer) {
+        const ticketId = ticketToTransfer;
+
+        // Direct transfer with the selected service
+        (async () => {
+          try {
+            const response = await fetch(`/api/tickets/${ticketId}/transfer`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                serviceId: service.id,
+              }),
+            });
+
+            if (response.ok) {
+              setIsTransferModalOpen(false);
+              setTicketToTransfer(null);
+              setServingTicketId(null);
+              fetchTickets();
+            }
+          } catch (error) {
+            console.error("Error transferring ticket:", error);
+          }
+        })();
+      }
+    }
   }
 
-  // Modify handleTransferTicket to handle confirmation
-  async function handleTransferTicket(confirmed: boolean = false) {
-    if (!confirmed || !ticketToTransfer || !serviceToConfirm) {
-      // If not confirmed or missing data, just close modals and reset state
-      setIsTransferConfirmModalOpen(false);
-      setServiceToConfirm(null);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `/api/tickets/${ticketToTransfer}/transfer`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            serviceId: serviceToConfirm.id,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        // Close modal and reset state
-        setIsTransferConfirmModalOpen(false);
-        setServiceToConfirm(null);
-        setTicketToTransfer(null);
-        setSelectedServiceId("");
-        setServingTicketId(null);
-        fetchTickets();
-      } else {
-        console.error("Failed to transfer ticket");
-      }
-    } catch (error) {
-      console.error("Error transferring ticket:", error);
+  // Modify the openLapsedConfirmModal function
+  function openLapsedConfirmModal(ticketId: string) {
+    if (showConfirmations) {
+      setTicketToLapse(ticketId);
+      setIsLapsedConfirmModalOpen(true);
+    } else {
+      // Skip confirmation and mark as lapsed directly
+      markLapsed(ticketId);
     }
   }
 
@@ -792,7 +840,40 @@ export default function StaffDashboard() {
 
               {/* Profile Menu Dropdown */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 top-24 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                <div className="absolute right-0 top-24 w-64 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">
+                        Always Confirm
+                      </span>
+                      <button
+                        onClick={() => {
+                          const newValue = !showConfirmations;
+                          setShowConfirmations(newValue);
+                          localStorage.setItem(
+                            "showConfirmations",
+                            String(newValue)
+                          );
+                        }}
+                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+                          showConfirmations ? "bg-sky-600" : "bg-gray-300"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${
+                            showConfirmations
+                              ? "translate-x-6"
+                              : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {showConfirmations
+                        ? "Confirmation dialogs will be shown before actions"
+                        : "Actions will be performed without confirmation"}
+                    </p>
+                  </div>
                   <button
                     onClick={handleSignOut}
                     className="w-full text-left px-4 py-2 text-gray-700 hover:bg-sky-50 transition-colors"
@@ -851,7 +932,7 @@ export default function StaffDashboard() {
               <h2 className="text-3xl font-bold text-sky-800 mb-6">
                 Next in Line
               </h2>
-              <div className="h-[250px] flex items-center justify-center">
+              <div className="h-[290px] flex items-center justify-center">
                 {activeTickets.length ? (
                   <div className="flex flex-col items-center">
                     {/* Display just the first waiting ticket - RESPONSIVE SIZE */}
