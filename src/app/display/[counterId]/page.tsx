@@ -30,6 +30,11 @@ type DisplayData = {
   ticket: Ticket | null;
 };
 
+// Add helper function to format ticket number
+function formatTicketNumber(number: number): string {
+  return String(number).padStart(3, "0");
+}
+
 export default function CounterDisplayPage() {
   const { counterId } = useParams<{ counterId: string }>();
   const [data, setData] = useState<DisplayData | null>(null);
@@ -71,11 +76,14 @@ export default function CounterDisplayPage() {
       console.log("Received ticket update:", ticketData);
       // If ticket is for this counter, update display
       if (ticketData.counterId === counterId) {
-        setData((prevData) => ({
-          ...prevData,
-          counter: prevData?.counter || null,
-          ticket: ticketData.status === "SERVED" ? null : ticketData,
-        }));
+        setData((prevData) =>
+          prevData
+            ? {
+                ...prevData,
+                ticket: ticketData.status === "SERVED" ? null : ticketData,
+              }
+            : null
+        );
 
         // Play beep sound for newly called tickets
         if (ticketData.status === "CALLED" && audioRef.current) {
@@ -209,66 +217,42 @@ export default function CounterDisplayPage() {
       </header>
 
       <div className="w-full flex flex-col items-center justify-center">
-        {/* Display counter name at the top */}
-        {/* <div className="absolute top-6 left-0 right-0 text-center">
-          <h2 className="text-4xl font-bold text-sky-700">
+        {/* Counter name in fixed position below header */}
+        <div className="fixed top-[120px] left-0 right-0 bg-sky-50 py-4 z-10">
+          <h1 className="text-8xl font-bold text-sky-800 text-center">
             {counter?.name || "Counter Display"}
-          </h2>
-        </div> */}
+          </h1>
+        </div>
 
-        <h1 className="text-9xl font-bold mb-0 mt-20 text-sky-800">
-          {/* {ticket?.service?.name} */}
-          {counter?.name || "Counter Display"}
-        </h1>
+        {/* Main content with adjusted spacing from fixed header and counter name */}
+        <div className="mt-[150px]">
+          {ticket && ticket.id ? (
+            <div className="flex flex-col items-center">
+              <p
+                className={`text-[16rem] font-bold ${
+                  ticket.status.toLowerCase() === "called"
+                    ? "blink-animation"
+                    : "text-sky-800"
+                }`}
+              >
+                {`${ticket.isPrioritized ? "PWD-" : ""}${
+                  ticket.prefix
+                }-${formatTicketNumber(ticket.ticketNumber)}`}
+              </p>
 
-        {ticket && ticket.id ? (
-          <>
-            {/* Status indicators */}
-            {/* <div className="flex gap-4 mb-4">
-              {ticket.isPrioritized && (
-                <div className="px-6 py-2 bg-blue-100 rounded-full">
-                  <p className="text-3xl font-semibold text-blue-800">PWD</p>
-                </div>
+              <p className="text-5xl text-gray-600 text-center">
+                Currently Serving
+              </p>
+              {ticket.service && (
+                <p className="mt-2 text-2xl text-gray-700 text-center">
+                  {/* Service: {ticket.service.name} */}
+                </p>
               )}
-            </div> */}
-
-            <p
-              className={`text-[25rem] font-bold ${
-                ticket.status.toLowerCase() === "called"
-                  ? "blink-animation"
-                  : "text-sky-800"
-              }`}
-            >
-              {/* Format ticket number with PWD prefix for prioritized tickets */}
-              {`${ticket.isPrioritized ? "PWD-" : ""}${ticket.prefix}-${
-                ticket.ticketNumber
-              }`}
-            </p>
-
-            {/* Add status indicator */}
-            {/* <div
-              className={`mt-4 px-6 py-2 rounded-full ${
-                ticket.status.toLowerCase() === "called"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-green-100 text-green-800"
-              }`}
-            >
-              <p className="text-3xl font-semibold">
-                {ticket.status.charAt(0).toUpperCase() +
-                  ticket.status.slice(1).toLowerCase()}
-              </p>
-            </div> */}
-
-            <p className="mt-4 text-5xl text-gray-600">Currently Serving</p>
-            {ticket.service && (
-              <p className="mt-2 text-2xl text-gray-700">
-                {/* Service: {ticket.service.name} */}
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-3xl mt-10 text-gray-600">No ticket called yet</p>
-        )}
+            </div>
+          ) : (
+            <p className="text-3xl mt-10 text-gray-600">No ticket called yet</p>
+          )}
+        </div>
       </div>
     </div>
   );
