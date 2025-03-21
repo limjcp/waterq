@@ -1092,7 +1092,7 @@ export default function StaffDashboard() {
           {/* Other Counters Status - EXPANDED GRID */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-sky-800 mb-4">
-              Other {currentServingTicket?.service?.name || ""} Counters
+              Other Counters
             </h2>
             {otherCounterTickets.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
