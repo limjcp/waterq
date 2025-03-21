@@ -14,3 +14,41 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    const { name, code, serviceId } = body;
+
+    // Validate required fields
+    if (!name || !code || !serviceId) {
+      return NextResponse.json(
+        { error: "Name, code, and serviceId are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if service exists
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+    });
+
+    if (!service) {
+      return NextResponse.json({ error: "Service not found" }, { status: 404 });
+    }
+
+    // Create the counter
+    const counter = await prisma.counter.create({
+      data: {
+        name,
+        code,
+        serviceId,
+      },
+    });
+
+    return NextResponse.json(counter);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

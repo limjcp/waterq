@@ -70,7 +70,7 @@ export default function ServicesManagement() {
 
   // Update type name and regenerate code
   const handleTypeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
+    const name = e.target.value.toUpperCase();
 
     // Update the code based on current service and new name
     const newCode = generateTypeCode(selectedService, name);
@@ -445,7 +445,7 @@ export default function ServicesManagement() {
                     </label>
                     <input
                       type="text"
-                      value={newServiceType.name}
+                      value={newServiceType.name.toUpperCase()}
                       onChange={handleTypeNameChange}
                       className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                       required

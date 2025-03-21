@@ -155,6 +155,19 @@ export default function StaffDashboard() {
     window.location.href = "/api/auth/signout";
   };
 
+  // Add new state for service type confirmation modal
+  const [isServiceTypeConfirmModalOpen, setIsServiceTypeConfirmModalOpen] =
+    useState(false);
+  const [serviceTypeToConfirm, setServiceTypeToConfirm] =
+    useState<ServiceType | null>(null);
+
+  // Add new state for transfer confirmation modal
+  const [isTransferConfirmModalOpen, setIsTransferConfirmModalOpen] =
+    useState(false);
+  const [serviceToConfirm, setServiceToConfirm] = useState<Service | null>(
+    null
+  );
+
   // Fetch assigned counter ID when session is available
   useEffect(() => {
     async function getAssignedCounter() {
@@ -487,12 +500,18 @@ export default function StaffDashboard() {
   }
 
   // New function to complete transaction with service type
-  async function completeTransaction(serviceTypeId: string) {
-    if (!ticketToComplete || !serviceTypeId) {
-      console.error("Missing required data:", {
-        ticketToComplete,
-        serviceTypeId,
-      });
+  function openServiceTypeConfirmation(serviceType: ServiceType) {
+    setServiceTypeToConfirm(serviceType);
+    setIsServiceTypeConfirmModalOpen(true);
+    setIsServiceTypeModalOpen(false); // Close the selection modal
+  }
+
+  // New function to actually complete the transaction after confirmation
+  async function completeTransaction(confirmed: boolean = false) {
+    if (!confirmed || !ticketToComplete || !serviceTypeToConfirm) {
+      // If not confirmed or missing data, just close modals and reset state
+      setIsServiceTypeConfirmModalOpen(false);
+      setServiceTypeToConfirm(null);
       return;
     }
 
@@ -502,7 +521,7 @@ export default function StaffDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "SERVED",
-          serviceTypeId: serviceTypeId,
+          serviceTypeId: serviceTypeToConfirm.id,
           servingEnd: new Date(), // Add serving end time
         }),
       });
@@ -514,7 +533,8 @@ export default function StaffDashboard() {
       }
 
       // Reset states and refresh data
-      setIsServiceTypeModalOpen(false);
+      setIsServiceTypeConfirmModalOpen(false);
+      setServiceTypeToConfirm(null);
       setTicketToComplete(null);
       setSelectedServiceTypeId("");
       setServingTicketId(null);
@@ -600,20 +620,25 @@ export default function StaffDashboard() {
     fetchTickets();
   }
 
+  // Modify openTransferModal to just set the ticket ID
   function openTransferModal(ticketId: string) {
     setTicketToTransfer(ticketId);
     setIsTransferModalOpen(true);
   }
 
-  async function handleTransferTicket(serviceId?: string) {
-    if (!ticketToTransfer) {
-      return;
-    }
+  // New function to open transfer confirmation
+  function openTransferConfirmation(service: Service) {
+    setServiceToConfirm(service);
+    setIsTransferConfirmModalOpen(true);
+    setIsTransferModalOpen(false); // Close the selection modal
+  }
 
-    // Use provided serviceId or fall back to the state value
-    const targetServiceId = serviceId || selectedServiceId;
-
-    if (!targetServiceId) {
+  // Modify handleTransferTicket to handle confirmation
+  async function handleTransferTicket(confirmed: boolean = false) {
+    if (!confirmed || !ticketToTransfer || !serviceToConfirm) {
+      // If not confirmed or missing data, just close modals and reset state
+      setIsTransferConfirmModalOpen(false);
+      setServiceToConfirm(null);
       return;
     }
 
@@ -624,14 +649,15 @@ export default function StaffDashboard() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            serviceId: targetServiceId,
+            serviceId: serviceToConfirm.id,
           }),
         }
       );
 
       if (response.ok) {
         // Close modal and reset state
-        setIsTransferModalOpen(false);
+        setIsTransferConfirmModalOpen(false);
+        setServiceToConfirm(null);
         setTicketToTransfer(null);
         setSelectedServiceId("");
         setServingTicketId(null);
@@ -787,77 +813,87 @@ export default function StaffDashboard() {
           {/* Active and Lapsed Tickets side by side */}
           <div className="flex flex-col md:flex-row gap-6">
             {/* Lapsed Tickets Section - LEFT SIDE */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1">
+            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 min-h-[400px]">
               <h2 className="text-2xl font-bold text-sky-800 mb-4">
                 Lapsed Tickets
               </h2>
-              {lapsedTickets.length ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {lapsedTickets.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      className="border border-amber-100 rounded-lg p-4 bg-amber-50"
-                    >
-                      <p className="font-medium text-amber-700">
-                        {ticket.isPrioritized ? "PWD-" : ""}
-                        {getTicketDisplayCode(ticket)}-
-                        {formatTicketNumber(ticket.ticketNumber)}
-                      </p>
-                      <p className="text-xs text-amber-600 mt-1">
-                        Status: {ticket.status}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-amber-600">No lapsed tickets.</p>
-              )}
+              <div className="h-[220px] overflow-auto">
+                {lapsedTickets.length ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {lapsedTickets.map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="border border-amber-100 rounded-lg p-4 bg-amber-50"
+                      >
+                        <p className="font-medium text-amber-700">
+                          {ticket.isPrioritized ? "PWD-" : ""}
+                          {getTicketDisplayCode(ticket)}-
+                          {formatTicketNumber(ticket.ticketNumber)}
+                        </p>
+                        <p className="text-xs text-amber-600 mt-1">
+                          Status: {ticket.status}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-center text-amber-600">
+                      No lapsed tickets.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE - RESPONSIVE TEXT SIZE */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 flex-1">
+            <div className="bg-white rounded-2xl shadow-lg p-8 flex-1 min-h-[400px]">
               <h2 className="text-3xl font-bold text-sky-800 mb-6">
                 Next in Line
               </h2>
-              {activeTickets.length ? (
-                <div className="flex flex-col items-center">
-                  {/* Display just the first waiting ticket - RESPONSIVE SIZE */}
-                  <div className="bg-sky-50 rounded-lg w-56 h-28 flex items-center justify-center mb-6">
-                    <span
-                      className={`${getTicketTextSizeClass(
-                        activeTickets[0]
-                      )} font-bold text-sky-700 text-center px-2 break-all`}
-                    >
-                      {activeTickets[0].isPrioritized ? "PWD-" : ""}
-                      {getTicketDisplayCode(activeTickets[0])}-
-                      {formatTicketNumber(activeTickets[0].ticketNumber)}
-                    </span>
-                  </div>
-                  <p className="text-xl font-medium text-sky-600 mb-2">
-                    {activeTickets[0].service?.name || "Unknown Service"}
-                  </p>
-                  {activeTickets[0].isPrioritized && (
-                    <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
-                      Priority
-                    </span>
-                  )}
-                  <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
-
-                  {/* Show pending count if there are more waiting tickets */}
-                  {activeTickets.length > 1 && (
-                    <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
-                      <p className="text-center text-sky-700 font-medium text-xl">
-                        Waiting: {activeTickets.length - 1} ticket
-                        {activeTickets.length - 1 !== 1 ? "s" : ""}
-                      </p>
+              <div className="h-[250px] flex items-center justify-center">
+                {activeTickets.length ? (
+                  <div className="flex flex-col items-center">
+                    {/* Display just the first waiting ticket - RESPONSIVE SIZE */}
+                    <div className="bg-sky-50 rounded-lg w-56 h-28 flex items-center justify-center mb-6">
+                      <span
+                        className={`${getTicketTextSizeClass(
+                          activeTickets[0]
+                        )} font-bold text-sky-700 text-center px-2 break-all`}
+                      >
+                        {activeTickets[0].isPrioritized ? "PWD-" : ""}
+                        {getTicketDisplayCode(activeTickets[0])}-
+                        {formatTicketNumber(activeTickets[0].ticketNumber)}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-center text-sky-600 py-10 text-xl">
-                  No tickets waiting in queue
-                </p>
-              )}
+                    <p className="text-xl font-medium text-sky-600 mb-2">
+                      {activeTickets[0].service?.name || "Unknown Service"}
+                    </p>
+                    {activeTickets[0].isPrioritized && (
+                      <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
+                        Priority
+                      </span>
+                    )}
+                    <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
+
+                    {/* Show pending count if there are more waiting tickets */}
+                    {activeTickets.length > 1 && (
+                      <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
+                        <p className="text-center text-sky-700 font-medium text-xl">
+                          Waiting: {activeTickets.length - 1} ticket
+                          {activeTickets.length - 1 !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <p className="text-center text-sky-600 text-xl">
+                      No tickets waiting in queue
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1280,10 +1316,7 @@ export default function StaffDashboard() {
                 {availableServices.map((service) => (
                   <button
                     key={service.id}
-                    onClick={() => {
-                      setSelectedServiceId(service.id);
-                      handleTransferTicket(service.id);
-                    }}
+                    onClick={() => openTransferConfirmation(service)}
                     className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-between"
                   >
                     <span>{service.name}</span>
@@ -1304,6 +1337,97 @@ export default function StaffDashboard() {
                 className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Transfer Confirmation Modal */}
+      {isTransferConfirmModalOpen && serviceToConfirm && ticketToTransfer && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+            <div className="flex items-center mb-6 text-purple-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mr-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <h3 className="text-2xl font-bold text-gray-800">
+                Confirm Transfer
+              </h3>
+            </div>
+
+            <div className="mb-8">
+              <p className="text-lg text-gray-700 mb-6">
+                Are you sure you want to transfer this ticket to the following
+                service?
+              </p>
+
+              <div className="bg-purple-50 border border-purple-100 rounded-lg p-5 mb-6">
+                <div className="text-center">
+                  <span className="text-3xl font-bold text-purple-700 block">
+                    {serviceToConfirm.name}
+                  </span>
+                  <span className="text-xl text-purple-600 block mt-2">
+                    Code: {serviceToConfirm.code}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-sky-50 border border-sky-100 rounded-lg p-5">
+                {tickets
+                  .filter((t) => t.id === ticketToTransfer)
+                  .map((ticket) => (
+                    <div key={ticket.id} className="text-center">
+                      <span className="text-2xl font-bold text-sky-700 block">
+                        Current Ticket:
+                      </span>
+                      <span className="text-xl font-bold text-sky-700 block mt-2">
+                        {ticket.isPrioritized ? "PWD-" : ""}
+                        {getTicketDisplayCode(ticket)}-
+                        {formatTicketNumber(ticket.ticketNumber)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setIsTransferConfirmModalOpen(false);
+                  setServiceToConfirm(null);
+                  setIsTransferModalOpen(true); // Reopen the selection modal
+                }}
+                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors text-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleTransferTicket(true)}
+                className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Transfer Ticket
               </button>
             </div>
           </div>
@@ -1361,7 +1485,7 @@ export default function StaffDashboard() {
                   .map((type) => (
                     <button
                       key={type.id}
-                      onClick={() => completeTransaction(type.id)}
+                      onClick={() => openServiceTypeConfirmation(type)}
                       className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors flex flex-col items-start"
                     >
                       <span className="font-semibold text-sky-900 mb-1">
@@ -1484,6 +1608,80 @@ export default function StaffDashboard() {
                   />
                 </svg>
                 Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Service Type Confirmation Modal */}
+      {isServiceTypeConfirmModalOpen && serviceTypeToConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+            <div className="flex items-center mb-6 text-green-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mr-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <h3 className="text-2xl font-bold text-gray-800">
+                Confirm Service Type
+              </h3>
+            </div>
+
+            <div className="mb-8">
+              <p className="text-lg text-gray-700 mb-6">
+                Are you sure you want to complete this transaction with the
+                following service type?
+              </p>
+
+              <div className="bg-green-50 border border-green-100 rounded-lg p-5 mb-6">
+                <div className="text-center">
+                  <span className="text-3xl font-bold text-green-700 block">
+                    {serviceTypeToConfirm.name}
+                  </span>
+                  <span className="text-xl text-green-600 block mt-2">
+                    Code: {serviceTypeToConfirm.code}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setIsServiceTypeConfirmModalOpen(false);
+                  setServiceTypeToConfirm(null);
+                  setIsServiceTypeModalOpen(true); // Reopen the selection modal
+                }}
+                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors text-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => completeTransaction(true)}
+                className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Complete Transaction
               </button>
             </div>
           </div>

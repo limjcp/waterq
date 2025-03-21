@@ -49,6 +49,43 @@ export default function CountersManagement() {
     }
   }, [status]);
 
+  // Effect to auto-generate name and code when serviceId changes
+  useEffect(() => {
+    if (!isAddingCounter || editingCounter || !formData.serviceId) return;
+
+    const selectedService = services.find((s) => s.id === formData.serviceId);
+    if (!selectedService) return;
+
+    // Find existing counters for this service to determine next number
+    const serviceCounters = counters.filter(
+      (c) => c.serviceId === formData.serviceId
+    );
+
+    // Extract numbers from existing counter codes for this service
+    const existingNumbers = serviceCounters
+      .map((c) => {
+        const match = c.code.match(
+          new RegExp(`^${selectedService.code}(\\d+)$`)
+        );
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter((n) => !isNaN(n));
+
+    // Find the next available number
+    const nextNumber =
+      existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+
+    // Generate name and code
+    const newName = `${selectedService.name} ${nextNumber}`;
+    const newCode = `${selectedService.code}${nextNumber}`;
+
+    setFormData((prev) => ({
+      ...prev,
+      name: newName,
+      code: newCode,
+    }));
+  }, [formData.serviceId, services, counters, isAddingCounter, editingCounter]);
+
   const fetchCounters = async () => {
     try {
       setLoading(true);
@@ -214,40 +251,6 @@ export default function CountersManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-sky-700 mb-2">
-                  Counter Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g. Counter 1"
-                  className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-sky-700 mb-2">
-                  Counter Code
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  value={formData.code}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g. CW1"
-                  className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-                <p className="text-xs text-sky-600 mt-1">
-                  Codes like CW1 for Customer Welfare, NSA1 for New Service
-                  Application, P1 for Payment
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-sky-700 mb-2">
                   Assigned Service
                 </label>
                 <select
@@ -265,6 +268,51 @@ export default function CountersManagement() {
                   ))}
                 </select>
               </div>
+
+              {(editingCounter || formData.serviceId) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-sky-700 mb-2">
+                      Counter Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="Auto-generated name"
+                      className={`w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                        !editingCounter ? "bg-gray-50" : ""
+                      }`}
+                      readOnly={!editingCounter}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sky-700 mb-2">
+                      Counter Code
+                    </label>
+                    <input
+                      type="text"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleChange}
+                      required
+                      placeholder="Auto-generated code"
+                      className={`w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                        !editingCounter ? "bg-gray-50" : ""
+                      }`}
+                      readOnly={!editingCounter}
+                    />
+                    {!editingCounter && (
+                      <p className="text-xs text-sky-600 mt-1">
+                        Code is automatically generated based on service
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex justify-end gap-4 pt-4">
