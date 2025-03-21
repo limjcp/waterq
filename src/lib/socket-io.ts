@@ -11,18 +11,35 @@ export type NextApiResponseWithSocket = {
 };
 
 // Function to emit a Socket.IO event from an API route
-export function emitSocketEvent(event: string, data: any): boolean {
+export function emitSocketEvent(
+  event: string,
+  data: any,
+  room?: string
+): boolean {
   try {
-    // Access the global io instance that was set in the custom server
-    const io = global.io;
+    const io = getIO();
 
     if (!io) {
       console.warn("Socket.IO server not found. Event not emitted.");
       return false;
     }
 
-    io.emit(event, data);
-    console.log(`Emitted Socket.IO event: ${event}`);
+    // Clone the data to ensure we don't mutate the original
+    const payload = { ...data };
+
+    if (room) {
+      // Emit to specific room
+      io.to(room).emit(event, payload);
+      console.log(
+        `Emitted Socket.IO event: ${event} to room: ${room}`,
+        payload
+      );
+    } else {
+      // Broadcast to all clients
+      io.emit(event, payload);
+      console.log(`Emitted Socket.IO event: ${event} to all clients`, payload);
+    }
+
     return true;
   } catch (error) {
     console.error("Error emitting Socket.IO event:", error);
@@ -63,4 +80,17 @@ export function getSocketIo(server?: http.Server): IOServer {
   }
 
   return global.socketIo;
+}
+
+// Add specific event emitters for more type safety
+export function emitTicketUpdate(ticketData: any): boolean {
+  return emitSocketEvent("ticket:update", ticketData);
+}
+
+export function emitCounterUpdate(counterId: string, ticketData: any): boolean {
+  return emitSocketEvent("counter:ticket", ticketData, `counter:${counterId}`);
+}
+
+export function emitStatsUpdate(statsData: any): boolean {
+  return emitSocketEvent("stats:update", statsData);
 }

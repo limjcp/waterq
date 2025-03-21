@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { QueueStatus } from "@prisma/client";
+import { emitTicketUpdate } from "@/lib/socket-io";
 
 export async function POST(request: Request) {
   try {
@@ -63,9 +64,15 @@ export async function POST(request: Request) {
         status: QueueStatus.PENDING,
         isPrioritized: isPrioritized,
         service: { connect: { id: service.id } },
-        // No counter connection here
+      },
+      include: {
+        service: true,
+        counter: true,
       },
     });
+
+    // Emit socket event for the new ticket
+    emitTicketUpdate(newTicket);
 
     console.log("Created new ticket:", newTicket);
 

@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { QueueStatus } from "@prisma/client";
+import { emitTicketUpdate } from "@/lib/socket-io";
 
 export async function PUT(
   request: NextRequest,
   context: { params: { id: string } }
 ) {
-  const { id } = await context.params;
+  const { id } = context.params;
 
   try {
     const { serviceId } = await request.json();
@@ -18,29 +19,7 @@ export async function PUT(
       );
     }
 
-    // Get the ticket and verify it exists
-    const ticket = await prisma.queueTicket.findUnique({
-      where: { id },
-      include: { service: true },
-    });
-
-    if (!ticket) {
-      return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
-    }
-
-    // Get the destination service
-    const destinationService = await prisma.service.findUnique({
-      where: { id: serviceId },
-    });
-
-    if (!destinationService) {
-      return NextResponse.json(
-        { error: "Destination service not found" },
-        { status: 404 }
-      );
-    }
-
-    // Update the ticket to be transferred without changing the prefix
+    // Update the ticket to be transferred with complete data fetch
     const updatedTicket = await prisma.queueTicket.update({
       where: { id },
       data: {
@@ -48,7 +27,15 @@ export async function PUT(
         service: { connect: { id: serviceId } },
         counter: { disconnect: true }, // Disconnect from current counter
       },
+      include: {
+        service: true,
+        serviceType: true,
+        counter: true,
+      },
     });
+
+    // Emit update event with complete ticket data
+    emitTicketUpdate(updatedTicket);
 
     return NextResponse.json(updatedTicket);
   } catch (error) {

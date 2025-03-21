@@ -66,7 +66,14 @@ app.prepare().then(() => {
   });
 
   // Initialize Socket.IO with the same server
-  const io = new Server(server);
+  const io = new Server(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000,
+  });
 
   // Make io available globally
   global.io = io;
@@ -77,16 +84,24 @@ app.prepare().then(() => {
 
     // Let clients join rooms for specific counters
     socket.on("joinCounter", (counterId) => {
+      // Leave any previous counter rooms
+      socket.rooms.forEach((room) => {
+        if (room.startsWith("counter:")) {
+          socket.leave(room);
+        }
+      });
+
+      // Join new counter room
       socket.join(`counter:${counterId}`);
       console.log(`Client ${socket.id} joined counter ${counterId}`);
     });
 
-    // Handle ticket updates
+    // Handle ticket updates with full data payload
     socket.on("updateTicket", (ticketData) => {
       // Broadcast to all clients
       io.emit("ticket:update", ticketData);
 
-      // If ticket is assigned to a counter, send to that counter's room
+      // If ticket is assigned to a counter, send specific update
       if (ticketData.counterId) {
         io.to(`counter:${ticketData.counterId}`).emit(
           "counter:ticket",
@@ -95,8 +110,18 @@ app.prepare().then(() => {
       }
     });
 
+    // Handle stats updates with full data payload
+    socket.on("updateStats", (statsData) => {
+      io.emit("stats:update", statsData);
+    });
+
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
+    });
+
+    // Handle errors
+    socket.on("error", (error) => {
+      console.error("Socket error:", error);
     });
   });
 

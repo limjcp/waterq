@@ -57,11 +57,8 @@ export default function CounterDisplayPage() {
     const socket = io();
     socketRef.current = socket;
 
-    // Log connection status
     socket.on("connect", () => {
       console.log("Socket connected", socket.id);
-
-      // Join a room for this specific counter
       socket.emit("joinCounter", counterId);
     });
 
@@ -70,24 +67,33 @@ export default function CounterDisplayPage() {
     });
 
     // Listen for ticket updates
-    socket.on("ticket:update", () => {
-      console.log("Received general ticket update");
-      fetchTicket();
-    });
-
-    // Listen for updates specific to this counter
-    socket.on("counter:ticket", (ticketData) => {
-      console.log("Received counter-specific update for", counterId);
+    socket.on("ticket:update", (ticketData) => {
+      console.log("Received ticket update:", ticketData);
+      // If ticket is for this counter, update display
       if (ticketData.counterId === counterId) {
-        // Update directly from socket data or refetch
-        fetchTicket();
+        setData((prevData) => ({
+          ...prevData,
+          counter: prevData?.counter || null,
+          ticket: ticketData.status === "SERVED" ? null : ticketData,
+        }));
+
+        // Play beep sound for newly called tickets
+        if (ticketData.status === "CALLED" && audioRef.current) {
+          audioRef.current.play();
+        }
       }
     });
 
-    // Cleanup on unmount
     return () => {
       if (socketRef.current) {
+        socketRef.current.off("connect");
+        socketRef.current.off("connect_error");
+        socketRef.current.off("ticket:update");
         socketRef.current.disconnect();
+      }
+      // Clear any ongoing beep intervals
+      if (beepIntervalRef.current) {
+        clearInterval(beepIntervalRef.current);
       }
     };
   }, [counterId, fetchTicket]);

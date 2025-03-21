@@ -282,8 +282,6 @@ export default function StaffDashboard() {
   useEffect(() => {
     if (assignedCounterId) {
       fetchTickets();
-      const interval = setInterval(fetchTickets, 10000);
-      return () => clearInterval(interval);
     }
   }, [assignedCounterId, assignedCounterService]);
 
@@ -329,47 +327,86 @@ export default function StaffDashboard() {
 
   // Socket.IO setup effect
   useEffect(() => {
+    if (!assignedCounterId || !assignedCounterService) return;
+
     const socket = io();
 
-    socket.on("ticket:update", () => {
-      console.log("Ticket updated via Socket.IO");
-      // Instead of calling fetch functions directly, update the trigger
-      setSocketUpdateTrigger((prev) => prev + 1);
+    // Connect and immediately fetch initial data
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      socket.emit("joinCounter", assignedCounterId);
+    });
+
+    // Listen for ticket updates
+    socket.on("ticket:update", (ticketData) => {
+      console.log("Ticket update received:", ticketData);
+
+      // Update tickets state directly with the new data
+      setTickets((prevTickets) => {
+        // Create a copy of the current tickets
+        const newTickets = [...prevTickets];
+
+        // Find if this ticket already exists
+        const ticketIndex = newTickets.findIndex((t) => t.id === ticketData.id);
+
+        // If it exists, update it
+        if (ticketIndex > -1) {
+          newTickets[ticketIndex] = ticketData;
+        }
+        // If it's new and belongs to our service, add it
+        else if (
+          ticketData.serviceId === assignedCounterService &&
+          (ticketData.status === "PENDING" ||
+            (ticketData.status === "RETURNING" &&
+              ticketData.counterId === null))
+        ) {
+          newTickets.push(ticketData);
+        }
+
+        // Sort tickets: prioritized first, then by creation time
+        return newTickets.sort((a, b) => {
+          if (a.isPrioritized === b.isPrioritized) {
+            return (
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+          }
+          return b.isPrioritized ? 1 : -1;
+        });
+      });
+
+      // Update other state variables based on ticket status
+      if (ticketData.counterId === assignedCounterId) {
+        if (ticketData.status === "CALLED") {
+          setCalledTicketId(ticketData.id);
+        } else if (ticketData.status === "SERVING") {
+          setServingTicketId(ticketData.id);
+        } else if (
+          ["SERVED", "RETURNING", "LAPSED"].includes(ticketData.status)
+        ) {
+          if (calledTicketId === ticketData.id) setCalledTicketId(null);
+          if (servingTicketId === ticketData.id) setServingTicketId(null);
+        }
+      }
     });
 
     return () => {
+      socket.off("connect");
+      socket.off("ticket:update");
       socket.disconnect();
     };
-  }, []); // Empty dependency array means this runs once on mount
+  }, [
+    assignedCounterId,
+    assignedCounterService,
+    calledTicketId,
+    servingTicketId,
+  ]);
 
-  // Data fetching effect triggered by socket updates
-  useEffect(() => {
-    if (socketUpdateTrigger > 0) {
-      // Skip initial render
-      fetchTickets();
-      if (status === "authenticated") {
-        fetchUserStatistics();
-      }
-    }
-  }, [socketUpdateTrigger, status]);
-
-  // Regular polling effect (as a backup)
+  // Initial data fetch only
   useEffect(() => {
     if (assignedCounterId) {
       fetchTickets();
-      const intervalTickets = setInterval(fetchTickets, 5000);
-      return () => clearInterval(intervalTickets);
     }
-  }, [assignedCounterId, assignedCounterService]);
-
-  // User stats polling effect (as a backup)
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchUserStatistics();
-      const intervalStats = setInterval(fetchUserStatistics, 60000);
-      return () => clearInterval(intervalStats);
-    }
-  }, [status, session]);
+  }, [assignedCounterId]);
 
   async function fetchTickets() {
     if (!assignedCounterId || !assignedCounterService) return;
