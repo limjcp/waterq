@@ -1,10 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { TicketIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Accessibility, User } from "lucide-react";
 
 // Add utility function for ticket formatting
-function formatTicketNumber(ticketNumber: string): string {
+function formatTicketNumber(
+  ticketNumber: string,
+  isPWD: boolean = false
+): string {
   if (!ticketNumber) return "";
 
   // If already has a dash, we need to reformat it
@@ -15,8 +18,10 @@ function formatTicketNumber(ticketNumber: string): string {
     const number = parts[1];
 
     if (number && !isNaN(parseInt(number))) {
-      // Pad with leading zeros to make it 3 digits
-      return `${prefix}-${number.padStart(3, "0")}`;
+      // Format with PWD prefix if needed
+      return isPWD
+        ? `PWD-${prefix}-${number.padStart(3, "0")}`
+        : `${prefix}-${number.padStart(3, "0")}`;
     }
     return ticketNumber;
   }
@@ -29,8 +34,10 @@ function formatTicketNumber(ticketNumber: string): string {
   const prefix = ticketNumber.substring(0, numberIndex);
   const number = ticketNumber.substring(numberIndex);
 
-  // Pad with leading zeros to make it 3 digits
-  return `${prefix}-${number.padStart(3, "0")}`;
+  // Format with PWD prefix if needed
+  return isPWD
+    ? `PWD-${prefix}-${number.padStart(3, "0")}`
+    : `${prefix}-${number.padStart(3, "0")}`;
 }
 
 type TicketResponse = {
@@ -50,7 +57,6 @@ type ServiceOption = {
 export default function Kiosk() {
   // Step tracking (1: Choose PWD/Regular, 2: Select Service, 3: Show Ticket)
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedCounterCode, setSelectedCounterCode] = useState("");
   const [ticketData, setTicketData] = useState<TicketResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,8 +81,88 @@ export default function Kiosk() {
     },
   ];
 
+  // Add print function
+  function printTicket(ticket: TicketResponse) {
+    const printWindow = window.open("", "", "width=300,height=200");
+    if (!printWindow) return;
+
+    const ticketHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Queue Ticket</title>
+          <style>
+            @page {
+              size: 80mm 60mm;
+              margin: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: 80mm;
+              height: 60mm;
+              overflow: hidden;
+            }
+            .ticket {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              height: 60mm;
+              text-align: center;
+            }
+            .ticket-number {
+              font-size: 36px;
+              font-weight: bold;
+              font-family: 'Courier New', monospace;
+              margin: 0;
+              line-height: 1.2;
+            }
+            .timestamp {
+              font-size: 14px;
+              font-family: 'Courier New', monospace;
+              margin-top: 8px;
+            }
+            @media print {
+              @page {
+                margin: 0;
+              }
+              html, body {
+                width: 80mm;
+                height: 60mm;
+              }
+              .ticket {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="ticket">
+            <div class="ticket-number">${formatTicketNumber(
+              ticket.ticketNumber,
+              ticket.isPrioritized
+            )}</div>
+            <div class="timestamp">
+              ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+            </div>
+          </div>
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(ticketHtml);
+    printWindow.document.close();
+  }
+
   async function handleGenerateTicket(serviceCode: string) {
-    setSelectedCounterCode(serviceCode);
     setIsLoading(true);
     setError(null);
 
@@ -101,6 +187,8 @@ export default function Kiosk() {
       const data = await res.json();
       setTicketData(data);
       setCurrentStep(3);
+      // Trigger print after ticket is generated
+      printTicket(data);
     } catch (err) {
       console.error(err);
       setError(
@@ -270,16 +358,10 @@ export default function Kiosk() {
                     YOUR TICKET NUMBER
                   </h2>
                   <div className="text-9xl font-bold text-sky-800 animate-pop-in mb-4">
-                    {formatTicketNumber(ticketData.ticketNumber)}
-                  </div>
-
-                  <div className="mt-3 inline-flex items-center px-4 py-2 bg-sky-500 text-white rounded-full text-2xl font-medium animate-fade-in">
-                    {ticketData.isPrioritized
-                      ? `PWD-${formatTicketNumber(
-                          ticketData.ticketNumber.split("-").pop() ||
-                            ticketData.ticketNumber
-                        )}`
-                      : formatTicketNumber(ticketData.ticketNumber)}
+                    {formatTicketNumber(
+                      ticketData.ticketNumber,
+                      ticketData.isPrioritized
+                    )}
                   </div>
 
                   {ticketData.counterName && (
