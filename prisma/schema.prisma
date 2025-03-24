@@ -93,6 +93,7 @@ enum Role {
   unverified
   staff
   admin
+  archived
 }
 
 // New model for service types

@@ -11,7 +11,7 @@ services:
       # Update to use container name instead of localhost
       - DATABASE_URL=postgresql://klwj:123@waterq:5432/waterqdb
       - AUTH_SECRET=${AUTH_SECRET}
-      - HOST_IP=192.168.50.240
+      - HOST_IP=192.168.50.241
     networks:
       - postgres-network
     restart: unless-stopped
