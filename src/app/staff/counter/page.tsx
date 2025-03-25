@@ -1116,7 +1116,7 @@ export default function StaffDashboard() {
         {/* Left sidebar - Currently Serving section only */}
         <div className="lg:w-auto">
           {/* Current serving ticket card */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 h-[700px] w-[600px]">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 h-[650px] w-[570px]">
             <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
               Currently Serving
             </h2>
@@ -1590,7 +1590,7 @@ export default function StaffDashboard() {
             <div
               className={`bg-white rounded-2xl shadow-lg p-8 ${
                 isPaymentCounter ? "w-full" : "flex-1"
-              } min-h-[400px]`}
+              } min-h-[475px]`}
             >
               <h2 className="text-3xl font-bold text-sky-800 mb-6">
                 Next in Line
