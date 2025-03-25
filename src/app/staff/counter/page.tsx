@@ -981,9 +981,9 @@ export default function StaffDashboard() {
 
       {/* Main content area with sections and sidebar - FULL WIDTH */}
       <div className="w-full px-8 flex flex-col lg:flex-row gap-6">
-        {/* Sidebar section - MOVED TO LEFT SIDE */}
-        <div className="lg:w-auto space-y-0 flex flex-col sm:flex-row gap-6">
-          {/* Current serving ticket card - MOVED TO LEFT SIDE */}
+        {/* Left sidebar - Currently Serving section only */}
+        <div className="lg:w-auto">
+          {/* Current serving ticket card */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 h-[700px] w-[600px]">
             <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
               Currently Serving
@@ -1420,35 +1420,6 @@ export default function StaffDashboard() {
               )}
             </div>
           </div>
-
-          {/* User Statistics Card - NOW SIDE BY SIDE */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 h-fit">
-            <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
-              Your Statistics
-            </h2>
-            <div className="space-y-6">
-              <div className="bg-sky-50 rounded-lg p-5">
-                <p className="text-lg text-sky-700 font-medium">Total Served</p>
-                <p className="text-3xl font-bold text-sky-800">
-                  {userStats.totalServed}
-                </p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-5">
-                <p className="text-lg text-green-700 font-medium">Today</p>
-                <p className="text-3xl font-bold text-green-800">
-                  {userStats.todayServed}
-                </p>
-              </div>
-              <div className="bg-amber-50 rounded-lg p-5">
-                <p className="text-lg text-amber-700 font-medium">
-                  Avg. Service Time
-                </p>
-                <p className="text-3xl font-bold text-amber-800">
-                  {formatAverageTime(userStats.averageServiceTime)}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Main content area - EXPANDED */}
@@ -1620,6 +1591,37 @@ export default function StaffDashboard() {
                 No other counters with this service.
               </p>
             )}
+          </div>
+        </div>
+
+        {/* User Statistics Card - MOVED TO RIGHT SIDE */}
+        <div className="lg:w-auto">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 h-fit">
+            <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
+              Your Statistics
+            </h2>
+            <div className="space-y-6">
+              <div className="bg-sky-50 rounded-lg p-5">
+                <p className="text-lg text-sky-700 font-medium">Total Served</p>
+                <p className="text-3xl font-bold text-sky-800">
+                  {userStats.totalServed}
+                </p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-5">
+                <p className="text-lg text-green-700 font-medium">Today</p>
+                <p className="text-3xl font-bold text-green-800">
+                  {userStats.todayServed}
+                </p>
+              </div>
+              <div className="bg-amber-50 rounded-lg p-5">
+                <p className="text-lg text-amber-700 font-medium">
+                  Avg. Service Time
+                </p>
+                <p className="text-3xl font-bold text-amber-800">
+                  {formatAverageTime(userStats.averageServiceTime)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
