@@ -981,182 +981,10 @@ export default function StaffDashboard() {
 
       {/* Main content area with sections and sidebar - FULL WIDTH */}
       <div className="w-full px-8 flex flex-col lg:flex-row gap-6">
-        {/* Main content area - EXPANDED */}
-        <div className="flex-1 space-y-6">
-          {/* Active and Lapsed Tickets side by side */}
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Lapsed Tickets Section - LEFT SIDE - Only show for non-payment counters */}
-            {!isPaymentCounter && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 min-h-[400px]">
-                <h2 className="text-2xl font-bold text-sky-800 mb-4">
-                  Lapsed Tickets
-                </h2>
-                <div className="h-[220px] overflow-auto">
-                  {lapsedTickets.length ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {lapsedTickets.map((ticket) => (
-                        <div
-                          key={ticket.id}
-                          className="border border-amber-100 rounded-lg p-4 bg-amber-50"
-                        >
-                          <p className="font-medium text-amber-700">
-                            {ticket.isPrioritized ? "PWD-" : ""}
-                            {getTicketDisplayCode(ticket)}-
-                            {formatTicketNumber(ticket.ticketNumber)}
-                          </p>
-                          <p className="text-xs text-amber-600 mt-1">
-                            Status: {ticket.status}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <p className="text-center text-amber-600">
-                        No lapsed tickets.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Active Tickets - RIGHT SIDE - For non-payment counters, or FULL WIDTH for payment counters */}
-            <div
-              className={`bg-white rounded-2xl shadow-lg p-8 ${
-                isPaymentCounter ? "w-full" : "flex-1"
-              } min-h-[400px]`}
-            >
-              <h2 className="text-3xl font-bold text-sky-800 mb-6">
-                Next in Line
-              </h2>
-              <div className="h-[290px] flex items-center justify-center">
-                {activeTickets.length ? (
-                  <div className="flex flex-col items-center">
-                    {/* Display just the first waiting ticket - RESPONSIVE SIZE */}
-                    <div className="bg-sky-50 rounded-lg w-56 h-28 flex items-center justify-center mb-6">
-                      <span
-                        className={`${getTicketTextSizeClass(
-                          activeTickets[0]
-                        )} font-bold text-sky-700 text-center px-2 break-all`}
-                      >
-                        {activeTickets[0].isPrioritized ? "PWD-" : ""}
-                        {getTicketDisplayCode(activeTickets[0])}-
-                        {formatTicketNumber(activeTickets[0].ticketNumber)}
-                      </span>
-                    </div>
-                    <p className="text-xl font-medium text-sky-600 mb-2">
-                      {activeTickets[0].service?.name || "Unknown Service"}
-                    </p>
-                    {activeTickets[0].isPrioritized && (
-                      <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
-                        Priority
-                      </span>
-                    )}
-                    <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
-
-                    {/* Show pending count if there are more waiting tickets */}
-                    {activeTickets.length > 1 && (
-                      <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
-                        <p className="text-center text-sky-700 font-medium text-xl">
-                          Waiting: {activeTickets.length - 1} ticket
-                          {activeTickets.length - 1 !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center">
-                    <p className="text-center text-sky-600 text-xl">
-                      No tickets waiting in queue
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Returning Tickets Section - EXPANDED GRID */}
-          {!isPaymentCounter && (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-sky-800 mb-4">
-                Returning Tickets
-              </h2>
-              {returningTickets.length ? (
-                <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {returningTickets.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      className="border border-purple-100 rounded-lg p-4 bg-purple-50"
-                    >
-                      <p className="font-medium text-purple-700">
-                        {ticket.isPrioritized ? "PWD-" : ""}
-                        {getTicketDisplayCode(ticket)}-
-                        {formatTicketNumber(ticket.ticketNumber)}
-                      </p>
-                      <p className="text-xs text-purple-600 mt-1">
-                        Status: {ticket.status}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Transferred from Payment
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-purple-600">
-                  No returning tickets.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Other Counters Status - EXPANDED GRID */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-sky-800 mb-4">
-              Other Counters
-            </h2>
-            {otherCounterTickets.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {otherCounterTickets.map((counter) => (
-                  <div
-                    key={counter.counterId}
-                    className="border border-sky-100 rounded-lg p-4 bg-sky-50"
-                  >
-                    <p className="font-medium text-sky-700">
-                      {counter.counterName}
-                    </p>
-                    {counter.ticket ? (
-                      <div className="mt-2">
-                        <span className="inline-block bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-medium">
-                          {counter.ticket.isPrioritized ? "PWD-" : ""}
-                          {getTicketDisplayCode(counter.ticket)}-
-                          {formatTicketNumber(counter.ticket.ticketNumber)}
-                        </span>
-                        <span className="text-xs text-sky-600 block mt-1">
-                          Status: {counter.ticket.status}
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 mt-2">
-                        No active tickets
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-sky-600">
-                No other counters with this service.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar section - MODIFIED FROM VERTICAL TO HORIZONTAL */}
+        {/* Sidebar section - MOVED TO LEFT SIDE */}
         <div className="lg:w-auto space-y-0 flex flex-col sm:flex-row gap-6">
-          {/* Current serving ticket card - INCREASED SIZE WITH RESPONSIVE TEXT */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 h-[650px] w-[450px]">
+          {/* Current serving ticket card - MOVED TO LEFT SIDE */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 h-[700px] w-[600px]">
             <h2 className="text-2xl font-bold text-sky-800 mb-6 text-center">
               Currently Serving
             </h2>
@@ -1622,6 +1450,178 @@ export default function StaffDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Main content area - EXPANDED */}
+        <div className="flex-1 space-y-6">
+          {/* Active and Lapsed Tickets side by side */}
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Active Tickets - NOW LEFT SIDE */}
+            <div
+              className={`bg-white rounded-2xl shadow-lg p-8 ${
+                isPaymentCounter ? "w-full" : "flex-1"
+              } min-h-[400px]`}
+            >
+              <h2 className="text-3xl font-bold text-sky-800 mb-6">
+                Next in Line
+              </h2>
+              <div className="h-[290px] flex items-center justify-center">
+                {activeTickets.length ? (
+                  <div className="flex flex-col items-center">
+                    {/* Display just the first waiting ticket - RESPONSIVE SIZE */}
+                    <div className="bg-sky-50 rounded-lg w-56 h-28 flex items-center justify-center mb-6">
+                      <span
+                        className={`${getTicketTextSizeClass(
+                          activeTickets[0]
+                        )} font-bold text-sky-700 text-center px-2 break-all`}
+                      >
+                        {activeTickets[0].isPrioritized ? "PWD-" : ""}
+                        {getTicketDisplayCode(activeTickets[0])}-
+                        {formatTicketNumber(activeTickets[0].ticketNumber)}
+                      </span>
+                    </div>
+                    <p className="text-xl font-medium text-sky-600 mb-2">
+                      {activeTickets[0].service?.name || "Unknown Service"}
+                    </p>
+                    {activeTickets[0].isPrioritized && (
+                      <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
+                        Priority
+                      </span>
+                    )}
+                    <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
+
+                    {/* Show pending count if there are more waiting tickets */}
+                    {activeTickets.length > 1 && (
+                      <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
+                        <p className="text-center text-sky-700 font-medium text-xl">
+                          Waiting: {activeTickets.length - 1} ticket
+                          {activeTickets.length - 1 !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <p className="text-center text-sky-600 text-xl">
+                      No tickets waiting in queue
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Lapsed Tickets Section - NOW RIGHT SIDE - Only show for non-payment counters */}
+            {!isPaymentCounter && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 min-h-[400px]">
+                <h2 className="text-2xl font-bold text-sky-800 mb-4">
+                  Lapsed Tickets
+                </h2>
+                <div className="h-[220px] overflow-auto">
+                  {lapsedTickets.length ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {lapsedTickets.map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          className="border border-amber-100 rounded-lg p-4 bg-amber-50"
+                        >
+                          <p className="font-medium text-amber-700">
+                            {ticket.isPrioritized ? "PWD-" : ""}
+                            {getTicketDisplayCode(ticket)}-
+                            {formatTicketNumber(ticket.ticketNumber)}
+                          </p>
+                          <p className="text-xs text-amber-600 mt-1">
+                            Status: {ticket.status}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-center text-amber-600">
+                        No lapsed tickets.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Returning Tickets Section - EXPANDED GRID */}
+          {!isPaymentCounter && (
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-sky-800 mb-4">
+                Returning Tickets
+              </h2>
+              {returningTickets.length ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {returningTickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="border border-purple-100 rounded-lg p-4 bg-purple-50"
+                    >
+                      <p className="font-medium text-purple-700">
+                        {ticket.isPrioritized ? "PWD-" : ""}
+                        {getTicketDisplayCode(ticket)}-
+                        {formatTicketNumber(ticket.ticketNumber)}
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">
+                        Status: {ticket.status}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Transferred from Payment
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-purple-600">
+                  No returning tickets.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Other Counters Status - EXPANDED GRID */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-sky-800 mb-4">
+              Other Counters
+            </h2>
+            {otherCounterTickets.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {otherCounterTickets.map((counter) => (
+                  <div
+                    key={counter.counterId}
+                    className="border border-sky-100 rounded-lg p-4 bg-sky-50"
+                  >
+                    <p className="font-medium text-sky-700">
+                      {counter.counterName}
+                    </p>
+                    {counter.ticket ? (
+                      <div className="mt-2">
+                        <span className="inline-block bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {counter.ticket.isPrioritized ? "PWD-" : ""}
+                          {getTicketDisplayCode(counter.ticket)}-
+                          {formatTicketNumber(counter.ticket.ticketNumber)}
+                        </span>
+                        <span className="text-xs text-sky-600 block mt-1">
+                          Status: {counter.ticket.status}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 mt-2">
+                        No active tickets
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-sky-600">
+                No other counters with this service.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Transfer Modal */}
@@ -1908,7 +1908,6 @@ export default function StaffDashboard() {
                 Cancel
               </button>
               <button
-                on
                 onClick={() => {
                   const ticketId = ticketToLapse;
                   if (ticketId) {
