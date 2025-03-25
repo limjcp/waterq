@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { Accessibility, User } from "lucide-react";
+import { User } from "lucide-react";
+import { Wheelchair } from "@phosphor-icons/react";
 
 // Add utility function for ticket formatting
 function formatTicketNumber(
@@ -236,52 +237,113 @@ export default function Kiosk() {
   }, [currentStep, ticketData, countdown]);
 
   return (
-    <div className="min-h-screen h-screen w-screen bg-gradient-to-br from-sky-50 to-sky-100 flex flex-col overflow-hidden">
-      <div className="flex-1 flex items-center justify-center w-full h-full">
-        <div className="w-full h-full bg-white p-6 md:p-8 flex flex-col">
-          <div className="text-center mb-6 md:mb-8">
-            <img
-              src="/wdlogo.png"
-              alt="Ticket Icon"
-              className="h-96 w-96 text-sky-500 mx-auto mb-1 md:mb-2"
-            />
+    <div className="min-h-screen h-screen w-screen bg-gradient-to-br from-blue-50 via-cyan-100 to-blue-200 flex flex-col overflow-hidden relative">
+      {/* Water-themed background effects */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-0 left-0 w-full h-24 bg-cyan-300 rounded-full blur-3xl transform -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-2/3 h-64 bg-blue-400 rounded-full blur-3xl transform translate-y-1/3"></div>
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-300 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-1/6 w-96 h-32 bg-cyan-200 rounded-full blur-3xl"></div>
+      </div>
 
-            <h1 className="text-5xl md:text-8xl font-bold text-sky-800 mb-1 md:mb-2">
-              Customer Kiosk
-            </h1>
+      {/* Animated waves overlay */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="wave wave1"></div>
+        <div className="wave wave2"></div>
+        <div className="wave wave3"></div>
+        <div className="wave wave4"></div>
+      </div>
 
-            <p className="text-sky-600 text-lg md:text-xl">
-              Get your digital queue ticket
-            </p>
-          </div>
+      {/* Falling rain/water drops effect */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={i}
+            className="raindrop"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${Math.random() * 3 + 2}s`,
+            }}
+          ></div>
+        ))}
+      </div>
 
-          {error && (
-            <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 text-center">
-              <p>{error}</p>
-              <button
-                onClick={resetForm}
-                className="mt-2 text-red-600 underline"
-              >
-                Try again
-              </button>
-            </div>
-          )}
+      <div className="flex-1 flex items-center justify-center w-full h-full z-10">
+        <div className="w-full h-full bg-white/80 backdrop-blur-sm p-6 md:p-8 flex flex-col shadow-2xl rounded-xl border border-blue-100 relative overflow-hidden">
+          {/* Water ripple effect at the bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-blue-100/60 to-transparent"></div>
 
-          <div className="flex-1 flex flex-col justify-center">
-            {currentStep === 1 && (
-              <div className="space-y-6 flex-1 flex flex-col justify-center">
-                <h2 className="text-2xl font-semibold text-sky-800 text-center mb-6">
+          {currentStep === 1 && (
+            <div className="flex flex-col h-full">
+              {/* Modern header design with water theme and improved styling */}
+              <div className="relative mb-8">
+                {/* Background accent element with water wave effect */}
+                <div className="absolute -left-6 -top-6 -right-6 h-44 bg-gradient-to-r from-blue-700 to-cyan-500 rounded-b-3xl shadow-lg z-0 overflow-hidden">
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTEyODAgMEw2NDAgNzAgMCAwdjE0MGgxMjgweiIvPjwvZz48L3N2Zz4=')] bottom -1px repeat-x transform translate-y-8 opacity-20"></div>
+                </div>
+
+                {/* Header content with logo and text */}
+                <div className="relative z-10 flex items-center pt-6 px-4">
+                  {/* Logo with water drop shadow effect */}
+                  <div className="relative">
+                    <div className="absolute -inset-1 bg-cyan-200 rounded-full blur-md"></div>
+                    <img
+                      src="/wdlogo.png"
+                      alt="Water District Logo"
+                      className="h-24 w-24 object-contain relative z-10 drop-shadow-lg"
+                    />
+                  </div>
+                  <div className="ml-4">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-md">
+                      Customer Service
+                    </h1>
+                    <div className="h-1.5 w-32 bg-white/80 mt-2 rounded-full shadow-inner"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Emphasized ticket system message with water-themed styling */}
+              <div className="relative mb-8 text-center">
+                <p className="text-3xl md:text-5xl font-extrabold text-blue-700 drop-shadow-md">
+                  GET YOUR NUMBER HERE
+                </p>
+                <div className="h-1.5 w-40 bg-gradient-to-r from-cyan-400 to-blue-500 mx-auto mt-2 rounded-full shadow-sm"></div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 text-center shadow-md border border-red-100">
+                  <p>{error}</p>
+                  <button
+                    onClick={resetForm}
+                    className="mt-2 text-red-600 underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              <div className="flex-1 flex flex-col justify-center">
+                <h2 className="text-2xl font-semibold text-blue-800 text-center mb-6 drop-shadow-sm">
                   Please select your customer type
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
                   <button
                     onClick={() => selectUserType(true)}
-                    className="flex flex-col items-center justify-center text-white bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 hover:text-black font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                    className="flex flex-col items-center justify-center text-white bg-gradient-to-br from-blue-400 to-cyan-500 border-2 border-blue-200 hover:border-blue-500 hover:from-blue-50 hover:to-cyan-50 hover:text-blue-800 font-bold py-12 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
                   >
-                    <div className="flex-1 flex items-center justify-center mb-6">
-                      <Accessibility size={350} />
+                    {/* Water ripple effect on hover */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNXB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-20 transition-opacity duration-700"></div>
+
+                    <div className="items-center justify-center mb-6 relative">
+                      <Wheelchair
+                        size={350}
+                        className="drop-shadow-xl transition-transform group-hover:scale-110 duration-300"
+                      />
+                      <span className="text-7xl invisible block">SPACER</span>
+                      <span className="text-7xl invisible block">SPACER</span>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center drop-shadow-md">
                       <span className="text-7xl block">PWD</span>
                       <span className="text-7xl block">PREGNANT</span>
                       <span className="text-7xl block">SENIOR CITIZEN</span>
@@ -289,12 +351,21 @@ export default function Kiosk() {
                   </button>
                   <button
                     onClick={() => selectUserType(false)}
-                    className="flex flex-col items-center justify-center text-white bg-sky-400 border-2 border-sky-200 hover:border-sky-500 hover:bg-sky-50 hover:text-black font-bold py-12 px-6 rounded-xl transition-all duration-200 focus:ring-4 focus:ring-sky-300"
+                    className="flex flex-col items-center justify-center text-white bg-gradient-to-br from-blue-400 to-cyan-500 border-2 border-blue-200 hover:border-blue-500 hover:from-blue-50 hover:to-cyan-50 hover:text-blue-800 font-bold py-12 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
                   >
-                    <div className="flex-1 flex items-center justify-center mb-6">
-                      <User size={350} />
+                    {/* Water ripple effect on hover */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNXB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-20 transition-opacity duration-700"></div>
+
+                    <div className="items-center justify-center">
+                      <User
+                        size={350}
+                        className="drop-shadow-xl transition-transform group-hover:scale-110 duration-300"
+                      />
+                      <span className="text-7xl invisible block">SPACER</span>
+                      <span className="text-7xl invisible block">SPACER</span>
+                      <span className="text-7xl invisible block">SPACER</span>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center drop-shadow-md">
                       <span className="text-7xl block">REGULAR</span>
                       <span className="text-7xl invisible block">SPACER</span>
                       <span className="text-7xl invisible block">SPACER</span>
@@ -302,99 +373,262 @@ export default function Kiosk() {
                   </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {currentStep === 2 && (
-              <div className="space-y-6 flex-1 flex flex-col">
-                <div className="flex items-center mb-6">
+          {currentStep === 2 && (
+            <div className="flex flex-col h-full">
+              {/* Service selection page with water theme */}
+              <div className="flex-1 grid gap-4">
+                {services.map((service) => (
                   <button
-                    onClick={goBack}
-                    className="flex items-center font-bold text-white hover:text-sky-800 transition-colors bg-sky-400 rounded-full p-3"
+                    key={service.code}
+                    onClick={() =>
+                      handleGenerateTicket(
+                        isPWD ? `PWD-${service.code}` : service.code
+                      )
+                    }
+                    className="bg-gradient-to-r from-blue-400 to-cyan-500 border text-white border-blue-200 hover:border-blue-500 hover:text-blue-800 hover:from-blue-50 hover:to-cyan-50 rounded-xl p-6 flex flex-col h-full transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
                   >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    <span>Back</span>
-                  </button>
-                  <h2 className="text-2xl font-semibold text-white flex-grow text-center pr-10">
-                    {isPWD ? "PWD Services" : "Regular Services"}
-                  </h2>
-                </div>
-
-                <div className="grid gap-4 flex-1 overflow-y-auto">
-                  {services.map((service) => (
-                    <button
-                      key={service.code}
-                      onClick={() =>
-                        handleGenerateTicket(
-                          isPWD ? `PWD-${service.code}` : service.code
-                        )
-                      }
-                      className="bg-sky-400 border text-white border-sky-200 hover:border-sky-500 hover:text-black hover:bg-sky-50 rounded-xl p-6 flex flex-col h-64 transition-all duration-200 focus:ring-4 focus:ring-sky-300"
-                    >
-                      <div className="flex-1 flex items-center justify-center">
-                        <h3 className="text-7xl font-bold text-center">
-                          {service.name}
-                        </h3>
-                      </div>
-                      {service.description && (
-                        <p className="font-bold text-sky-600 text-center mb-4">
-                          {service.description}
-                        </p>
-                      )}
-                      <div className="flex justify-center">
-                        <span className="inline-flex items-center px-6 py-5 bg-sky-100 text-sky-800 rounded-full text-lg font-bold">
-                          {isPWD ? `PWD-${service.code}` : `${service.code}`}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {currentStep === 3 && ticketData && (
-              <div className="text-center space-y-6 animate-fade-in flex-1 flex flex-col justify-center">
-                <div className="bg-sky-50 rounded-xl p-64 border border-sky-100">
-                  <h2 className="text-3xl font-bold text-sky-600 mb-4">
-                    YOUR TICKET NUMBER
-                  </h2>
-                  <div className="text-9xl font-bold text-sky-800 animate-pop-in mb-4">
-                    {formatTicketNumber(
-                      ticketData.ticketNumber,
-                      ticketData.isPrioritized
-                    )}
-                  </div>
-
-                  {ticketData.counterName && (
-                    <div className="mt-6 text-sky-700">
-                      <p className="font-medium text-xl">
-                        Assigned to: {ticketData.counterName}
-                      </p>
-                      <p className="text-md text-sky-600 mt-2">
-                        Please proceed to this counter
-                      </p>
+                    {/* Water ripple effect on hover */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNXB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-20 transition-opacity duration-700"></div>
+                    <div className="flex-1 flex items-center justify-center">
+                      <h3 className="text-7xl font-bold text-center drop-shadow-md">
+                        {service.name}
+                      </h3>
                     </div>
-                  )}
-                </div>
+                    {service.description && (
+                      <p className="font-bold text-cyan-600 text-center mb-4">
+                        {service.description}
+                      </p>
+                    )}
+                    <div className="flex justify-center">
+                      {/* <span className="inline-flex items-center px-6 py-5 bg-sky-100 text-sky-800 rounded-full text-lg font-bold">
+                        {isPWD ? `PWD-${service.code}` : `${service.code}`}
+                      </span> */}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Big back button at the bottom */}
+              <div className="mt-6">
                 <button
-                  onClick={resetForm}
-                  className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-6 text-3xl rounded-lg transition-colors duration-200 focus:ring-4 focus:ring-sky-300 focus:ring-offset-2"
+                  onClick={goBack}
+                  className="w-full flex items-center justify-center font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl py-6 px-8 text-3xl transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
                 >
-                  Get Another Ticket ({countdown})
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-30 transition-opacity duration-700"></div>
+                  <ArrowLeftIcon className="h-8 w-8 mr-4" />
+                  <span>Back to Customer Type Selection</span>
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {currentStep === 3 && ticketData && (
+            <div className="text-center space-y-6 animate-fade-in flex-1 flex flex-col justify-center">
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-100 rounded-xl p-64 border border-blue-200 shadow-lg relative overflow-hidden">
+                {/* Bubble effect in the background */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute animate-float top-1/4 left-1/4 w-32 h-32 bg-blue-300 rounded-full blur-xl"></div>
+                  <div className="absolute animate-float-delayed top-3/4 right-1/4 w-24 h-24 bg-cyan-300 rounded-full blur-xl"></div>
+                  <div className="absolute animate-float-slow bottom-1/4 right-1/3 w-16 h-16 bg-blue-200 rounded-full blur-lg"></div>
+                </div>
+
+                <h2 className="text-3xl font-bold text-blue-600 mb-4 drop-shadow-md relative">
+                  YOUR TICKET NUMBER
+                </h2>
+                <div className="text-9xl font-bold text-blue-800 animate-pop-in mb-4 drop-shadow-xl relative">
+                  {formatTicketNumber(
+                    ticketData.ticketNumber,
+                    ticketData.isPrioritized
+                  )}
+                </div>
+
+                {ticketData.counterName && (
+                  <div className="mt-6 text-blue-700 relative">
+                    <p className="font-medium text-xl drop-shadow-sm">
+                      Assigned to: {ticketData.counterName}
+                    </p>
+                    <p className="text-md text-blue-600 mt-2">
+                      Please proceed to this counter
+                    </p>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={resetForm}
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-4 px-6 text-3xl rounded-lg transition-all duration-300 focus:ring-4 focus:ring-cyan-300 focus:ring-offset-2 shadow-lg hover:shadow-xl relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-30 transition-opacity duration-700"></div>
+                Get Another Ticket ({countdown})
+              </button>
+            </div>
+          )}
 
           {isLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-50">
-              <div className="animate-spin h-12 w-12 border-4 border-sky-500 border-t-transparent rounded-full"></div>
-              <p className="mt-4 text-sky-700 text-xl">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/90 to-cyan-100/90 backdrop-blur-sm z-50">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-blue-300 blur-xl animate-pulse"></div>
+                <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full relative"></div>
+              </div>
+              <p className="mt-4 text-blue-700 text-xl font-semibold drop-shadow-sm">
                 Generating your ticket...
               </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Add water animation styles */}
+      <style jsx global>{`
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-15px);
+          }
+        }
+        @keyframes float-delayed {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        @keyframes float-slow {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
+        }
+        .animate-float {
+          animation: float 8s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float-delayed 6s ease-in-out infinite 1s;
+        }
+        .animate-float-slow {
+          animation: float-slow 10s ease-in-out infinite 2s;
+        }
+        @keyframes pop-in {
+          0% {
+            transform: scale(0.8);
+            opacity: 0;
+          }
+          70% {
+            transform: scale(1.1);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        .animate-pop-in {
+          animation: pop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fade-in {
+          0% {
+            opacity: 0;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-in-out forwards;
+        }
+
+        /* Wave animations */
+        .wave {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 200%;
+          height: 100px;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230099ff' fill-opacity='0.2' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
+            repeat-x;
+          background-size: 100% 100px;
+          animation: wave-animation 12s linear infinite;
+        }
+
+        .wave1 {
+          bottom: -25px;
+          opacity: 0.3;
+          animation: wave-animation 10s linear infinite;
+        }
+
+        .wave2 {
+          bottom: -35px;
+          opacity: 0.2;
+          animation: wave-animation 14s linear reverse infinite;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2300ccff' fill-opacity='0.2' d='M0,64L48,80C96,96,192,128,288,138.7C384,149,480,139,576,144C672,149,768,171,864,165.3C960,160,1056,128,1152,117.3C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
+            repeat-x;
+        }
+
+        .wave3 {
+          bottom: -45px;
+          opacity: 0.15;
+          animation: wave-animation 17s linear infinite;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230088ff' fill-opacity='0.2' d='M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,218.7C672,203,768,149,864,154.7C960,160,1056,224,1152,218.7C1248,213,1344,139,1392,101.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
+            repeat-x;
+        }
+
+        .wave4 {
+          bottom: -55px;
+          opacity: 0.1;
+          animation: wave-animation 20s linear reverse infinite;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230066ff' fill-opacity='0.2' d='M0,128L48,128C96,128,192,128,288,149.3C384,171,480,213,576,224C672,235,768,213,864,192C960,171,1056,149,1152,160C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
+            repeat-x;
+        }
+
+        @keyframes wave-animation {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        /* Raindrop animation */
+        .raindrop {
+          position: absolute;
+          top: -20px;
+          width: 2px;
+          height: 20px;
+          background: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(77, 208, 225, 0.8) 100%
+          );
+          border-radius: 0 0 5px 5px;
+          animation: rainfall linear infinite;
+          z-index: 5;
+        }
+
+        @keyframes rainfall {
+          0% {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+          25% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(calc(100vh + 20px));
+            opacity: 0.5;
+          }
+        }
+      `}</style>
     </div>
   );
 }
