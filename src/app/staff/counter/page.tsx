@@ -732,9 +732,11 @@ export default function StaffDashboard() {
       setIsTransferModalOpen(false);
     } else {
       // Skip confirmation and transfer directly
-      if (ticketToTransfer) {
-        const ticketId = ticketToTransfer;
+      const ticketId =
+        ticketToTransfer ||
+        (currentServingTicket ? currentServingTicket.id : null);
 
+      if (ticketId) {
         // Direct transfer with the selected service
         (async () => {
           try {
@@ -855,6 +857,136 @@ export default function StaffDashboard() {
     setTicketToLapse(ticketId);
     setIsLapsedConfirmModalOpen(true);
   }
+
+  // Add keyboard shortcut handler
+  useEffect(() => {
+    function handleKeyPress(e: KeyboardEvent) {
+      console.log("Key pressed:", e.key, "Code:", e.code); // Debug log
+
+      // Only handle keypresses if no input is focused
+      if (document.activeElement?.tagName === "INPUT") return;
+
+      // Common actions
+      if (e.key === "n" && !isAnyActive && hasPendingTickets) {
+        callNextTicket();
+      }
+
+      // Serving ticket actions
+      if (currentServingTicket) {
+        console.log("Current serving ticket:", currentServingTicket); // Debug log
+
+        if (e.key === "c") {
+          // Complete action
+          if (isPaymentCounter) {
+            // Find payment service type and complete automatically
+            const paymentType = serviceTypes.find((type) =>
+              type.code.startsWith("P-")
+            );
+            if (paymentType) {
+              fetch(`/api/tickets/${currentServingTicket.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  status: "SERVED",
+                  serviceTypeId: paymentType.id,
+                  servingEnd: new Date(),
+                }),
+              }).then(() => {
+                setServingTicketId(null);
+                setCalledTicketId(null);
+                fetchTickets();
+                fetchUserStatistics();
+              });
+            }
+          } else {
+            openServiceTypeModal(currentServingTicket.id);
+          }
+        }
+
+        // Transfer shortcuts (1-9 for transfer options)
+        if (e.code.startsWith("Numpad") || (e.key >= "1" && e.key <= "9")) {
+          console.log("Number key detected:", e.key, e.code); // Debug log
+          console.log("Available services:", availableServices); // Debug log
+
+          let index: number;
+          if (e.code.startsWith("Numpad")) {
+            // Extract the number from NumpadX and convert to zero-based index
+            const numpadNum = parseInt(e.code.replace("Numpad", ""));
+            console.log("Numpad number:", numpadNum); // Debug log
+            if (!isNaN(numpadNum) && numpadNum >= 1 && numpadNum <= 9) {
+              index = numpadNum - 1;
+            } else {
+              return; // Invalid numpad key
+            }
+          } else {
+            // Regular number key
+            index = parseInt(e.key) - 1;
+          }
+
+          console.log("Calculated index:", index); // Debug log
+
+          if (index >= 0 && index < availableServices.length) {
+            const service = availableServices[index];
+            console.log("Service found at index:", service); // Debug log
+
+            if (showConfirmations) {
+              openTransferConfirmation(service);
+            } else {
+              // Find and click the transfer button for this service
+              const transferButtons = document.querySelectorAll("button");
+              const targetButton = Array.from(transferButtons).find((button) =>
+                button.textContent?.includes(`Transfer to ${service.name}`)
+              );
+
+              if (targetButton) {
+                console.log("Found transfer button, clicking...");
+                targetButton.click();
+              } else {
+                console.log("Transfer button not found");
+              }
+            }
+          }
+        }
+
+        if (e.key === "x") {
+          // Cancel action
+          fetch(`/api/tickets/${currentServingTicket.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "CANCELLED" }),
+          }).then(() => {
+            setServingTicketId(null);
+            fetchTickets();
+          });
+        }
+      }
+
+      // Called ticket actions
+      if (calledTicketId) {
+        const calledTicket = tickets.find((t) => t.id === calledTicketId);
+        if (calledTicket) {
+          if (e.key === "s") {
+            startServing(calledTicket.id);
+          }
+          if (e.key === "l" && !isPaymentCounter) {
+            openLapsedConfirmModal(calledTicket.id);
+          }
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [
+    currentServingTicket,
+    calledTicketId,
+    isPaymentCounter,
+    availableServices,
+    hasPendingTickets,
+    isAnyActive,
+    serviceTypes,
+    showConfirmations,
+  ]);
 
   if (status === "loading" || loading) {
     return (
@@ -1059,14 +1191,17 @@ export default function StaffDashboard() {
                               console.error("Error completing payment:", error);
                             }
                           }}
-                          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
+                          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                         >
                           Complete Payment
+                          <span className="absolute top-0 right-0 bg-green-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                            C
+                          </span>
                         </button>
 
                         {/* Transfers - Direct buttons instead of modal */}
                         <div className="grid grid-cols-1 gap-2">
-                          {availableServices.map((service) => (
+                          {availableServices.map((service, index) => (
                             <button
                               key={service.id}
                               onClick={async () => {
@@ -1095,7 +1230,7 @@ export default function StaffDashboard() {
                                   );
                                 }
                               }}
-                              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center relative"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1107,6 +1242,9 @@ export default function StaffDashboard() {
                                 <path d="M12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z" />
                               </svg>
                               Transfer to {service.name}
+                              <span className="absolute top-0 right-0 bg-purple-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                                {index + 1}
+                              </span>
                             </button>
                           ))}
                         </div>
@@ -1136,9 +1274,12 @@ export default function StaffDashboard() {
                               console.error("Error cancelling ticket:", error);
                             }
                           }}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
+                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                         >
                           Cancel Transaction
+                          <span className="absolute top-0 right-0 bg-red-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                            X
+                          </span>
                         </button>
                       </>
                     ) : (
@@ -1221,7 +1362,8 @@ export default function StaffDashboard() {
                                     startServing(ticket.id);
                                   }, 150);
                                 }}
-                                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center"
+                                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center relative"
+                                title="Press 'S' to start serving"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1236,12 +1378,16 @@ export default function StaffDashboard() {
                                   />
                                 </svg>
                                 Start Serving
+                                <span className="absolute top-0 right-0 bg-green-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                                  S
+                                </span>
                               </button>
                               <button
                                 onClick={() =>
                                   openLapsedConfirmModal(ticket.id)
                                 }
-                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center"
+                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center relative"
+                                title="Press 'L' to mark as lapsed"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1256,6 +1402,9 @@ export default function StaffDashboard() {
                                   />
                                 </svg>
                                 Mark as Lapsed
+                                <span className="absolute top-0 right-0 bg-amber-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                                  L
+                                </span>
                               </button>
                             </>
                           )}
@@ -1338,6 +1487,7 @@ export default function StaffDashboard() {
 
                   {/* Call Next Ticket button at the bottom */}
                   <div className="w-full mt-3 pt-3 border-t border-gray-100">
+                    {/* Call Next Button */}
                     <button
                       onClick={(e) => {
                         if (!hasPendingTickets) return;
@@ -1351,11 +1501,12 @@ export default function StaffDashboard() {
                         }, 300);
                       }}
                       disabled={!hasPendingTickets}
-                      className={`w-full py-3 px-4 rounded-lg transition-all transform font-medium flex items-center justify-center ${
+                      className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium relative ${
                         hasPendingTickets
                           ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
+                      title="Press 'N' to call next ticket"
                     >
                       {hasPendingTickets && (
                         <svg
@@ -1368,6 +1519,9 @@ export default function StaffDashboard() {
                         </svg>
                       )}
                       Call Next Ticket
+                      <span className="absolute top-0 right-0 bg-sky-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                        N
+                      </span>
                     </button>
                     {!hasPendingTickets && (
                       <p className="text-xs text-gray-500 text-center mt-1">
@@ -1801,9 +1955,9 @@ export default function StaffDashboard() {
                       type.name
                         .toLowerCase()
                         .includes(serviceTypeSearchQuery.toLowerCase()) ||
-                      type.code
-                        .toLowerCase()
-                        .includes(serviceTypeSearchQuery.toLowerCase())
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
                   )
                   .map((type) => (
                     <button
@@ -1811,7 +1965,7 @@ export default function StaffDashboard() {
                       onClick={() => openServiceTypeConfirmation(type)}
                       className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors flex flex-col items-start"
                     >
-                      <span className="font-semibold text-sky-900 mb-1">
+                      <span className="font-semiboldtext-sky-900 mb-1">
                         {type.name}
                       </span>
                       <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
