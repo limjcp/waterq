@@ -506,6 +506,7 @@ export default function StaffDashboard() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   }
 
+  // Modify the callNextTicket function to auto-start serving for payment counters
   async function callNextTicket() {
     if (!assignedCounterId || !assignedCounterService) return;
 
@@ -529,15 +530,30 @@ export default function StaffDashboard() {
     }
 
     if (nextTicket) {
-      await fetch(`/api/tickets/${nextTicket.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "CALLED",
-          counterId: assignedCounterId, // Assignment happens here
-        }),
-      });
-      setCalledTicketId(nextTicket.id);
+      // For payment counters, start serving immediately
+      if (isPaymentCounter) {
+        await fetch(`/api/tickets/${nextTicket.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: "SERVING",
+            counterId: assignedCounterId,
+            servingStart: new Date(),
+          }),
+        });
+        setServingTicketId(nextTicket.id);
+      } else {
+        // For non-payment counters, just call the ticket as before
+        await fetch(`/api/tickets/${nextTicket.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: "CALLED",
+            counterId: assignedCounterId,
+          }),
+        });
+        setCalledTicketId(nextTicket.id);
+      }
       fetchTickets();
     }
   }
@@ -931,7 +947,7 @@ export default function StaffDashboard() {
                             String(newValue)
                           );
                         }}
-                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
                           showConfirmations ? "bg-sky-600" : "bg-gray-300"
                         }`}
                       >
@@ -969,42 +985,48 @@ export default function StaffDashboard() {
         <div className="flex-1 space-y-6">
           {/* Active and Lapsed Tickets side by side */}
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Lapsed Tickets Section - LEFT SIDE */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 min-h-[400px]">
-              <h2 className="text-2xl font-bold text-sky-800 mb-4">
-                Lapsed Tickets
-              </h2>
-              <div className="h-[220px] overflow-auto">
-                {lapsedTickets.length ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {lapsedTickets.map((ticket) => (
-                      <div
-                        key={ticket.id}
-                        className="border border-amber-100 rounded-lg p-4 bg-amber-50"
-                      >
-                        <p className="font-medium text-amber-700">
-                          {ticket.isPrioritized ? "PWD-" : ""}
-                          {getTicketDisplayCode(ticket)}-
-                          {formatTicketNumber(ticket.ticketNumber)}
-                        </p>
-                        <p className="text-xs text-amber-600 mt-1">
-                          Status: {ticket.status}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-center text-amber-600">
-                      No lapsed tickets.
-                    </p>
-                  </div>
-                )}
+            {/* Lapsed Tickets Section - LEFT SIDE - Only show for non-payment counters */}
+            {!isPaymentCounter && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 min-h-[400px]">
+                <h2 className="text-2xl font-bold text-sky-800 mb-4">
+                  Lapsed Tickets
+                </h2>
+                <div className="h-[220px] overflow-auto">
+                  {lapsedTickets.length ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {lapsedTickets.map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          className="border border-amber-100 rounded-lg p-4 bg-amber-50"
+                        >
+                          <p className="font-medium text-amber-700">
+                            {ticket.isPrioritized ? "PWD-" : ""}
+                            {getTicketDisplayCode(ticket)}-
+                            {formatTicketNumber(ticket.ticketNumber)}
+                          </p>
+                          <p className="text-xs text-amber-600 mt-1">
+                            Status: {ticket.status}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-center text-amber-600">
+                        No lapsed tickets.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Active Tickets - RIGHT SIDE - UPDATED TO SHOW NEXT IN LINE - RESPONSIVE TEXT SIZE */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 flex-1 min-h-[400px]">
+            {/* Active Tickets - RIGHT SIDE - For non-payment counters, or FULL WIDTH for payment counters */}
+            <div
+              className={`bg-white rounded-2xl shadow-lg p-8 ${
+                isPaymentCounter ? "w-full" : "flex-1"
+              } min-h-[400px]`}
+            >
               <h2 className="text-3xl font-bold text-sky-800 mb-6">
                 Next in Line
               </h2>
@@ -1170,23 +1192,136 @@ export default function StaffDashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2 w-full">
-                    <button
-                      onClick={() =>
-                        openServiceTypeModal(currentServingTicket.id)
-                      }
-                      className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
-                    >
-                      Complete Transaction
-                    </button>
-                    {isPaymentCounter && (
+                  <div className="mt-4 w-full space-y-3">
+                    {isPaymentCounter ? (
+                      <>
+                        {/* For Payment Counter - Complete button */}
+                        <button
+                          onClick={async () => {
+                            try {
+                              // Find payment service type and complete with it automatically
+                              const paymentType = serviceTypes.find((type) =>
+                                type.code.startsWith("P-")
+                              );
+
+                              if (paymentType) {
+                                const response = await fetch(
+                                  `/api/tickets/${currentServingTicket.id}`,
+                                  {
+                                    method: "PUT",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      status: "SERVED",
+                                      serviceTypeId: paymentType.id,
+                                      servingEnd: new Date(),
+                                    }),
+                                  }
+                                );
+
+                                if (response.ok) {
+                                  setServingTicketId(null);
+                                  setCalledTicketId(null);
+                                  fetchTickets();
+                                  fetchUserStatistics();
+                                }
+                              }
+                            } catch (error) {
+                              console.error("Error completing payment:", error);
+                            }
+                          }}
+                          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
+                        >
+                          Complete Payment
+                        </button>
+
+                        {/* Transfers - Direct buttons instead of modal */}
+                        <div className="grid grid-cols-1 gap-2">
+                          {availableServices.map((service) => (
+                            <button
+                              key={service.id}
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(
+                                    `/api/tickets/${currentServingTicket.id}/transfer`,
+                                    {
+                                      method: "PUT",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        serviceId: service.id,
+                                      }),
+                                    }
+                                  );
+
+                                  if (response.ok) {
+                                    setServingTicketId(null);
+                                    fetchTickets();
+                                  }
+                                } catch (error) {
+                                  console.error(
+                                    "Error transferring ticket:",
+                                    error
+                                  );
+                                }
+                              }}
+                              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5 mr-2"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M8 5a1 1 0 100 2h5.586l-1.293 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L13.586 5H8z" />
+                                <path d="M12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z" />
+                              </svg>
+                              Transfer to {service.name}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Cancel button */}
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(
+                                `/api/tickets/${currentServingTicket.id}`,
+                                {
+                                  method: "PUT",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    status: "CANCELLED", // Changed from LAPSED to CANCELLED
+                                  }),
+                                }
+                              );
+
+                              if (response.ok) {
+                                setServingTicketId(null);
+                                fetchTickets();
+                              }
+                            } catch (error) {
+                              console.error("Error cancelling ticket:", error);
+                            }
+                          }}
+                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
+                        >
+                          Cancel Transaction
+                        </button>
+                      </>
+                    ) : (
+                      // For non-payment counters - Keep original button
                       <button
                         onClick={() =>
-                          openTransferModal(currentServingTicket.id)
+                          openServiceTypeModal(currentServingTicket.id)
                         }
-                        className="w-full mt-3 bg-purple-500 hover:bg-purple-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
                       >
-                        Transfer Ticket
+                        Complete Transaction
                       </button>
                     )}
                   </div>
@@ -1223,50 +1358,79 @@ export default function StaffDashboard() {
                           Ticket Called
                         </p>
                         <div className="mt-6 w-full space-y-4">
-                          <button
-                            onClick={() => {
-                              const btn =
-                                document.activeElement as HTMLButtonElement;
-                              btn?.classList.add("scale-95", "opacity-80");
-                              setTimeout(() => {
-                                btn?.classList.remove("scale-95", "opacity-80");
-                                startServing(ticket.id);
-                              }, 150);
-                            }}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-7 w-7 mr-3"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
+                          {isPaymentCounter ? (
+                            // For payment counter, we show Start Serving button which works the same
+                            // as the regular Start Serving button but without confirmation dialog
+                            <button
+                              onClick={() => startServing(ticket.id)}
+                              className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all flex items-center justify-center"
                             >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            Start Serving
-                          </button>
-                          <button
-                            onClick={() => openLapsedConfirmModal(ticket.id)}
-                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-7 w-7 mr-3"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            Mark as Lapsed
-                          </button>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-7 w-7 mr-3"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M8 7h4v10H8z" />
+                                <path d="M6 7H2v10h4z" />
+                                <path d="M18 7h-4v10h4z" />
+                              </svg>
+                              Start Payment Process
+                            </button>
+                          ) : (
+                            // For non-payment counters, keep original buttons
+                            <>
+                              <button
+                                onClick={() => {
+                                  const btn =
+                                    document.activeElement as HTMLButtonElement;
+                                  btn?.classList.add("scale-95", "opacity-80");
+                                  setTimeout(() => {
+                                    btn?.classList.remove(
+                                      "scale-95",
+                                      "opacity-80"
+                                    );
+                                    startServing(ticket.id);
+                                  }, 150);
+                                }}
+                                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-7 w-7 mr-3"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Start Serving
+                              </button>
+                              <button
+                                onClick={() =>
+                                  openLapsedConfirmModal(ticket.id)
+                                }
+                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-7 w-7 mr-3"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Mark as Lapsed
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1744,6 +1908,7 @@ export default function StaffDashboard() {
                 Cancel
               </button>
               <button
+                on
                 onClick={() => {
                   const ticketId = ticketToLapse;
                   if (ticketId) {
@@ -1760,7 +1925,7 @@ export default function StaffDashboard() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
                     clipRule="evenodd"
                   />
                 </svg>
