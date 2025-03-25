@@ -86,11 +86,11 @@ function getTicketTextSizeClass(ticket: Ticket): string {
   }${displayCode}-${formatTicketNumber(ticket.ticketNumber)}`;
 
   if (ticketText.length > 12) {
-    return "text-2xl";
+    return "text-6xl";
   } else if (ticketText.length > 9) {
-    return "text-3xl";
+    return "text-6xl";
   } else {
-    return "text-4xl";
+    return "text-6xl";
   }
 }
 
@@ -1123,7 +1123,7 @@ export default function StaffDashboard() {
             <div className="h-[520px] flex items-center justify-center">
               {currentServingTicket ? (
                 <div className="flex flex-col items-center w-full">
-                  <div className="bg-sky-100 rounded-lg w-56 h-56 flex items-center justify-center mb-1">
+                  <div className="bg-sky-100 rounded-lg w-[500px] h-[100px] flex items-center justify-center mb-1">
                     <span
                       className={`${getTicketTextSizeClass(
                         currentServingTicket
@@ -1242,9 +1242,9 @@ export default function StaffDashboard() {
                                 <path d="M12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z" />
                               </svg>
                               Transfer to {service.name}
-                              <span className="absolute top-0 right-0 bg-purple-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                              {/* <span className="absolute top-0 right-0 bg-purple-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
                                 {index + 1}
-                              </span>
+                              </span> */}
                             </button>
                           ))}
                         </div>
@@ -1304,7 +1304,7 @@ export default function StaffDashboard() {
                         key={ticket.id}
                         className="flex flex-col items-center w-full"
                       >
-                        <div className="bg-amber-100 rounded-lg w-60 h-60 flex items-center justify-center mb-6 shadow-md">
+                        <div className="bg-amber-100 rounded-lg w-[500px] h-[100px] flex items-center justify-center mb-6 shadow-md">
                           <span
                             className={`${getTicketTextSizeClass(
                               ticket
@@ -1564,6 +1564,9 @@ export default function StaffDashboard() {
                       </svg>
                     )}
                     Call Next Ticket
+                    <span className="absolute top-0 right-0 bg-sky-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                      N
+                    </span>
                   </button>
                   {!hasPendingTickets && (
                     <p className="text-xs text-gray-500 text-center mt-1">
@@ -1593,7 +1596,7 @@ export default function StaffDashboard() {
                 {activeTickets.length ? (
                   <div className="flex flex-col items-center">
                     {/* Display just the first waiting ticket - RESPONSIVE SIZE */}
-                    <div className="bg-sky-50 rounded-lg w-56 h-28 flex items-center justify-center mb-6">
+                    <div className="bg-sky-50 rounded-lg w-[500px] h-[200px] flex items-center justify-center mb-6">
                       <span
                         className={`${getTicketTextSizeClass(
                           activeTickets[0]
