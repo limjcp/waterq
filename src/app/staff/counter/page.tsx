@@ -1288,9 +1288,12 @@ export default function StaffDashboard() {
                         onClick={() =>
                           openServiceTypeModal(currentServingTicket.id)
                         }
-                        className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors"
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                       >
                         Complete Transaction
+                        <span className="absolute top-0 right-0 bg-green-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                          C
+                        </span>
                       </button>
                     )}
                   </div>
@@ -1931,7 +1934,7 @@ export default function StaffDashboard() {
               />
               <div className="absolute right-3 top-2.5 text-gray-400">
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns="http://wwww3.org/2000/svg"
                   className="h-5 w-5"
                   viewBox="0 0 20 20"
                   fill="currentColor"
