@@ -1038,12 +1038,13 @@ export default function StaffDashboard() {
 
             <div>
               <h1 className="text-3xl font-bold text-sky-800 mb-2">
-                Staff Dashboard
-              </h1>
-              <h2 className="text-xl font-medium text-sky-600">
                 {session?.user?.assignedCounterName ||
                   `Counter ID: ${assignedCounterId}`}
-              </h2>
+              </h1>
+              {/* <h2 className="text-xl font-medium text-sky-600">
+                {session?.user?.assignedCounterName ||
+                  `Counter ID: ${assignedCounterId}`}
+              </h2> */}
             </div>
           </div>
 
