@@ -1714,7 +1714,7 @@ export default function StaffDashboard() {
           )}
 
           {/* Other Counters Status - EXPANDED GRID */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          {/* <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-sky-800 mb-4">
               Other Counters
             </h2>
@@ -1752,7 +1752,7 @@ export default function StaffDashboard() {
                 No other counters with this service.
               </p>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* User Statistics Card - MOVED TO RIGHT SIDE */}

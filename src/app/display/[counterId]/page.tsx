@@ -39,9 +39,10 @@ export default function CounterDisplayPage() {
   const { counterId } = useParams<{ counterId: string }>();
   const [data, setData] = useState<DisplayData | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const prevStatusRef = useRef<string | null>(null);
-  const beepIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  // Refs to track previous ticket state for sound trigger
+  const prevTicketIdRef = useRef<string | null>(null);
+  const prevTicketStatusRef = useRef<string | null>(null);
 
   const fetchTicket = useCallback(async () => {
     try {
@@ -84,11 +85,7 @@ export default function CounterDisplayPage() {
               }
             : null
         );
-
-        // Play beep sound for newly called tickets
-        if (ticketData.status === "CALLED" && audioRef.current) {
-          audioRef.current.play();
-        }
+        // Removed sound playing logic from here
       }
     });
 
@@ -99,10 +96,7 @@ export default function CounterDisplayPage() {
         socketRef.current.off("ticket:update");
         socketRef.current.disconnect();
       }
-      // Clear any ongoing beep intervals
-      if (beepIntervalRef.current) {
-        clearInterval(beepIntervalRef.current);
-      }
+      // Removed beep interval clearing as it's no longer used
     };
   }, [counterId, fetchTicket]);
 
@@ -122,66 +116,45 @@ export default function CounterDisplayPage() {
         audioRef.current.pause();
         audioRef.current = null;
       }
-      if (beepIntervalRef.current) {
-        clearInterval(beepIntervalRef.current);
-        beepIntervalRef.current = null;
-      }
+      // Removed beep interval clearing as it's no longer used
     };
   }, []);
 
-  // Play sound when status changes to "called"
+  // Play sound once when ticket ID or status changes
   useEffect(() => {
-    const currentStatus = data?.ticket?.status?.toLowerCase();
-    const previousStatus = prevStatusRef.current;
-
-    if (beepIntervalRef.current) {
-      clearInterval(beepIntervalRef.current);
-      beepIntervalRef.current = null;
-    }
+    const currentTicket = data?.ticket;
+    const currentTicketId = currentTicket?.id;
+    const currentStatus = currentTicket?.status;
 
     const playBeep = async () => {
       if (!audioRef.current) return;
-
       try {
+        // Ensure audio plays from the beginning
         audioRef.current.currentTime = 0;
         const playPromise = audioRef.current.play();
-
         if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.error("Audio play error:", err);
-            // Retry once
-            setTimeout(() => {
-              if (audioRef.current) {
-                audioRef.current
-                  .play()
-                  .catch((e) => console.error("Retry failed:", e));
-              }
-            }, 100);
-          });
+          playPromise.catch((err) => console.error("Audio play error:", err));
         }
       } catch (err) {
         console.error("Error in playBeep:", err);
       }
     };
 
+    // Play only if there's a ticket and either ID or status has changed since the last render
     if (
-      data?.ticket &&
-      currentStatus === "called" &&
-      (previousStatus !== "called" || previousStatus === null)
+      currentTicket &&
+      (currentTicketId !== prevTicketIdRef.current ||
+        currentStatus !== prevTicketStatusRef.current)
     ) {
       playBeep();
-      beepIntervalRef.current = setInterval(playBeep, 3000);
     }
 
-    prevStatusRef.current = currentStatus || null;
+    // Update refs for the next render check
+    prevTicketIdRef.current = currentTicketId || null;
+    prevTicketStatusRef.current = currentStatus || null;
+  }, [data?.ticket?.id, data?.ticket?.status]); // Depend explicitly on id and status
 
-    return () => {
-      if (beepIntervalRef.current) {
-        clearInterval(beepIntervalRef.current);
-        beepIntervalRef.current = null;
-      }
-    };
-  }, [data?.ticket]);
+  // Removed the previous useEffect hook that handled interval beeping
 
   const ticket = data?.ticket;
   const counter = data?.counter;
