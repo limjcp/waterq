@@ -107,3 +107,14 @@ model ServiceType {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 }
+
+// New model for screensaver images
+model ScreensaverImage {
+  id        String   @id @default(cuid())
+  title     String
+  imageUrl  String
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

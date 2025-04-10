@@ -49,6 +49,31 @@ export async function PUT(
   try {
     const data = await request.json();
 
+    // Add special handling for LAPSED status
+    if (data.status === "LAPSED") {
+      // Get current lapsed tickets
+      const lapsedTickets = await prisma.queueTicket.findMany({
+        where: { status: "LAPSED" },
+        orderBy: { createdAt: "desc" },
+      });
+
+      // If we already have 2 or more lapsed tickets, convert oldest to cancelled
+      if (lapsedTickets.length >= 2) {
+        // Get all tickets beyond the first 2 (they will be cancelled)
+        const ticketsToCancel = lapsedTickets.slice(1); // Keep newest, cancel the rest
+        
+        // Update old lapsed tickets to cancelled
+        await prisma.$transaction(
+          ticketsToCancel.map((ticket) =>
+            prisma.queueTicket.update({
+              where: { id: ticket.id },
+              data: { status: "CANCELLED" },
+            })
+          )
+        );
+      }
+    }
+
     // Validate status provided and allowed update
     if (!data.status || !Object.values(QueueStatus).includes(data.status)) {
       return new NextResponse(

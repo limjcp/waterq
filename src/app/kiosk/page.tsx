@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { User } from "lucide-react";
-import { Wheelchair } from "@phosphor-icons/react";
+import { Wheelchair} from "@phosphor-icons/react";
 import Image from "next/image";
 
-// Update screensaver timeout to 1 minute
+// Update screensaver timeout to 3 seconds
 const SCREENSAVER_TIMEOUT = 60 * 1000;
 
 // Add utility function for ticket formatting
@@ -68,6 +68,8 @@ export default function Kiosk() {
   const [countdown, setCountdown] = useState(5);
   const [showScreensaver, setShowScreensaver] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [screensaverImages, setScreensaverImages] = useState<Array<{ id: string; imageUrl: string; title: string }>>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -132,6 +134,39 @@ export default function Kiosk() {
       }
     }
   }, [scrollPosition, showScreensaver]);
+
+  // Add effect to fetch screensaver images
+  useEffect(() => {
+    async function fetchScreensaverImages() {
+      try {
+        const res = await fetch('/api/screensaver');
+        const data = await res.json();
+        // Only keep active images
+        const activeImages = data.filter((img: any) => img.isActive === true); 
+        setScreensaverImages(activeImages);
+      } catch (error) {
+        console.error('Failed to fetch screensaver images:', error);
+      }
+    }
+    fetchScreensaverImages();
+  }, []);
+
+  // Add new useEffect for image rotation
+  useEffect(() => {
+    let imageRotationTimer: NodeJS.Timeout;
+
+    if (showScreensaver && screensaverImages.length > 0) {
+      imageRotationTimer = setInterval(() => {
+        setCurrentImageIndex((prev) =>
+          prev === screensaverImages.length - 1 ? 0 : prev + 1
+        );
+      }, 5000); // Change image every 5 seconds
+    }
+
+    return () => {
+      if (imageRotationTimer) clearInterval(imageRotationTimer);
+    };
+  }, [showScreensaver, screensaverImages.length]);
 
   const services: ServiceOption[] = [
     {
@@ -308,148 +343,182 @@ export default function Kiosk() {
   return (
     <div className="min-h-screen h-screen w-screen bg-gradient-to-br from-blue-50 via-cyan-100 to-blue-200 flex flex-col overflow-hidden relative">
       {showScreensaver ? (
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-600 flex flex-col items-center justify-start overflow-hidden z-50">
-          {/* Header with logo and name - keep fixed */}
-          <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-b from-blue-600 to-transparent pt-8 pb-16">
-            <div className="flex flex-col items-center">
-              <div className="relative w-48 h-48 mb-4">
-                <div className="absolute inset-0 bg-cyan-300 rounded-full blur-xl animate-pulse"></div>
-                <Image
-                  src="/wdlogo.png"
-                  alt="GSCWD Logo"
-                  width={192}
-                  height={192}
-                  className="relative w-full h-full object-contain drop-shadow-2xl"
-                  priority
-                />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-600 flex flex-col items-center justify-center overflow-hidden z-50 backdrop-blur-lg">
+          {screensaverImages.length > 0 ? (
+            <div className="relative w-full h-full">
+              {screensaverImages.map((image, index) => (
+                <div
+                  key={image.id}
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                    index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <img
+                    src={image.imageUrl}
+                    alt={image.title}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* Header with logo and name - keep fixed */}
+              <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-b from-blue-600 to-transparent pt-8 pb-16">
+                <div className="flex flex-col items-center">
+                  <div className="relative w-48 h-48 mb-4">
+                    <div className="absolute inset-0 bg-cyan-300 rounded-full blur-xl animate-pulse"></div>
+                    <Image
+                      src="/wdlogo.png"
+                      alt="GSCWD Logo"
+                      width={192}
+                      height={192}
+                      className="relative w-full h-full object-contain drop-shadow-2xl"
+                      priority
+                    />
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-2 drop-shadow-lg">
+                    General Santos City Water District
+                  </h1>
+                  <div className="h-1 w-32 bg-cyan-300 rounded-full"></div>
+                </div>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-2 drop-shadow-lg">
-                General Santos City Water District
-              </h1>
-              <div className="h-1 w-32 bg-cyan-300 rounded-full"></div>
-            </div>
-          </div>
 
-          {/* Scrolling content container */}
-          <div className="screensaver-content flex-1 w-full max-w-4xl mx-auto px-6 overflow-hidden text-white space-y-8 mt-[32rem]">
-            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
-              <h2 className="text-2xl font-semibold mb-4">Our History</h2>
-              <p className="text-lg leading-relaxed">
-                On August 21, 1987, the General Santos City Water District
-                (GSCWD) was organized through Sangguniang Panlungsod (SP) Board
-                Resolution No. 116, as amended, SP Board Resolution No. 224
-                series of 1987 pursuant to the provision of Section 3, 27, and
-                45 of Titles I and II of Presidential Decree 198, as amended
-                otherwise known as the Provincial Water Utilities Act of 1973
-                signed by former President Ferdinand E. Marcos, LWUA later
-                issued a Conditional Certificate of Conformance (CCC) No. 370 on
-                November 29, 1988 to establish the water district.
-              </p>
-            </div>
+              {/* Scrolling content container */}
+              <div className="screensaver-content flex-1 w-full max-w-4xl mx-auto px-6 overflow-hidden text-white space-y-8 mt-[32rem]">
+                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                  <h2 className="text-2xl font-semibold mb-4">Our History</h2>
+                  <p className="text-lg leading-relaxed">
+                    On August 21, 7, the General Santos City Water District
+                    (GSCWD) was organized through Sangguniang Panlungsod (SP) Board
+                    Resolution No. 116, as amended, SP Board Resolution No. 224
+                    series of 1987 pursuant to the provision of Section 3, 27, and
+                    45 of Titles I and II of Presidential Decree 198, as amended
+                    otherwise known as the Provincial Water Utilities Act of 1973
+                    signed by former President Ferdinand E. Marcos, LWUA later
+                    issued a Conditional Certificate of Conformance (CCC) No. 370 on
+                    November 29, 1988 to establish the water district.
+                  </p>
+                </div>
 
-            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
-              <h2 className="text-2xl font-semibold mb-4">
-                Growth and Service
-              </h2>
-              <p className="text-lg leading-relaxed">
-                For 29 years from the formation of the GSCWD in the city, the
-                district has now active service connections of 42,503 as of
-                November 2016 and has 161 employees.
-              </p>
-            </div>
+                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Growth and Service
+                  </h2>
+                  <p className="text-lg leading-relaxed">
+                    For 29 years from the formation of the GSCWD in the city, the
+                    district has now active service connections of 42,503 as of
+                    November 2016 and has 161 employees.
+                  </p>
+                </div>
 
-            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
-              <h2 className="text-2xl font-semibold mb-4">
-                Corporate Social Responsibility
-              </h2>
-              <p className="text-lg leading-relaxed">
-                Along with the GSCWD's mandate of providing safe and potable
-                water, it is highly committed to fulfill its corporate social
-                responsibility. It actively participated in the protection of
-                water resources through the adoption of protected areas and
-                established projects for watershed development. It extended
-                special projects such as donations of school building for the
-                children in the remote areas and sustained the need of a child
-                to access quality health through the support and adoption of the
-                Neonatal Intensive Care Unit (NICU) project at the General
-                Santos City District Hospital.
-              </p>
-            </div>
+                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Corporate Social Responsibility
+                  </h2>
+                  <p className="text-lg leading-relaxed">
+                    Along with the GSCWD's mandate of providing safe and potable
+                    water, it is highly committed to fulfill its corporate social
+                    responsibility. It actively participated in the protection of
+                    water resources through the adoption of protected areas and
+                    established projects for watershed development. It extended
+                    special projects such as donations of school building for the
+                    children in the remote areas and sustained the need of a child
+                    to access quality health through the support and adoption of the
+                    Neonatal Intensive Care Unit (NICU) project at the General
+                    Santos City District Hospital.
+                  </p>
+                </div>
 
-            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
-              <h2 className="text-2xl font-semibold mb-4">
-                Awards and Recognition
-              </h2>
-              <p className="text-lg leading-relaxed">
-                The General Santos City Water District has been awarded by the
-                Local Water Utilities Administration as the Most Outstanding
-                Water District – Medium Category, Mindanao for exemplary
-                performance in providing water services to the community with
-                sustained superior levels of institutional and financial
-                viability for the year 2007.
-              </p>
-            </div>
+                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Awards and Recognition
+                  </h2>
+                  <p className="text-lg leading-relaxed">
+                    The General Santos City Water District has been awarded by the
+                    Local Water Utilities Administration as the Most Outstanding
+                    Water District – Medium Category, Mindanao for exemplary
+                    performance in providing water services to the community with
+                    sustained superior levels of institutional and financial
+                    viability for the year 2007.
+                  </p>
+                </div>
 
-            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
-              <h2 className="text-2xl font-semibold mb-4">
-                Contact Information
-              </h2>
-              <div className="space-y-2 text-lg">
-                <p>
-                  E. Fernandez St., Brgy. Lagao, General Santos City, 9500,
-                  Philippines
-                </p>
-                <p>Customer hotline: (083) 552 3824</p>
-                <p>Mobile Numbers:</p>
-                <ul className="list-disc list-inside pl-4">
-                  <li>0998 5307 893</li>
-                  <li>0998 8485 714</li>
-                  <li>0917 7049 979</li>
-                  <li>0917 7049 867</li>
-                </ul>
+                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Contact Information
+                  </h2>
+                  <div className="space-y-2 text-lg">
+                    <p>
+                      E. Fernandez St., Brgy. Lagao, General Santos City, 9500,
+                      Philippines
+                    </p>
+                    <p>Customer hotline: (083) 552 3824</p>
+                    <p>Mobile Numbers:</p>
+                    <ul className="list-disc list-inside pl-4">
+                      <li>0998 5307 893</li>
+                      <li>0998 8485 714</li>
+                      <li>0917 7049 979</li>
+                      <li>0917 7049 867</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex justify-center space-x-8 py-8">
+                  <Image
+                    src="/transparency-seal.png"
+                    alt="Transparency Seal"
+                    width={64}
+                    height={64}
+                    className="h-16"
+                  />
+                  <Image
+                    src="/foi-logo.png"
+                    alt="FOI Logo"
+                    width={64}
+                    height={64}
+                    className="h-16"
+                  />
+                  <Image
+                    src="/philgeps-logo.png"
+                    alt="PhilGEPS Logo"
+                    width={64}
+                    height={64}
+                    className="h-16"
+                  />
+                </div>
+
+                <div className="text-center text-sm opacity-75">
+                  <p>All rights reserved © General Santos City Water District</p>
+                  <p>©2021 General Santos Water District</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex justify-center space-x-8 py-8">
-              <Image
-                src="/transparency-seal.png"
-                alt="Transparency Seal"
-                width={64}
-                height={64}
-                className="h-16"
-              />
-              <Image
-                src="/foi-logo.png"
-                alt="FOI Logo"
-                width={64}
-                height={64}
-                className="h-16"
-              />
-              <Image
-                src="/philgeps-logo.png"
-                alt="PhilGEPS Logo"
-                width={64}
-                height={64}
-                className="h-16"
-              />
-            </div>
+              {/* Fixed gradient overlays for smooth transitions */}
+              <div className="fixed top-0 left-0 right-0 h-32 bg-gradient-to-b from-blue-600 to-transparent pointer-events-none"></div>
+              <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-cyan-600 to-transparent pointer-events-none"></div>
 
-            <div className="text-center text-sm opacity-75">
-              <p>All rights reserved © General Santos City Water District</p>
-              <p>©2021 General Santos Water District</p>
-            </div>
-          </div>
+              {/* Animated water waves */}
+              <div className="fixed bottom-0 left-0 right-0 pointer-events-none">
+                <div className="wave wave1"></div>
+                <div className="wave wave2"></div>
+                <div className="wave wave3"></div>
+              </div>
+            </>
+          )}
 
-          {/* Fixed gradient overlays for smooth transitions */}
-          <div className="fixed top-0 left-0 right-0 h-32 bg-gradient-to-b from-blue-600 to-transparent pointer-events-none"></div>
-          <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-cyan-600 to-transparent pointer-events-none"></div>
-
-          {/* Animated water waves */}
-          <div className="fixed bottom-0 left-0 right-0 pointer-events-none">
+          {/* Animated waves overlay */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="wave wave1"></div>
             <div className="wave wave2"></div>
             <div className="wave wave3"></div>
+            <div className="wave wave4"></div>
           </div>
+
+          {/* Falling rain/water drops effect */}
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div key={i} className={`raindrop raindrop-${i}`}></div>
+          ))}
         </div>
       ) : (
         <>
@@ -484,7 +553,7 @@ export default function Kiosk() {
                   {/* Modern header design with water theme and improved styling */}
                   <div className="relative mb-8">
                     {/* Background accent element with water wave effect */}
-                    <div className="absolute -left-6 -top-6 -right-6 h-44 bg-gradient-to-r from-blue-700 to-cyan-500 rounded-b-3xl shadow-lg z-0 overflow-hidden">
+                    <div className="absolute -left-6 -top-6 -right-6 h-96 bg-gradient-to-r from-blue-700 to-cyan-500 rounded-b-3xl shadow-lg z-0 overflow-hidden">
                       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTEyODAgMEw2NDAgNzAgMCAwdjE0MGgxMjgweiIvPjwvZz48L3N2Zz4=')] bottom -1px repeat-x transform translate-y-8 opacity-20"></div>
                     </div>
 
@@ -496,24 +565,26 @@ export default function Kiosk() {
                         <img
                           src="/wdlogo.png"
                           alt="Water District Logo"
-                          className="h-24 w-24 object-contain relative z-10 drop-shadow-lg"
+                          className="h-64 w-64 object-contain relative z-10 drop-shadow-lg"
                         />
                       </div>
                       <div className="ml-4">
-                        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-md">
+                        <h1 className="text-7xl md:text-7xl font-bold text-white tracking-tight drop-shadow-md">
                           Customer Service
                         </h1>
-                        <div className="h-1.5 w-32 bg-white/80 mt-2 rounded-full shadow-inner"></div>
+                        
                       </div>
                     </div>
                   </div>
 
                   {/* Emphasized ticket system message with water-themed styling */}
-                  <div className="relative mb-8 text-center">
-                    <p className="text-3xl md:text-5xl font-extrabold text-blue-700 drop-shadow-md">
+                  <div className="relative mb-8 mt-16 text-center">
+                    <p className="text-6xl md:text-8xl font-extrabold text-blue-700 drop-shadow-md">
                       GET YOUR NUMBER HERE
                     </p>
-                    <div className="h-1.5 w-40 bg-gradient-to-r from-cyan-400 to-blue-500 mx-auto mt-2 rounded-full shadow-sm"></div>
+                    <p className="text-lg md:text-4xl text-blue-700 mt-4 drop-shadow-md">
+                      Please select your user type to proceed.
+                    </p>
                   </div>
 
                   {error && (
@@ -530,7 +601,7 @@ export default function Kiosk() {
 
                   <div className="flex-1 flex flex-col justify-center">
                     <h2 className="text-2xl font-semibold text-blue-800 text-center mb-6 drop-shadow-sm">
-                      Please select your customer type
+                    
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
                       <button
@@ -543,6 +614,7 @@ export default function Kiosk() {
                         <div className="items-center justify-center mb-6 relative">
                           <Wheelchair
                             size={350}
+                            weight="bold"
                             className="drop-shadow-xl transition-transform group-hover:scale-110 duration-300"
                           />
                           <span className="text-7xl invisible block">
@@ -610,7 +682,7 @@ export default function Kiosk() {
                         className="bg-gradient-to-r from-blue-400 to-cyan-500 border text-white border-blue-200 hover:border-blue-500 hover:text-blue-800 hover:from-blue-50 hover:to-cyan-50 rounded-xl p-6 flex flex-col h-full transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
                       >
                         {/* Water ripple effect on hover */}
-                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNXB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-20 transition-opacity duration-700"></div>
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNXB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-20 transition-opacity duration-700"></div>
                         <div className="flex-1 flex items-center justify-center">
                           <h3 className="text-7xl font-bold text-center drop-shadow-md">
                             {service.name}

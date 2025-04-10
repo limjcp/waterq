@@ -33,6 +33,7 @@ export default function AdminLayout({
     if (pathname === "/admin/services") return "services";
     if (pathname === "/admin/counters") return "counters";
     if (pathname === "/admin/register-service") return "register-service";
+    if (pathname === "/admin/screensaver") return "screensaver";
     if (pathname === "/admin/report") return "report";
     return "";
   };
@@ -190,6 +191,25 @@ export default function AdminLayout({
                   {!isSidebarCollapsed && "Register Service"}
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/admin/screensaver"
+                  className={`flex items-center p-3 rounded-lg ${
+                    activePage === "screensaver"
+                      ? "bg-sky-700 font-medium"
+                      : "hover:bg-sky-700/50"
+                  }`}
+                  title="Screensaver"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z" />
+</svg>
+
+                 
+                  {!isSidebarCollapsed && "Screensaver"}
+                </Link>
+              </li>
+            
               <li>
                 <Link
                   href="/admin/report"

@@ -11,6 +11,7 @@ export default auth((req) => {
   // Public routes that don't require authentication
   if (
     nextUrl.pathname.startsWith("/api/auth") ||
+    nextUrl.pathname.startsWith("/public/upload") ||
     nextUrl.pathname === "/WD.png" ||
     nextUrl.pathname === "/wdmascot.png" ||
     nextUrl.pathname === "/wdlogo.png" ||
@@ -19,10 +20,14 @@ export default auth((req) => {
     nextUrl.pathname.startsWith("/auth/signin") ||
     nextUrl.pathname.startsWith("/api/tickets") ||
     nextUrl.pathname.startsWith("/display") ||
+    nextUrl.pathname.startsWith("/api/screensaver") ||
+    nextUrl.pathname.startsWith("/api/upload") ||
     nextUrl.pathname.startsWith("/api/display") ||
     nextUrl.pathname === "/admin/register" ||
     nextUrl.pathname === "/push.png" ||
-    nextUrl.pathname === "/users.png"
+    nextUrl.pathname === "/users.png" ||
+    nextUrl.pathname.startsWith("/screensaver/") ||  // Add access to screensaver images
+    nextUrl.pathname.match(/\.(jpg|jpeg|png|gif|svg)$/) // Allow all image files
   ) {
     return NextResponse.next();
   }
