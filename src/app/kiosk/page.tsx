@@ -473,7 +473,7 @@ export default function Kiosk() {
                   )}
                   <div className="flex-1 flex flex-col justify-center">
                     <h2 className="text-2xl font-semibold text-blue-800 text-center mb-6 drop-shadow-sm"></h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow p-10">
                       <button
                         onClick={() => selectUserType(true)}
                         className="flex flex-col items-center justify-center text-white bg-gradient-to-br from-blue-400 to-cyan-500 border-2 border-blue-200 hover:border-blue-500 hover:from-blue-50 hover:to-cyan-50 hover:text-blue-800 font-bold py-12 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
