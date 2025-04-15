@@ -58,7 +58,7 @@ export async function PUT(
       });
 
       // If we already have 2 or more lapsed tickets, convert oldest to cancelled
-      if (lapsedTickets.length >= 2) {
+      if (lapsedTickets.length >= 5) {
         // Get all tickets beyond the first 2 (they will be cancelled)
         const ticketsToCancel = lapsedTickets.slice(1); // Keep newest, cancel the rest
         

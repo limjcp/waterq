@@ -158,8 +158,7 @@ export default function StaffDashboard() {
   // Add new state for service type confirmation modal
   const [isServiceTypeConfirmModalOpen, setIsServiceTypeConfirmModalOpen] =
     useState(false);
-  const [serviceTypeToConfirm, setServiceTypeToConfirm] =
-    useState<ServiceType | null>(null);
+  const [serviceTypeToConfirm, setServiceTypeToConfirm] = useState<ServiceType | null>(null);
 
   // Add new state for transfer confirmation modal
   const [isTransferConfirmModalOpen, setIsTransferConfirmModalOpen] =
@@ -179,6 +178,10 @@ export default function StaffDashboard() {
       setShowConfirmations(savedPreference === "true");
     }
   }, []);
+
+  // Add these new state variables near the other state declarations
+  const [isLapsedListModalOpen, setIsLapsedListModalOpen] = useState(false);
+  const [isReturningListModalOpen, setIsReturningListModalOpen] = useState(false);
 
   // Fetch assigned counter ID when session is available
   useEffect(() => {
@@ -832,7 +835,7 @@ export default function StaffDashboard() {
       ticket.status !== "LAPSED" &&
       ticket.status !== "CALLED" &&
       ticket.status !== "SERVING" &&
-      ticket.status === "PENDING" &&
+      (ticket.status === "PENDING" || ticket.status === "RETURNING") &&
       ticket.serviceId === assignedCounterService
   );
 
@@ -1041,14 +1044,14 @@ export default function StaffDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100">
       {/* Full-width header that stretches edge to edge */}
-      <div className="bg-white shadow-lg p-0 mb-8 w-full sticky top-0">
+      <div className="bg-blue-600 shadow-lg p-0 mb-8 w-full sticky top-0">
         <div className="w-full flex justify-between items-center px-8">
           <div className="flex items-center gap-4">
             {/* Logo */}
             <Image src="/wdlogo.png" alt="WD Logo" width={120} height={120} />
 
             <div>
-              <h1 className="text-3xl font-bold text-sky-800 mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 {session?.user?.assignedCounterName ||
                   `Counter ID: ${assignedCounterId}`}
               </h1>
@@ -1066,10 +1069,10 @@ export default function StaffDashboard() {
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                 className="flex items-center cursor-pointer"
               >
-                <div className="bg-sky-600 text-white rounded-full w-20 h-20 flex items-center justify-center font-bold text-lg mr-3">
+                <div className="bg-white text-sky-600 rounded-full w-20 h-20 flex items-center justify-center font-bold text-lg mr-3">
                   {getInitials(session.user.name || "")}
                 </div>
-                <span className="text-sky-800 font-extrabold">
+                <span className="text-white font-extrabold">
                   {session.user.name || "Staff User"}
                 </span>
               </button>
@@ -1124,59 +1127,180 @@ export default function StaffDashboard() {
       </div>
 
       {/* Main content area with responsive layout */}
-      <div className="w-[95vw] h-[calc(100vh-180px)] flex flex-col lg:flex-row gap-4 lg:gap-6 m-10">
-        
+      <div className="w-[90vw] h-[calc(100vh-180px)] flex flex-col lg:flex-row gap-4 lg:gap-6 mx-auto my-10">
 
         {/* Next in Line section */}
         <div className="w-full lg:w-1/3 flex-shrink-0">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
-            <h2 className="text-xl md:text-6xl font-bold text-sky-800 mb-4 lg:mb-6 text-center flex-none">
+            <h2 className="text-xl md:text-6xl font-bold text-blue-600 mb-4 lg:mb-6 text-center flex-none">
               Next
             </h2>
-            <div className="flex-1 flex items-center justify-center">
-              {activeTickets.length ? (
-                <div className="flex flex-col items-center w-full max-w-[500px] mx-auto">
-                  <div className="bg-sky-50 rounded-lg w-full h-[120px] lg:h-[160px] xl:h-[200px] flex items-center justify-center mb-4">
-                    <span className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-sky-700 text-center px-2 break-all">
-                      {activeTickets[0].isPrioritized ? "PWD-" : ""}
-                      {getTicketDisplayCode(activeTickets[0])}-
-                      {formatTicketNumber(activeTickets[0].ticketNumber)}
-                    </span>
-                  </div>
-                  <p className="text-xl font-medium text-sky-600 mb-2">
-                    {activeTickets[0].service?.name || "Unknown Service"}
-                  </p>
-                  {activeTickets[0].isPrioritized && (
-                    <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
-                      Priority
-                    </span>
-                  )}
-                  <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
-
-                  {/* Show pending count if there are more waiting tickets */}
-                  {activeTickets.length > 1 && (
-                    <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
-                      <p className="text-center text-sky-700 font-medium text-xl">
-                        Waiting: {activeTickets.length - 1} ticket
-                        {activeTickets.length - 1 !== 1 ? "s" : ""}
-                      </p>
+            <div className="flex-1 flex flex-col">
+              {/* Regular pending tickets */}
+              <div className="flex-0 mb-4 h-64">
+                {activeTickets.length ? (
+                  <div className="flex flex-col items-center w-full max-w-[500px] mx-auto">
+                    <div className="bg-sky-50 rounded-lg w-full h-[80px] lg:h-[100px] xl:h-[100px] flex items-center justify-center mb-4">
+                      <span className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-sky-700 text-center px-2 break-all">
+                        {activeTickets[0].isPrioritized ? "PWD-" : ""}
+                        {getTicketDisplayCode(activeTickets[0])}-
+                        {formatTicketNumber(activeTickets[0].ticketNumber)}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center">
-                  <p className="text-center text-sky-600 text-xl">
-                    No tickets waiting in queue
-                  </p>
-                </div>
-              )}
+                    <p className="text-xl font-medium text-sky-600 mb-2">
+                      {activeTickets[0].service?.name || "Unknown Service"}
+                    </p>
+                    {activeTickets[0].isPrioritized && (
+                      <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
+                        Priority
+                      </span>
+                    )}
+                    <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
+
+                    {/* Show pending count if there are more waiting tickets */}
+                    {activeTickets.length > 1 && (
+                      <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
+                        <p className="text-center text-sky-700 font-medium text-xl">
+                          Waiting: {activeTickets.length - 1} ticket
+                          {activeTickets.length - 1 !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <p className="text-center text-sky-600 text-xl">
+                      No tickets waiting in queue
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Lapsed and Returning Tickets Container */}
+              <div className="flex-1 space-y-4 overflow-y-auto">
+                {/* Lapsed Tickets - Show only 2 */}
+                {lapsedTickets.length > 0 && (
+                  <div className="w-full">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-medium text-amber-700 sticky top-0 bg-white">
+                        Lapsed Tickets
+                      </h3>
+                      {lapsedTickets.length > 2 && (
+                        <button
+                          onClick={() => setIsLapsedListModalOpen(true)}
+                          className="text-xs text-amber-600 hover:text-amber-800 font-medium"
+                        >
+                          Show All ({lapsedTickets.length})
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {lapsedTickets.slice(0, 2).map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          className="bg-amber-50 p-2 rounded-lg flex flex-col gap-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">
+                              {ticket.isPrioritized ? "PWD-" : ""}
+                              {getTicketDisplayCode(ticket)}-
+                              {formatTicketNumber(ticket.ticketNumber)}
+                            </span>
+                            {ticket.isPrioritized && (
+                              <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded">
+                                PWD
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => recallTicket(ticket.id)}
+                            disabled={calledTicketId !== null || servingTicketId !== null}
+                            className={`${
+                              calledTicketId !== null || servingTicketId !== null
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-amber-500 hover:bg-amber-600 active:scale-95"
+                            } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                            </svg>
+                            Recall
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Returning Tickets - Show only 2 */}
+                {returningTickets.length > 0 && (
+                  <div className="w-full">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-medium text-purple-700 sticky top-0 bg-white">
+                        Returning Tickets
+                      </h3>
+                      {returningTickets.length > 2 && (
+                        <button
+                          onClick={() => setIsReturningListModalOpen(true)}
+                          className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                        >
+                          Show All ({returningTickets.length})
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {returningTickets.slice(0, 2).map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">
+                              {ticket.isPrioritized ? "PWD-" : ""}
+                              {getTicketDisplayCode(ticket)}-
+                              {formatTicketNumber(ticket.ticketNumber)}
+                            </span>
+                            {ticket.isPrioritized && (
+                              <span className="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded">
+                                PWD
+                              </span>
+                            )}
+                          </div>
+                            <button
+                            onClick={(e) => {
+                              const btn = e.currentTarget;
+                              btn.classList.add("scale-95");
+                              btn.innerHTML = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+                              setTimeout(() => {
+                              recallTicket(ticket.id);
+                              }, 200);
+                            }}
+                            disabled={calledTicketId !== null || servingTicketId !== null}
+                            className={`${
+                              calledTicketId !== null || servingTicketId !== null
+                              ? "bg-gray-400 cursor-not-allowed opacity-50"
+                              : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
+                            } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                            >
+                            <svg className={`w-4 h-4 ${calledTicketId !== null || servingTicketId !== null ? 'opacity-50' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                            </svg>
+                            Call
+                            </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-{/* Currently Serving section */}
+
+        {/* Currently Serving section */}
         <div className="w-full lg:w-1/3 flex-shrink-0 h-full">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
-            <h2 className="text-xl md:text-6xl font-bold text-sky-800 mb-4 lg:mb-6 text-center flex-none">
+            <h2 className="text-xl md:text-6xl font-bold text-blue-600 mb-4 lg:mb-6 text-center flex-none">
               Currently Serving
             </h2>
             <div className="flex-1 flex items-center justify-center">
@@ -1249,7 +1373,7 @@ export default function StaffDashboard() {
                           className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                         >
                           Complete Payment
-                          <span className="absolute right-0 bg-green-700 text-lg px-4 py-2 rounded-lg ml-4">
+                          <span className="absolute  right-0 bg-green-700 text-lg px-4 py-2 rounded-lg ml-4 ">
                             C
                           </span>
                         </button>
@@ -1293,8 +1417,9 @@ export default function StaffDashboard() {
                                 viewBox="0 0 20 20"
                                 fill="currentColor"
                               >
-                                <path d="M8 5a1 1 0 100 2h5.586l-1.293 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L13.586 5H8z" />
-                                <path d="M12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z" />
+                                <path d="M8 7h4v10H8z" />
+                                <path d="M6 7H2v10h4z" />
+                                <path d="M18 7h-4v10h4z" />
                               </svg>
                               Transfer to {service.name}
                               {/* <span className="absolute top-0 right-0 bg-purple-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
@@ -1470,124 +1595,6 @@ export default function StaffDashboard() {
                       </div>
                     ))}
                 </div>
-              ) : lapsedTickets.length > 0 || returningTickets.length > 0 ? (
-                <div className="flex flex-col items-center w-full">
-                  <p className="text-center text-sky-700 mb-4">
-                    Available Actions
-                  </p>
-
-                  {lapsedTickets.length > 0 && (
-                    <div className="w-full mb-3">
-                      <h3 className="text-sm font-medium text-amber-700 mb-2">
-                        Lapsed Tickets
-                      </h3>
-                      {lapsedTickets.map((ticket) => (
-                        <div
-                          key={ticket.id}
-                          className="bg-amber-50 p-2 rounded-lg mb-2 flex justify-between items-center"
-                        >
-                          <span>
-                            {ticket.isPrioritized ? "PWD-" : ""}
-                            {getTicketDisplayCode(ticket)}-
-                            {formatTicketNumber(ticket.ticketNumber)}
-                          </span>
-                          <button
-                            onClick={() => recallTicket(ticket.id)}
-                            className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
-                          >
-                            Recall
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {returningTickets.length > 0 && (
-                    <div className="w-full mb-4">
-                      <h3 className="text-sm font-medium text-purple-700 mb-2">
-                        Returning Tickets
-                      </h3>
-                      {returningTickets.map((ticket) => (
-                        <div
-                          key={ticket.id}
-                          className="bg-purple-50 p-2 rounded-lg mb-2 flex justify-between items-center hover:bg-purple-100 transition-colors border border-purple-100"
-                        >
-                          <span className="font-medium">
-                            {ticket.isPrioritized ? "PWD-" : ""}
-                            {getTicketDisplayCode(ticket)}-
-                            {formatTicketNumber(ticket.ticketNumber)}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              const btn = e.currentTarget;
-                              btn.classList.add("scale-95");
-                              btn.innerText = "Calling...";
-                              setTimeout(() => {
-                                recallTicket(ticket.id);
-                              }, 200);
-                            }}
-                            className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-1 px-3 rounded text-sm transition-all transform active:scale-95 active:bg-purple-700 flex items-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 mr-1"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                            Call
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Call Next Ticket button at the bottom */}
-                  <div className="w-full mt-3 pt-3 border-t border-gray-100">
-                    {/* Call Next Button */}
-                    <button
-                      onClick={(e) => {
-                        if (!hasPendingTickets) return;
-                        const btn = e.currentTarget;
-                        btn.innerText = "Calling...";
-                        btn.classList.add("scale-95", "bg-sky-700");
-                        btn.disabled = true;
-                        setTimeout(() => {
-                          callNextTicket();
-                          // Button will be unmounted/remounted when state changes
-                        }, 300);
-                      }}
-                      disabled={!hasPendingTickets}
-                      className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium relative ${
-                        hasPendingTickets
-                          ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
-                      title="Press 'N' to call next ticket"
-                    >
-                      {hasPendingTickets && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                        </svg>
-                      )}
-                      Call Next Ticket
-                      <span className="absolute right-0 bg-sky-700 text-lg px-4 py-2 rounded-lg ml-4">
-                        N
-                      </span>
-                    </button>
-                    {!hasPendingTickets && (
-                      <p className="text-xs text-gray-500 text-center mt-1">
-                        No pending tickets in queue
-                      </p>
-                    )}
-                  </div>
-                </div>
               ) : (
                 <div className="flex flex-col items-center w-full">
                   <p className="text-center text-gray-500 mb-6">
@@ -1639,7 +1646,7 @@ export default function StaffDashboard() {
         {/* Statistics section */}
         <div className="w-full lg:w-1/3 flex-shrink-0">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
-            <h2 className="text-xl md:text-6xl font-bold text-sky-800 mb-4 lg:mb-6 text-center flex-none">
+            <h2 className="text-xl md:text-6xl font-bold text-blue-600 mb-4 lg:mb-6 text-center flex-none">
               Your Statistics
             </h2>
             <div className="flex-1 flex flex-col justify-center">
@@ -1970,7 +1977,7 @@ export default function StaffDashboard() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
                     clipRule="evenodd"
                   />
                 </svg>
@@ -1994,7 +2001,7 @@ export default function StaffDashboard() {
               >
                 <path
                   fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -2050,6 +2057,118 @@ export default function StaffDashboard() {
                 </svg>
                 Complete Transaction
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lapsed List Modal */}
+      {isLapsedListModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[800px] max-h-[80vh] shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-amber-700">All Lapsed Tickets</h3>
+              <button
+                onClick={() => setIsLapsedListModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-[60vh] p-2">
+              {lapsedTickets.map((ticket) => (
+                // Same ticket card component as before
+                <div
+                  key={ticket.id}
+                  className="bg-amber-50 p-2 rounded-lg flex flex-col gap-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {ticket.isPrioritized ? "PWD-" : ""}
+                      {getTicketDisplayCode(ticket)}-
+                      {formatTicketNumber(ticket.ticketNumber)}
+                    </span>
+                    {ticket.isPrioritized && (
+                      <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded">
+                        PWD
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => recallTicket(ticket.id)}
+                    disabled={calledTicketId !== null || servingTicketId !== null}
+                    className={`${
+                      calledTicketId !== null || servingTicketId !== null
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-600 active:scale-95"
+                    } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                    Recall
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Returning List Modal */}
+      {isReturningListModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[800px] max-h-[80vh] shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-purple-700">All Returning Tickets</h3>
+              <button
+                onClick={() => setIsReturningListModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-[60vh] p-2">
+              {returningTickets.map((ticket) => (
+                // Same ticket card component as before
+                <div
+                  key={ticket.id}
+                  className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {ticket.isPrioritized ? "PWD-" : ""}
+                      {getTicketDisplayCode(ticket)}-
+                      {formatTicketNumber(ticket.ticketNumber)}
+                    </span>
+                    {ticket.isPrioritized && (
+                      <span className="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded">
+                        PWD
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      const btn = e.currentTarget;
+                      btn.classList.add("scale-95");
+                      btn.innerHTML = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+                      setTimeout(() => {
+                        recallTicket(ticket.id);
+                      }, 200);
+                    }}
+                    className="bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-1 px-3 rounded transition-all transform active:scale-95 active:bg-purple-700 flex items-center justify-center gap-1"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                    Call
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
