@@ -158,7 +158,8 @@ export default function StaffDashboard() {
   // Add new state for service type confirmation modal
   const [isServiceTypeConfirmModalOpen, setIsServiceTypeConfirmModalOpen] =
     useState(false);
-  const [serviceTypeToConfirm, setServiceTypeToConfirm] = useState<ServiceType | null>(null);
+  const [serviceTypeToConfirm, setServiceTypeToConfirm] =
+    useState<ServiceType | null>(null);
 
   // Add new state for transfer confirmation modal
   const [isTransferConfirmModalOpen, setIsTransferConfirmModalOpen] =
@@ -181,7 +182,8 @@ export default function StaffDashboard() {
 
   // Add these new state variables near the other state declarations
   const [isLapsedListModalOpen, setIsLapsedListModalOpen] = useState(false);
-  const [isReturningListModalOpen, setIsReturningListModalOpen] = useState(false);
+  const [isReturningListModalOpen, setIsReturningListModalOpen] =
+    useState(false);
 
   // Fetch assigned counter ID when session is available
   useEffect(() => {
@@ -1127,8 +1129,7 @@ export default function StaffDashboard() {
       </div>
 
       {/* Main content area with responsive layout */}
-      <div className="w-[90vw] h-[calc(100vh-180px)] flex flex-col lg:flex-row gap-4 lg:gap-6 mx-auto my-10">
-
+      <div className=" h-[calc(100vh-180px)] flex flex-col lg:flex-row gap-5 lg:gap-5 ml-5 mr-5 my-auto">
         {/* Next in Line section */}
         <div className="w-full lg:w-1/3 flex-shrink-0">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
@@ -1214,14 +1215,22 @@ export default function StaffDashboard() {
                           </div>
                           <button
                             onClick={() => recallTicket(ticket.id)}
-                            disabled={calledTicketId !== null || servingTicketId !== null}
+                            disabled={
+                              calledTicketId !== null ||
+                              servingTicketId !== null
+                            }
                             className={`${
-                              calledTicketId !== null || servingTicketId !== null
+                              calledTicketId !== null ||
+                              servingTicketId !== null
                                 ? "bg-gray-400 cursor-not-allowed"
                                 : "bg-amber-500 hover:bg-amber-600 active:scale-95"
                             } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                           >
-                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <svg
+                              className="w-4 h-4"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
                               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                             </svg>
                             Recall
@@ -1266,27 +1275,41 @@ export default function StaffDashboard() {
                               </span>
                             )}
                           </div>
-                            <button
+                          <button
                             onClick={(e) => {
                               const btn = e.currentTarget;
                               btn.classList.add("scale-95");
-                              btn.innerHTML = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+                              btn.innerHTML =
+                                '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
                               setTimeout(() => {
-                              recallTicket(ticket.id);
+                                recallTicket(ticket.id);
                               }, 200);
                             }}
-                            disabled={calledTicketId !== null || servingTicketId !== null}
+                            disabled={
+                              calledTicketId !== null ||
+                              servingTicketId !== null
+                            }
                             className={`${
-                              calledTicketId !== null || servingTicketId !== null
-                              ? "bg-gray-400 cursor-not-allowed opacity-50"
-                              : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
+                              calledTicketId !== null ||
+                              servingTicketId !== null
+                                ? "bg-gray-400 cursor-not-allowed opacity-50"
+                                : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
                             } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                          >
+                            <svg
+                              className={`w-4 h-4 ${
+                                calledTicketId !== null ||
+                                servingTicketId !== null
+                                  ? "opacity-50"
+                                  : ""
+                              }`}
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
                             >
-                            <svg className={`w-4 h-4 ${calledTicketId !== null || servingTicketId !== null ? 'opacity-50' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                             </svg>
                             Call
-                            </button>
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -1307,7 +1330,11 @@ export default function StaffDashboard() {
               {currentServingTicket ? (
                 <div className="flex flex-col items-center w-full max-w-[500px] mx-auto">
                   <div className="bg-sky-100 rounded-lg w-full h-[80px] lg:h-[100px] flex items-center justify-center mb-4">
-                    <span className={`${getTicketTextSizeClass(currentServingTicket)} font-bold text-sky-700 text-center px-2 break-all`}>
+                    <span
+                      className={`${getTicketTextSizeClass(
+                        currentServingTicket
+                      )} font-bold text-sky-700 text-center px-2 break-all`}
+                    >
                       {currentServingTicket.isPrioritized ? "PWD-" : ""}
                       {getTicketDisplayCode(currentServingTicket)}-
                       {formatTicketNumber(currentServingTicket.ticketNumber)}
@@ -1370,10 +1397,10 @@ export default function StaffDashboard() {
                               console.error("Error completing payment:", error);
                             }
                           }}
-                          className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
+                          className="w-full transform flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                         >
                           Complete Payment
-                          <span className="absolute  right-0 bg-green-700 text-lg px-4 py-2 rounded-lg ml-4 ">
+                          <span className="absolute  right-0 bg-green-700 text-lg px-6 py-4 rounded-lg ml-4 ">
                             C
                           </span>
                         </button>
@@ -1454,10 +1481,10 @@ export default function StaffDashboard() {
                               console.error("Error cancelling ticket:", error);
                             }
                           }}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
+                          className="w-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                         >
                           Cancel Transaction
-                          <span className="absolute right-0 bg-red-700 text-lg px-4 py-2 rounded-lg ml-4">
+                          <span className="absolute right-0 bg-red-700 text-lg px-6 py-4 rounded-lg ml-4">
                             X
                           </span>
                         </button>
@@ -1468,10 +1495,10 @@ export default function StaffDashboard() {
                         onClick={() =>
                           openServiceTypeModal(currentServingTicket.id)
                         }
-                        className="w-full bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
+                        className="w-full flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                       >
                         Complete Transaction
-                        <span className="absolute right-0 bg-green-700 text-lg px-4 py-2 rounded-lg ml-4">
+                        <span className="absolute right-0 bg-green-700 text-lg px-6 py-4 rounded-lg ml-4">
                           C
                         </span>
                       </button>
@@ -1561,7 +1588,7 @@ export default function StaffDashboard() {
                                   />
                                 </svg>
                                 Start Serving
-                                <span className="absolute right-0 bg-green-700 text-lg px-4 py-2 rounded-lg ml-4">
+                                <span className="absolute right-0 bg-green-700 text-lg px-6 py-4 rounded-lg ml-4">
                                   S
                                 </span>
                               </button>
@@ -1585,7 +1612,7 @@ export default function StaffDashboard() {
                                   />
                                 </svg>
                                 Mark as Lapsed
-                                <span className="absolute right-0 bg-amber-700 text-lg px-4 py-2 rounded-lg ml-4">
+                                <span className="absolute right-0 bg-amber-700 text-lg px-6 py-4 rounded-lg ml-4">
                                   L
                                 </span>
                               </button>
@@ -1644,7 +1671,7 @@ export default function StaffDashboard() {
           </div>
         </div>
         {/* Statistics section */}
-        <div className="w-full lg:w-1/3 flex-shrink-0">
+        <div className="w-full lg:w-1/3 flex-shrink-1">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
             <h2 className="text-xl md:text-6xl font-bold text-blue-600 mb-4 lg:mb-6 text-center flex-none">
               Your Statistics
@@ -1652,13 +1679,17 @@ export default function StaffDashboard() {
             <div className="flex-1 flex flex-col justify-center">
               <div className="space-y-4 lg:space-y-8 w-full max-w-[500px] mx-auto">
                 <div className="bg-sky-50 rounded-lg p-4 lg:p-6">
-                  <p className="text-base lg:text-lg text-sky-700 font-medium">Total Served</p>
+                  <p className="text-base lg:text-lg text-sky-700 font-medium">
+                    Total Served
+                  </p>
                   <p className="text-2xl lg:text-3xl xl:text-4xl font-bold text-sky-800 mt-2">
                     {userStats.totalServed}
                   </p>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4 lg:p-6">
-                  <p className="text-base lg:text-lg text-green-700 font-medium">Today</p>
+                  <p className="text-base lg:text-lg text-green-700 font-medium">
+                    Today
+                  </p>
                   <p className="text-2xl lg:text-3xl xl:text-4xl font-bold text-green-800 mt-2">
                     {userStats.todayServed}
                   </p>
@@ -2067,13 +2098,25 @@ export default function StaffDashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[800px] max-h-[80vh] shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-amber-700">All Lapsed Tickets</h3>
+              <h3 className="text-xl font-semibold text-amber-700">
+                All Lapsed Tickets
+              </h3>
               <button
                 onClick={() => setIsLapsedListModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -2098,14 +2141,20 @@ export default function StaffDashboard() {
                   </div>
                   <button
                     onClick={() => recallTicket(ticket.id)}
-                    disabled={calledTicketId !== null || servingTicketId !== null}
+                    disabled={
+                      calledTicketId !== null || servingTicketId !== null
+                    }
                     className={`${
                       calledTicketId !== null || servingTicketId !== null
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-amber-500 hover:bg-amber-600 active:scale-95"
                     } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
                       <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                     </svg>
                     Recall
@@ -2122,13 +2171,25 @@ export default function StaffDashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[800px] max-h-[80vh] shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-purple-700">All Returning Tickets</h3>
+              <h3 className="text-xl font-semibold text-purple-700">
+                All Returning Tickets
+              </h3>
               <button
                 onClick={() => setIsReturningListModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -2155,14 +2216,19 @@ export default function StaffDashboard() {
                     onClick={(e) => {
                       const btn = e.currentTarget;
                       btn.classList.add("scale-95");
-                      btn.innerHTML = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+                      btn.innerHTML =
+                        '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
                       setTimeout(() => {
                         recallTicket(ticket.id);
                       }, 200);
                     }}
                     className="bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-1 px-3 rounded transition-all transform active:scale-95 active:bg-purple-700 flex items-center justify-center gap-1"
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
                       <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                     </svg>
                     Call
