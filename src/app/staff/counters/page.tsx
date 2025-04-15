@@ -874,11 +874,12 @@ export default function StaffDashboard() {
     setIsLapsedConfirmModalOpen(true);
   }
 
+  // Add a ref to store the transfer button handlers
+  const transferButtonRefs = React.useRef<(null | (() => void))[]>([]);
+
   // Add keyboard shortcut handler
   useEffect(() => {
     function handleKeyPress(e: KeyboardEvent) {
-      console.log("Key pressed:", e.key, "Code:", e.code); // Debug log
-
       // Only handle keypresses if no input is focused
       if (document.activeElement?.tagName === "INPUT") return;
 
@@ -888,9 +889,28 @@ export default function StaffDashboard() {
       }
 
       // Serving ticket actions
-      if (currentServingTicket) {
-        console.log("Current serving ticket:", currentServingTicket); // Debug log
+      if (
+        currentServingTicket &&
+        isPaymentCounter &&
+        availableServices.length > 0
+      ) {
+        // Numpad1-9 or 1-9 for transfer
+        let idx = -1;
+        if (e.code.startsWith("Numpad")) {
+          const num = parseInt(e.code.replace("Numpad", ""), 10);
+          if (!isNaN(num) && num >= 1 && num <= availableServices.length)
+            idx = num - 1;
+        } else if (e.key >= "1" && e.key <= "9") {
+          const num = parseInt(e.key, 10);
+          if (!isNaN(num) && num >= 1 && num <= availableServices.length)
+            idx = num - 1;
+        }
+        if (idx !== -1 && transferButtonRefs.current[idx]) {
+          transferButtonRefs.current[idx]!();
+        }
+      }
 
+      if (currentServingTicket) {
         if (e.key === "c") {
           // Complete action
           if (isPaymentCounter) {
@@ -916,51 +936,6 @@ export default function StaffDashboard() {
             }
           } else {
             openServiceTypeModal(currentServingTicket.id);
-          }
-        }
-
-        // Transfer shortcuts (1-9 for transfer options)
-        if (e.code.startsWith("Numpad") || (e.key >= "1" && e.key <= "9")) {
-          console.log("Number key detected:", e.key, e.code); // Debug log
-          console.log("Available services:", availableServices); // Debug log
-
-          let index: number;
-          if (e.code.startsWith("Numpad")) {
-            // Extract the number from NumpadX and convert to zero-based index
-            const numpadNum = parseInt(e.code.replace("Numpad", ""));
-            console.log("Numpad number:", numpadNum); // Debug log
-            if (!isNaN(numpadNum) && numpadNum >= 1 && numpadNum <= 9) {
-              index = numpadNum - 1;
-            } else {
-              return; // Invalid numpad key
-            }
-          } else {
-            // Regular number key
-            index = parseInt(e.key) - 1;
-          }
-
-          console.log("Calculated index:", index); // Debug log
-
-          if (index >= 0 && index < availableServices.length) {
-            const service = availableServices[index];
-            console.log("Service found at index:", service); // Debug log
-
-            if (showConfirmations) {
-              openTransferConfirmation(service);
-            } else {
-              // Find and click the transfer button for this service
-              const transferButtons = document.querySelectorAll("button");
-              const targetButton = Array.from(transferButtons).find((button) =>
-                button.textContent?.includes(`Transfer to ${service.name}`)
-              );
-
-              if (targetButton) {
-                console.log("Found transfer button, clicking...");
-                targetButton.click();
-              } else {
-                console.log("Transfer button not found");
-              }
-            }
           }
         }
 
@@ -1436,6 +1411,35 @@ export default function StaffDashboard() {
                                   );
                                 }
                               }}
+                              ref={() => {
+                                // Save the handler for hotkey
+                                transferButtonRefs.current[index] =
+                                  async () => {
+                                    try {
+                                      const response = await fetch(
+                                        `/api/tickets/${currentServingTicket.id}/transfer`,
+                                        {
+                                          method: "PUT",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                          body: JSON.stringify({
+                                            serviceId: service.id,
+                                          }),
+                                        }
+                                      );
+                                      if (response.ok) {
+                                        setServingTicketId(null);
+                                        fetchTickets();
+                                      }
+                                    } catch (error) {
+                                      console.error(
+                                        "Error transferring ticket:",
+                                        error
+                                      );
+                                    }
+                                  };
+                              }}
                               className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center relative"
                             >
                               <svg
@@ -1449,9 +1453,9 @@ export default function StaffDashboard() {
                                 <path d="M18 7h-4v10h4z" />
                               </svg>
                               Transfer to {service.name}
-                              {/* <span className="absolute top-0 right-0 bg-purple-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                              <span className="absolute right-0 bg-purple-700 text-lg px-4 py-2 rounded-lg ml-4">
                                 {index + 1}
-                              </span> */}
+                              </span>
                             </button>
                           ))}
                         </div>
@@ -1583,7 +1587,7 @@ export default function StaffDashboard() {
                                 >
                                   <path
                                     fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-4a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
                                     clipRule="evenodd"
                                   />
                                 </svg>
@@ -1937,7 +1941,7 @@ export default function StaffDashboard() {
 
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen && ticketToLapse && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-60flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
             <div className="flex items-center mb-6 text-amber-500">
               <svg
@@ -2032,7 +2036,7 @@ export default function StaffDashboard() {
               >
                 <path
                   fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm11 13a1 1 0 01-1 1H2a1 1 0 01-1-1v-2a1 1 0 011-1h16a1 1 0 011 1v2z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -2222,10 +2226,21 @@ export default function StaffDashboard() {
                         recallTicket(ticket.id);
                       }, 200);
                     }}
-                    className="bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-1 px-3 rounded transition-all transform active:scale-95 active:bg-purple-700 flex items-center justify-center gap-1"
+                    disabled={
+                      calledTicketId !== null || servingTicketId !== null
+                    }
+                    className={`${
+                      calledTicketId !== null || servingTicketId !== null
+                        ? "bg-gray-400 cursor-not-allowed opacity-50"
+                        : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
+                    } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                   >
                     <svg
-                      className="w-4 h-4"
+                      className={`w-4 h-4 ${
+                        calledTicketId !== null || servingTicketId !== null
+                          ? "opacity-50"
+                          : ""
+                      }`}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
