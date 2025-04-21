@@ -11,6 +11,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
+
   title: "GSCWD Queuing System",
   description: "General Santos City Water District Queueing System",
 };
