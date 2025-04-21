@@ -119,40 +119,127 @@ export default function CounterDisplayPage() {
       // Removed beep interval clearing as it's no longer used
     };
   }, []);
-
-  // Play sound once when ticket ID or status changes
+  // Play TTS only when ticket status is CALLED
   useEffect(() => {
     const currentTicket = data?.ticket;
     const currentTicketId = currentTicket?.id;
     const currentStatus = currentTicket?.status;
+    const counterName = data?.counter?.name;
 
-    const playBeep = async () => {
-      if (!audioRef.current) return;
-      try {
-        // Ensure audio plays from the beginning
-        audioRef.current.currentTime = 0;
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => console.error("Audio play error:", err));
-        }
-      } catch (err) {
-        console.error("Error in playBeep:", err);
+    const speakTicket = (ticket: Ticket, counterName: string) => {
+      if (!window.speechSynthesis) return;
+      // Format ticket number as individual digits (e.g., 019 -> 'zero one nine')
+      const numStr = formatTicketNumber(ticket.ticketNumber)
+        .split("")
+        .map((d) => {
+          switch (d) {
+            case "0":
+              return "zero";
+            case "1":
+              return "one";
+            case "2":
+              return "two";
+            case "3":
+              return "three";
+            case "4":
+              return "four";
+            case "5":
+              return "five";
+            case "6":
+              return "six";
+            case "7":
+              return "seven";
+            case "8":
+              return "eight";
+            case "9":
+              return "nine";
+            default:
+              return d;
+          }
+        })
+        .join(" ");
+      const ticketStr = `${ticket.isPrioritized ? "PWD-" : ""}${
+        ticket.prefix
+      } ${numStr}`;
+      const message = `${ticketStr} please proceed to ${counterName}`;
+      const synth = window.speechSynthesis;
+      let voices = synth.getVoices();
+      // Try to select a natural-sounding male English voice
+      let selectedVoice = voices.find(
+        (v) => v.lang.startsWith("en") && v.name.toLowerCase().includes("male")
+      );
+      if (!selectedVoice) {
+        // Fallback: pick a male-sounding voice by name
+        selectedVoice = voices.find(
+          (v) =>
+            v.lang.startsWith("en") &&
+            (v.name.toLowerCase().includes("david") ||
+              v.name.toLowerCase().includes("matthew") ||
+              v.name.toLowerCase().includes("alex") ||
+              v.name.toLowerCase().includes("daniel") ||
+              v.name.toLowerCase().includes("fred"))
+        );
+      }
+      if (!selectedVoice) {
+        // Fallback: pick any English voice
+        selectedVoice = voices.find((v) => v.lang.startsWith("en"));
+      }
+      const utter = new window.SpeechSynthesisUtterance(message);
+      utter.lang = selectedVoice?.lang || "en-US";
+      utter.voice = selectedVoice || null;
+      utter.rate = 0.8;
+      utter.pitch = 1.0;
+      synth.cancel(); // Stop any ongoing speech
+      // Some browsers load voices asynchronously
+      if (voices.length === 0) {
+        synth.onvoiceschanged = () => {
+          voices = synth.getVoices();
+          let v = voices.find(
+            (v) =>
+              v.lang.startsWith("en") && v.name.toLowerCase().includes("male")
+          );
+          if (!v) {
+            v = voices.find(
+              (v) =>
+                v.lang.startsWith("en") &&
+                (v.name.toLowerCase().includes("david") ||
+                  v.name.toLowerCase().includes("matthew") ||
+                  v.name.toLowerCase().includes("alex") ||
+                  v.name.toLowerCase().includes("daniel") ||
+                  v.name.toLowerCase().includes("fred"))
+            );
+          }
+          if (!v) {
+            v = voices.find((v) => v.lang.startsWith("en"));
+          }
+          utter.voice = v || null;
+          synth.speak(utter);
+        };
+      } else {
+        synth.speak(utter);
       }
     };
 
-    // Play only if there's a ticket and either ID or status has changed since the last render
+    // Only play TTS when ticket status is "CALLED" and either ID or status has changed
     if (
       currentTicket &&
+      counterName &&
+      currentStatus?.toLowerCase() === "called" &&
       (currentTicketId !== prevTicketIdRef.current ||
-        currentStatus !== prevTicketStatusRef.current)
+        (currentStatus !== prevTicketStatusRef.current &&
+          prevTicketStatusRef.current?.toLowerCase() !== "called"))
     ) {
-      playBeep();
+      speakTicket(currentTicket, counterName);
     }
 
-    // Update refs for the next render check
     prevTicketIdRef.current = currentTicketId || null;
     prevTicketStatusRef.current = currentStatus || null;
-  }, [data?.ticket?.id, data?.ticket?.status]); // Depend explicitly on id and status
+  }, [
+    data?.ticket,
+    data?.ticket?.id,
+    data?.ticket?.status,
+    data?.counter?.name,
+  ]); // Depend explicitly on id and status
 
   // Removed the previous useEffect hook that handled interval beeping
 

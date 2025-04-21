@@ -367,7 +367,7 @@ export default function Kiosk() {
           ) : (
             <div className="flex flex-col items-center justify-center h-full">
               <div className="relative w-96 h-96 mb-8">
-                <div className="absolute inset-0 bg-cyan-300 rounded-full blur-xl animate-pulse"></div>
+                <div className="absolute inset-0 bg-cyan-30 rounded-full blur-xl animate-pulse"></div>
                 <Image
                   src="/wdlogo.png"
                   alt="GSCWD Logo"
@@ -436,18 +436,23 @@ export default function Kiosk() {
                     <div className="relative flex justify-center items-center h-[500px] bg-gradient-to-r from-blue-700 to-cyan-500 rounded-b-[2rem] px-10 shadow-lg z-0 overflow-hidden">
                       {" "}
                       {/* Logo with water drop shadow effect */}
-                      <div className="relative flex items-center">
-                        <div className="absolute -inset-1 bg-cyan-200 rounded-full blur-md"></div>
-                        <img
-                          src="/wdlogo.png"
-                          alt="Water District Logo"
-                          className="h-80 w-80 object-contain relative z-10 drop-shadow-lg"
-                        />
-                      </div>
-                      <div className="ml-8">
-                        <h1 className="text-8xl md:text-8xl font-bold text-white tracking-tight drop-shadow-md">
-                          Customer Service
-                        </h1>
+                      <div className="relative flex items-center gap-8">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-cyan-300/50 rounded-full blur-2xl"></div>
+                          <img
+                            src="/wdlogo.png"
+                            alt="Water District Logo"
+                            className="h-96 w-96 object-contain relative z-10 drop-shadow-2xl"
+                          />
+                        </div>
+                        <div>
+                          <h1 className="text-9xl font-bold text-white tracking-tight drop-shadow-lg">
+                            Customer
+                          </h1>
+                          <h1 className="text-9xl font-bold text-white tracking-tight drop-shadow-lg">
+                            Service
+                          </h1>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -538,9 +543,13 @@ export default function Kiosk() {
               )}
 
               {currentStep === 2 && (
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full mt-6">
+                  {" "}
+                  {/* Added padding */}
                   {/* Service selection page with water theme */}
-                  <div className="flex-1 grid gap-4">
+                  <div className="flex-1 grid gap-8 mx-8">
+                    {" "}
+                    {/* Increased gap and added margin */}
                     {services.map((service) => (
                       <button
                         key={service.code}
@@ -549,7 +558,7 @@ export default function Kiosk() {
                             isPWD ? `PWD-${service.code}` : service.code
                           )
                         }
-                        className="bg-gradient-to-r from-blue-400 to-cyan-500 border text-white border-blue-200 hover:border-blue-500 hover:text-blue-800 hover:from-blue-50 hover:to-cyan-50 rounded-xl p-6 flex flex-col h-full transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
+                        className="bg-gradient-to-r from-blue-400 to-cyan-500 border text-white border-blue-200 hover:border-blue-500 hover:text-blue-800 hover:from-blue-50 hover:to-cyan-50 rounded-xl p-12 flex flex-col h-full transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
                       >
                         {/* Water ripple effect on hover */}
                         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNXB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-20 transition-opacity duration-700"></div>
@@ -565,18 +574,19 @@ export default function Kiosk() {
                         )}
                         <div className="flex justify-center">
                           {/* <span className="inline-flex items-center px-6 py-5 bg-sky-100 text-sky-800 rounded-full text-lg font-bold">
-                            {isPWD ? `PWD-${service.code}` : `${service.code}`}
-                          </span> */}
+                      {isPWD ? `PWD-${service.code}` : `${service.code}`}
+                      </span> */}
                         </div>
                       </button>
                     ))}
                   </div>
-
                   {/* Big back button at the bottom */}
-                  <div className="mt-6">
+                  <div className="mt-8 mx-8 mb-6">
+                    {" "}
+                    {/* Added margins */}
                     <button
                       onClick={goBack}
-                      className="w-full flex items-center justify-center font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl py-6 px-8 text-3xl transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
+                      className="w-full flex items-center justify-center font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl py-8 px-8 text-3xl transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
                     >
                       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-30 transition-opacity duration-700"></div>
                       <ArrowLeftIcon className="h-8 w-8 mr-4" />

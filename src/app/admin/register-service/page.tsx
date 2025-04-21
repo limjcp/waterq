@@ -84,7 +84,7 @@ export default function RegisterService() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-10xl mx-auto">
       {/* Service Registration Form */}
       <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8">
         <h1 className="text-3xl font-bold text-sky-800 mb-6">

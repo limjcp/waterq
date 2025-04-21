@@ -50,6 +50,10 @@ export default function UsersPage() {
   });
   const [registerLoading, setRegisterLoading] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
+
   useEffect(() => {
     if (status === "authenticated") {
       fetchUsers();
@@ -189,6 +193,15 @@ export default function UsersPage() {
     }
   };
 
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setTotalPages(Math.ceil(users.length / itemsPerPage));
+  }, [users]);
+
   if (status === "loading" || loading) {
     return (
       <div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full mx-auto"></div>
@@ -196,7 +209,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
+    <div className="max-w-10xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-sky-800">Staff Management</h1>
         <button
@@ -490,8 +503,8 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody>
-            {users.length > 0 ? (
-              users.map((user) => (
+            {paginatedUsers.length > 0 ? (
+              paginatedUsers.map((user) => (
                 <tr
                   key={user.id}
                   className="border-b border-sky-50 hover:bg-sky-50"
@@ -552,6 +565,48 @@ export default function UsersPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Add Pagination Controls */}
+      {users.length > 0 && (
+        <div className="mt-6 flex justify-between items-center">
+          <div className="text-sm text-sky-600">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, users.length)} of{" "}
+            {users.length} entries
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+            >
+              Previous
+            </button>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => setCurrentPage(index + 1)}
+                className={`px-3 py-1 rounded-lg border ${
+                  currentPage === index + 1
+                    ? "bg-sky-500 text-white"
+                    : "border-sky-200 hover:bg-sky-50"
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

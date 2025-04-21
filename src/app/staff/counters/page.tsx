@@ -1199,7 +1199,7 @@ export default function StaffDashboard() {
                               servingTicketId !== null
                                 ? "bg-amber-400 cursor-not-allowed"
                                 : "bg-amber-50 hover:bg-amber-600 active:scale-95 hover:text-white"
-                            } text-amber-600 text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                            } disabled:text-gray-400 text-amber-600 text-sm font-medium py-1 px-3 disabled:bg-gray-200 rounded transition-all transform flex items-center justify-center gap-1`}
                           >
                             <svg
                               className="w-4 h-4"
@@ -1528,26 +1528,26 @@ export default function StaffDashboard() {
                         key={ticket.id}
                         className="flex flex-col items-center w-full"
                       >
-                        <div className="bg-amber-100 rounded-lg w-full max-w-[500px] h-[80px] md:h-[100px] flex items-center justify-center mb-6 shadow-md">
+                        <div className="bg-green-50 rounded-lg w-full max-w-[500px] h-[80px] md:h-[100px] flex items-center justify-center mb-6 shadow-md">
                           <span
                             className={`${getTicketTextSizeClass(
                               ticket
-                            )} font-bold text-amber-700 text-center px-2 break-all`}
+                            )} font-bold text-green-800 text-center px-2 break-all`}
                           >
                             {ticket.isPrioritized ? "PWD-" : ""}
                             {getTicketDisplayCode(ticket)}-
                             {formatTicketNumber(ticket.ticketNumber)}
                           </span>
                         </div>
-                        <p className="text-xl font-medium text-amber-600 mb-2">
+                        <p className="text-xl font-medium text-sky-600 mb-2">
                           {ticket.service?.name || "Unknown Service"}
                         </p>
                         {ticket.isPrioritized && (
-                          <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-4">
+                          <span className="bg-green-600 text-green-500 text-white px-3 py-1 rounded-full font-medium mb-4">
                             Priority
                           </span>
                         )}
-                        <p className="text-center text-amber-600 mb-4 animate-pulse font-medium text-2xl">
+                        <p className="text-center text-sky-600 mb-4 animate-pulse font-medium text-2xl">
                           Ticket Called
                         </p>
                         <div className="mt-6 w-full space-y-4">
@@ -1762,11 +1762,11 @@ export default function StaffDashboard() {
         </div>
       )}
 
-      {/* Add Transfer Confirmation Modal */}
-      {isTransferConfirmModalOpen && serviceToConfirm && ticketToTransfer && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen && ticketToLapse && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
           <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
-            <div className="flex items-center mb-6 text-purple-500">
+            <div className="flex items-center mb-6 text-amber-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-12 w-12 mr-4"
@@ -1775,44 +1775,33 @@ export default function StaffDashboard() {
               >
                 <path
                   fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                   clipRule="evenodd"
                 />
               </svg>
               <h3 className="text-2xl font-bold text-gray-800">
-                Confirm Transfer
+                Confirm Action
               </h3>
             </div>
 
             <div className="mb-8">
               <p className="text-lg text-gray-700 mb-6">
-                Are you sure you want to transfer this ticket to the following
-                service?
+                Are you sure you want to mark this ticket as lapsed? This action
+                indicates the customer did not respond when called.
               </p>
 
-              <div className="bg-purple-50 border border-purple-100 rounded-lg p-5 mb-6">
-                <div className="text-center">
-                  <span className="text-3xl font-bold text-purple-700 block">
-                    {serviceToConfirm.name}
-                  </span>
-                  <span className="text-xl text-purple-600 block mt-2">
-                    Code: {serviceToConfirm.code}
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-sky-50 border border-sky-100 rounded-lg p-5">
+              <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
                 {tickets
-                  .filter((t) => t.id === ticketToTransfer)
+                  .filter((t) => t.id === ticketToLapse)
                   .map((ticket) => (
                     <div key={ticket.id} className="text-center">
-                      <span className="text-2xl font-bold text-sky-700 block">
-                        Current Ticket:
-                      </span>
-                      <span className="text-xl font-bold text-sky-700 block mt-2">
+                      <span className="text-3xl font-bold text-amber-700 block">
                         {ticket.isPrioritized ? "PWD-" : ""}
                         {getTicketDisplayCode(ticket)}-
                         {formatTicketNumber(ticket.ticketNumber)}
+                      </span>
+                      <span className="text-xl text-amber-600 block mt-2">
+                        {ticket.service?.name}
                       </span>
                     </div>
                   ))}
@@ -1822,17 +1811,21 @@ export default function StaffDashboard() {
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => {
-                  setIsTransferConfirmModalOpen(false);
-                  setServiceToConfirm(null);
-                  setIsTransferModalOpen(true); // Reopen the selection modal
+                  setIsLapsedConfirmModalOpen(false);
+                  setTicketToLapse(null);
                 }}
                 className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors text-lg"
               >
                 Cancel
               </button>
               <button
-                onClick={() => handleTransferTicket(true)}
-                className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
+                onClick={() => {
+                  const ticketId = ticketToLapse;
+                  if (ticketId) {
+                    markLapsed(ticketId);
+                  }
+                }}
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1842,11 +1835,11 @@ export default function StaffDashboard() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
                     clipRule="evenodd"
                   />
                 </svg>
-                Transfer Ticket
+                Confirm
               </button>
             </div>
           </div>
@@ -1951,7 +1944,7 @@ export default function StaffDashboard() {
 
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen && ticketToLapse && (
-        <div className="fixed inset-0 bg-black bg-opacity-60flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
           <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
             <div className="flex items-center mb-6 text-amber-500">
               <svg
@@ -1977,17 +1970,17 @@ export default function StaffDashboard() {
                 indicates the customer did not respond when called.
               </p>
 
-              <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+              <div className="bg-sky-50 border border-sky-100 rounded-lg p-5 mb-6">
                 {tickets
                   .filter((t) => t.id === ticketToLapse)
                   .map((ticket) => (
                     <div key={ticket.id} className="text-center">
-                      <span className="text-3xl font-bold text-amber-700 block">
+                      <span className="text-3xl font-bold text-sky-800 block">
                         {ticket.isPrioritized ? "PWD-" : ""}
                         {getTicketDisplayCode(ticket)}-
                         {formatTicketNumber(ticket.ticketNumber)}
                       </span>
-                      <span className="text-xl text-amber-600 block mt-2">
+                      <span className="text-xl text-sky-800 block mt-2">
                         {ticket.service?.name}
                       </span>
                     </div>
@@ -2001,8 +1994,20 @@ export default function StaffDashboard() {
                   setIsLapsedConfirmModalOpen(false);
                   setTicketToLapse(null);
                 }}
-                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors text-lg"
+                className="px-6 py-3 bg-red-700 hover:bg-red-600 text-white font-medium rounded-md transition-colors text-lg flex items-center"
               >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
                 Cancel
               </button>
               <button
@@ -2012,7 +2017,7 @@ export default function StaffDashboard() {
                     markLapsed(ticketId);
                   }
                 }}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
+                className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-medium rounded-md transition-colors flex items-center text-lg"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

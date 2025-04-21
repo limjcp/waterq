@@ -223,8 +223,8 @@ export default function StaffReports() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className=" bg-gradient-to-br from-sky-50 to-sky-100 ">
+      <div className="max-w-10xl mx-auto">
         <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
           <h1 className="text-3xl font-bold text-sky-800 mb-6">
             Performance Reports

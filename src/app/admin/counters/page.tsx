@@ -33,6 +33,11 @@ export default function CountersManagement() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Add these pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
+
   // Form states
   const [isAddingCounter, setIsAddingCounter] = useState(false);
   const [editingCounter, setEditingCounter] = useState<string | null>(null);
@@ -208,6 +213,15 @@ export default function CountersManagement() {
     setSuccess("");
   };
 
+  const paginatedCounters = counters.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setTotalPages(Math.ceil(counters.length / itemsPerPage));
+  }, [counters]);
+
   if (status === "loading" || loading) {
     return (
       <div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full mx-auto"></div>
@@ -215,7 +229,7 @@ export default function CountersManagement() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
+    <div className="max-w-10xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-sky-800">Counter Management</h1>
         {!isAddingCounter && (
@@ -354,8 +368,8 @@ export default function CountersManagement() {
             </tr>
           </thead>
           <tbody>
-            {counters.length > 0 ? (
-              counters.map((counter) => (
+            {paginatedCounters.length > 0 ? (
+              paginatedCounters.map((counter) => (
                 <tr
                   key={counter.id}
                   className="border-b border-sky-50 hover:bg-sky-50"
@@ -399,6 +413,48 @@ export default function CountersManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Add Pagination Controls */}
+      {counters.length > 0 && (
+        <div className="mt-6 flex justify-between items-center">
+          <div className="text-sm text-sky-600">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, counters.length)} of{" "}
+            {counters.length} entries
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+            >
+              Previous
+            </button>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => setCurrentPage(index + 1)}
+                className={`px-3 py-1 rounded-lg border ${
+                  currentPage === index + 1
+                    ? "bg-sky-500 text-white"
+                    : "border-sky-200 hover:bg-sky-50"
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
