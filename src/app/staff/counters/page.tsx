@@ -1021,7 +1021,7 @@ export default function StaffDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100">
       {/* Full-width header that stretches edge to edge */}
-      <div className="bg-blue-600 shadow-lg p-0 mb-8 w-full sticky top-0">
+      <div className="bg-sky-800 shadow-lg p-0 mb-8 w-full sticky top-0">
         <div className="w-full flex justify-between items-center px-8">
           <div className="flex items-center gap-4">
             {/* Logo */}
@@ -1108,7 +1108,7 @@ export default function StaffDashboard() {
         {/* Next in Line section */}
         <div className="w-full lg:w-1/3 flex-shrink-0">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
-            <h2 className="text-xl md:text-6xl font-bold text-blue-600 mb-4 lg:mb-6 text-center flex-none">
+            <h2 className="text-xl md:text-6xl font-bold text-sky-600 mb-4 lg:mb-6 text-center flex-none">
               Next
             </h2>
             <div className="flex-1 flex flex-col">
@@ -1135,7 +1135,7 @@ export default function StaffDashboard() {
 
                     {/* Show pending count if there are more waiting tickets */}
                     {activeTickets.length > 1 && (
-                      <div className="mt-6 bg-sky-50 border border-sky-100 rounded-lg py-3 px-6">
+                      <div className="mt-2  rounded-lg py-3 px-6">
                         <p className="text-center text-sky-700 font-medium text-xl">
                           Waiting: {activeTickets.length - 1} ticket
                           {activeTickets.length - 1 !== 1 ? "s" : ""}
@@ -1174,16 +1174,16 @@ export default function StaffDashboard() {
                       {lapsedTickets.slice(0, 2).map((ticket) => (
                         <div
                           key={ticket.id}
-                          className="bg-amber-50 p-2 rounded-lg flex flex-col gap-2"
+                          className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">
+                            <span className="text-sm text-amber-600 font-medium">
                               {ticket.isPrioritized ? "PWD-" : ""}
                               {getTicketDisplayCode(ticket)}-
                               {formatTicketNumber(ticket.ticketNumber)}
                             </span>
                             {ticket.isPrioritized && (
-                              <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded">
+                              <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded font-bold">
                                 PWD
                               </span>
                             )}
@@ -1197,9 +1197,9 @@ export default function StaffDashboard() {
                             className={`${
                               calledTicketId !== null ||
                               servingTicketId !== null
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-amber-500 hover:bg-amber-600 active:scale-95"
-                            } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                                ? "bg-amber-400 cursor-not-allowed"
+                                : "bg-amber-50 hover:bg-amber-600 active:scale-95 hover:text-white"
+                            } text-amber-600 text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                           >
                             <svg
                               className="w-4 h-4"
@@ -1220,7 +1220,7 @@ export default function StaffDashboard() {
                 {returningTickets.length > 0 && (
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium text-purple-700 sticky top-0 bg-white">
+                      <h3 className="text-sm font-medium text-sky-700 sticky top-0 bg-white">
                         Returning Tickets
                       </h3>
                       {returningTickets.length > 2 && (
@@ -1239,7 +1239,7 @@ export default function StaffDashboard() {
                           className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">
+                            <span className="text-sm font-medium text-sky-800">
                               {ticket.isPrioritized ? "PWD-" : ""}
                               {getTicketDisplayCode(ticket)}-
                               {formatTicketNumber(ticket.ticketNumber)}
@@ -1268,8 +1268,8 @@ export default function StaffDashboard() {
                               calledTicketId !== null ||
                               servingTicketId !== null
                                 ? "bg-gray-400 cursor-not-allowed opacity-50"
-                                : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
-                            } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                                : "bg-sky-50 hover:bg-sky-800 active:scale-95 hover:text-sky-50"
+                            } text-sky-800 text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                           >
                             <svg
                               className={`w-4 h-4 ${
@@ -1298,7 +1298,7 @@ export default function StaffDashboard() {
         {/* Currently Serving section */}
         <div className="w-full lg:w-1/3 flex-shrink-0 h-full">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
-            <h2 className="text-xl md:text-6xl font-bold text-blue-600 mb-4 lg:mb-6 text-center flex-none">
+            <h2 className="text-xl md:text-6xl font-bold text-sky-600 mb-4 lg:mb-6 text-center flex-none">
               Currently Serving
             </h2>
             <div className="flex-1 flex items-center justify-center">
@@ -1576,7 +1576,7 @@ export default function StaffDashboard() {
                                     startServing(ticket.id);
                                   }, 150);
                                 }}
-                                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center relative"
+                                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center relative"
                                 title="Press 'S' to start serving"
                               >
                                 <svg
@@ -1677,7 +1677,7 @@ export default function StaffDashboard() {
         {/* Statistics section */}
         <div className="w-full lg:w-1/3 flex-shrink-1">
           <div className="bg-white rounded-2xl shadow-2xl p-4 lg:p-8 h-full flex flex-col">
-            <h2 className="text-xl md:text-6xl font-bold text-blue-600 mb-4 lg:mb-6 text-center flex-none">
+            <h2 className="text-xl md:text-6xl font-bold text-sky-600 mb-4 lg:mb-6 text-center flex-none">
               Your Statistics
             </h2>
             <div className="flex-1 flex flex-col justify-center">
