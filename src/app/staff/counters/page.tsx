@@ -1441,6 +1441,10 @@ export default function StaffDashboard() {
                                   };
                               }}
                               className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center relative"
+                              style={{
+                                backgroundColor: "#0891b2",
+                                color: "#000000",
+                              }}
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1453,7 +1457,13 @@ export default function StaffDashboard() {
                                 <path d="M18 7h-4v10h4z" />
                               </svg>
                               Transfer to {service.name}
-                              <span className="absolute right-0 bg-purple-700 text-lg px-4 py-2 rounded-lg ml-4">
+                              <span
+                                className="absolute right-0 bg-purple-700 text-lg px-4 py-2 rounded-lg ml-4"
+                                style={{
+                                  backgroundColor: "#075985",
+                                  color: "#FFFFFF",
+                                }}
+                              >
                                 {index + 1}
                               </span>
                             </button>

@@ -26,7 +26,7 @@ export default auth((req) => {
     nextUrl.pathname === "/admin/register" ||
     nextUrl.pathname === "/push.png" ||
     nextUrl.pathname === "/users.png" ||
-    nextUrl.pathname.startsWith("/screensaver/") ||  // Add access to screensaver images
+    nextUrl.pathname.startsWith("/screensaver/") || // Add access to screensaver images
     nextUrl.pathname.match(/\.(jpg|jpeg|png|gif|svg)$/) // Allow all image files
   ) {
     return NextResponse.next();
@@ -53,8 +53,8 @@ export default auth((req) => {
 
     // For staff users, redirect to counter
     if (user.role && Array.isArray(user.role) && user.role.includes("staff")) {
-      console.log("Redirecting staff user to /staff/counter");
-      return NextResponse.redirect(new URL("/staff/counter", nextUrl));
+      console.log("Redirecting staff user to /staff/counters");
+      return NextResponse.redirect(new URL("/staff/counters", nextUrl));
     }
   }
 
