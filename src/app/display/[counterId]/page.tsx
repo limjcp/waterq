@@ -80,9 +80,9 @@ export default function CounterDisplayPage() {
         setData((prevData) =>
           prevData
             ? {
-                ...prevData,
-                ticket: ticketData.status === "SERVED" ? null : ticketData,
-              }
+              ...prevData,
+              ticket: ticketData.status === "SERVED" ? null : ticketData,
+            }
             : null
         );
         // Removed sound playing logic from here
@@ -158,9 +158,8 @@ export default function CounterDisplayPage() {
           }
         })
         .join(" ");
-      const ticketStr = `${ticket.isPrioritized ? "PWD-" : ""}${
-        ticket.prefix
-      } ${numStr}`;
+      const ticketStr = `${ticket.isPrioritized ? "PWD-" : ""}${ticket.prefix
+        } ${numStr}`;
       const message = `${ticketStr} please proceed to ${counterName}`;
       const synth = window.speechSynthesis;
       let voices = synth.getVoices();
@@ -267,10 +266,18 @@ export default function CounterDisplayPage() {
       `}</style>
 
       {/* Header Section */}
-      <header className="w-full flex items-center justify-between p-4 bg-sky-700 text-white shadow-lg fixed top-0 left-0 right-0">
-        <div className="flex items-center">
-          <Image width={100} height={100} src="/wdlogo.png" alt="Logo" />
-          <h1 className="text-6xl font-bold">
+      <header className="w-full flex items-center justify-between bg-sky-700 text-white shadow-lg fixed top-0 left-0 right-0 py-3">
+        <div className="flex items-center gap-4 px-4">
+          <div className="min-w-[100px]">
+            <Image
+              width={100}
+              height={100}
+              src="/wdlogo.png"
+              alt="Logo"
+              className="object-contain"
+            />
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold leading-tight tracking-wide">
             GENERAL SANTOS CITY WATER DISTRICT
           </h1>
         </div>
@@ -279,7 +286,7 @@ export default function CounterDisplayPage() {
       <div className="w-full flex flex-col items-center justify-center">
         {/* Counter name in fixed position below header */}
         <div className="fixed top-[120px] left-0 right-0 bg-sky-50 py-4 z-10">
-          <h1 className="text-8xl font-bold text-sky-800 text-center">
+          <h1 className="text-8xl font-bold mt-6 text-sky-800 text-center">
             {counter?.name || "Counter Display"}
           </h1>
         </div>
@@ -289,18 +296,16 @@ export default function CounterDisplayPage() {
           {ticket && ticket.id ? (
             <div className="flex flex-col items-center">
               <p
-                className={`text-[16rem] font-bold ${
-                  ticket.status.toLowerCase() === "called"
-                    ? "blink-animation"
-                    : "text-sky-800"
-                }`}
+                className={`text-[16rem] font-bold ${ticket.status.toLowerCase() === "called"
+                  ? "blink-animation"
+                  : "text-sky-800"
+                  }`}
               >
-                {`${ticket.isPrioritized ? "PWD-" : ""}${
-                  ticket.prefix
-                }-${formatTicketNumber(ticket.ticketNumber)}`}
+                {`${ticket.isPrioritized ? "PWD-" : ""}${ticket.prefix
+                  }-${formatTicketNumber(ticket.ticketNumber)}`}
               </p>
 
-              <p className="text-5xl text-gray-600 text-center">
+              <p className="text-7xl text-gray-600 text-center">
                 Currently Serving
               </p>
               {ticket.service && (
