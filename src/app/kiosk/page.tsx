@@ -191,90 +191,132 @@ export default function Kiosk() {
     },
   ]; // Add print function
   function printTicket(ticket: TicketResponse) {
+    try {
+      // Format ticket data for printing
+      const ticketData = {
+        ticketNumber: formatTicketNumber(
+          ticket.ticketNumber,
+          ticket.isPrioritized
+        ),
+        timestamp: new Date().toLocaleString(),
+        counterName: ticket.counterName || "",
+        isPrioritized: ticket.isPrioritized,
+      };
+
+      // Call local print service
+      fetch("http://localhost:3030/print", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(ticketData),
+      }).catch((err) => {
+        console.error("Error sending print job:", err);
+        // Fallback to browser printing if local service fails
+        fallbackBrowserPrint(ticketData);
+      });
+    } catch (error) {
+      console.error("Printing failed:", error);
+      // Fallback to browser printing
+      fallbackBrowserPrint(ticket);
+    }
+  }
+
+  // Fallback function if local printing fails
+  function fallbackBrowserPrint(ticket: any) {
     const printWindow = window.open("", "", "width=300,height=200");
     if (!printWindow) return;
 
     const ticketHtml = `
       <!DOCTYPE html>
-<html>
-  <head>
-    <title>Queue Ticket</title>
-    <style>
-      @page {
-        size: 89mm 51mm portrait;
-        margin: 0;
-      }
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        width: 89mm;
-        height: 51mm;
-        overflow: hidden;
-      }
-      .ticket-container {
-        width: 65mm;
-        height: 40mm;
-        box-sizing: border-box;
-        border: 2px solid #000000;
-        border-radius: 1px;
-        background-color: #ffffff;
-        padding: 0px;
-        position: absolute;
-      }
-      .ticket {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-        text-align: center;
-        width: 100%;
-      }
-      .ticket-number {
-        font-size: 36px;
-        font-weight: bold;
-        font-family: "Courier New", monospace;
-        margin: 0;
-        line-height: 1.2;
-      }
-      .timestamp {
-        font-size: 14px;
-        font-family: "Courier New", monospace;
-        margin-top: 8px;
-      }
-      @media print {
-        @page {
-          margin: 0;
-        }
-        html,
-        body {
-          width: 80mm;
-          height: 60mm;
-        }
-        .ticket {
-          page-break-after: avoid;
-          page-break-inside: avoid;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="ticket-container">
-      <div class="ticket">
-        <div class="ticket-number">PWD-NSA-001</div>
-        <div class="timestamp">4/22/2025 9:22:27 AM</div>
-      </div>
-    </div>
-    <script>
-      window.onload = () => {
-        window.print();
-        setTimeout(() => window.close(), 500);
-      };
-    </script>
-  </body>
-</html>
-
+      <html>
+        <head>
+          <title>Queue Ticket</title>
+          <style>
+            @page {
+              size: 89mm 51mm portrait;
+              margin: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: 89mm;
+              height: 51mm;
+              overflow: hidden;
+            }
+            .ticket-container {
+              width: 65mm;
+              height: 40mm;
+              box-sizing: border-box;
+              border: 2px solid #000000;
+              border-radius: 1px;
+              background-color: #ffffff;
+              padding: 0px;
+              position: absolute;
+            }
+            .ticket {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              height: 100%;
+              text-align: center;
+              width: 100%;
+            }
+            .ticket-number {
+              font-size: 36px;
+              font-weight: bold;
+              font-family: "Courier New", monospace;
+              margin: 0;
+              line-height: 1.2;
+            }
+            .timestamp {
+              font-size: 14px;
+              font-family: "Courier New", monospace;
+              margin-top: 8px;
+            }
+            @media print {
+              @page {
+                margin: 0;
+              }
+              html, body {
+                width: 80mm;
+                height: 60mm;
+              }
+              .ticket {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="ticket-container">
+            <div class="ticket">
+              <div class="ticket-number">${
+                typeof ticket === "object"
+                  ? ticket.ticketNumber
+                  : formatTicketNumber(
+                      ticket.ticketNumber,
+                      ticket.isPrioritized
+                    )
+              }</div>
+              <div class="timestamp">${new Date().toLocaleString()}</div>
+              ${
+                ticket.counterName
+                  ? `<div class="counter">Counter: ${ticket.counterName}</div>`
+                  : ""
+              }
+            </div>
+          </div>
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
     `;
 
     printWindow.document.write(ticketHtml);
@@ -650,10 +692,10 @@ export default function Kiosk() {
                       <div className="absolute animate-float-slow bottom-1/4 right-1/3 w-16 h-16 bg-blue-200 rounded-full blur-lg"></div>
                     </div>
 
-                    <h2 className="text-3xl mt-96 font-bold text-blue-600 mb-4 drop-shadow-md relative">
+                    <h2 className="text-5xl mt-96 font-bold text-blue-600 mb-4 drop-shadow-md relative">
                       YOUR TICKET NUMBER
                     </h2>
-                    <div className="text-[83px] font-bold text-blue-800 animate-pop-in mb-4 drop-shadow-xl relative">
+                    <div className="text-[120px] font-bold text-blue-800 animate-pop-in drop-shadow-xl relative">
                       {formatTicketNumber(
                         ticketData.ticketNumber,
                         ticketData.isPrioritized
