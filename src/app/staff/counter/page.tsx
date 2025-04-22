@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import io from "socket.io-client";
+import Button from "@/components/Button";
 
 type Ticket = {
   id: string;
@@ -81,9 +82,8 @@ function formatTicketNumber(number: number): string {
 // Add a new function to determine text size class based on ticket number length
 function getTicketTextSizeClass(ticket: Ticket): string {
   const displayCode = getTicketDisplayCode(ticket);
-  const ticketText = `${
-    ticket.isPrioritized ? "PWD-" : ""
-  }${displayCode}-${formatTicketNumber(ticket.ticketNumber)}`;
+  const ticketText = `${ticket.isPrioritized ? "PWD-" : ""
+    }${displayCode}-${formatTicketNumber(ticket.ticketNumber)}`;
 
   if (ticketText.length > 12) {
     return "text-6xl";
@@ -830,10 +830,10 @@ export default function StaffDashboard() {
   // For Customer Welfare and New Service Application, filter returning tickets
   const returningTickets = !isPaymentCounter
     ? tickets.filter(
-        (ticket) =>
-          ticket.status === "RETURNING" &&
-          ticket.serviceId === assignedCounterService
-      )
+      (ticket) =>
+        ticket.status === "RETURNING" &&
+        ticket.serviceId === assignedCounterService
+    )
     : [];
 
   // Disable if a ticket is already in CALLED or SERVING
@@ -1080,16 +1080,14 @@ export default function StaffDashboard() {
                             String(newValue)
                           );
                         }}
-                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
-                          showConfirmations ? "bg-sky-600" : "bg-gray-300"
-                        }`}
+                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${showConfirmations ? "bg-sky-600" : "bg-gray-300"
+                          }`}
                       >
                         <span
-                          className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${
-                            showConfirmations
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                          }`}
+                          className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${showConfirmations
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                            }`}
                         />
                       </button>
                     </div>
@@ -1251,7 +1249,7 @@ export default function StaffDashboard() {
                         </div>
 
                         {/* Cancel button */}
-                        <button
+                        {/* <button
                           onClick={async () => {
                             try {
                               const response = await fetch(
@@ -1281,7 +1279,34 @@ export default function StaffDashboard() {
                           <span className="absolute top-0 right-0 bg-red-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
                             X
                           </span>
-                        </button>
+                        </button> */}
+                        <Button onClick={async () => {
+                          try {
+                            const response = await fetch(
+                              `/api/tickets/${currentServingTicket.id}`,
+                              {
+                                method: "PUT",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                  status: "CANCELLED", // Changed from LAPSED to CANCELLED
+                                }),
+                              }
+                            );
+
+                            if (response.ok) {
+                              setServingTicketId(null);
+                              fetchTickets();
+                            }
+                          } catch (error) {
+                            console.error("Error cancelling ticket:", error);
+                          }
+                        }}>
+                          Cancel Transaction 1
+                          <span className="absolute top-0 right-0 bg-red-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
+                            X
+                          </span></Button>
                       </>
                     ) : (
                       // For non-payment counters - Keep original button
@@ -1505,11 +1530,10 @@ export default function StaffDashboard() {
                         }, 300);
                       }}
                       disabled={!hasPendingTickets}
-                      className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium relative ${
-                        hasPendingTickets
-                          ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
+                      className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium relative ${hasPendingTickets
+                        ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
                       title="Press 'N' to call next ticket"
                     >
                       {hasPendingTickets && (
@@ -1551,11 +1575,10 @@ export default function StaffDashboard() {
                       }, 300);
                     }}
                     disabled={!hasPendingTickets}
-                    className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium ${
-                      hasPendingTickets
-                        ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
+                    className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium ${hasPendingTickets
+                      ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
                   >
                     {hasPendingTickets && (
                       <svg
@@ -1589,9 +1612,8 @@ export default function StaffDashboard() {
           <div className="flex flex-col md:flex-row gap-6">
             {/* Active Tickets - NOW LEFT SIDE */}
             <div
-              className={`bg-white rounded-2xl shadow-lg p-8 ${
-                isPaymentCounter ? "w-full" : "flex-1"
-              } min-h-[475px]`}
+              className={`bg-white rounded-2xl shadow-lg p-8 ${isPaymentCounter ? "w-full" : "flex-1"
+                } min-h-[475px]`}
             >
               <h2 className="text-3xl font-bold text-sky-800 mb-6">
                 Next in Line
@@ -1991,10 +2013,10 @@ export default function StaffDashboard() {
                     .toLowerCase()
                     .includes(serviceTypeSearchQuery.toLowerCase())
               ).length === 0 && (
-                <p className="text-center text-gray-500 py-4">
-                  No matching service types found
-                </p>
-              )}
+                  <p className="text-center text-gray-500 py-4">
+                    No matching service types found
+                  </p>
+                )}
             </div>
 
             <div className="flex justify-end">

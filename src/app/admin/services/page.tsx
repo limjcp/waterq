@@ -6,6 +6,7 @@ import {
   ChevronUpIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
+import Button from "@/components/Button";
 
 type Service = {
   id: string;
@@ -245,12 +246,8 @@ export default function ServicesManagement() {
             <h1 className="text-3xl font-bold text-sky-800">
               Services Management
             </h1>
-            <button
-              onClick={() => setIsAddingType(true)}
-              className="bg-sky-500 hover:bg-sky-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-            >
-              Add Service Type
-            </button>
+            <Button onClick={() => setIsAddingType(true)} variant={"primary"}>Add Service Type 1</Button>
+            <Button onClick={() => alert("Hello")}>Hello</Button>
           </div>
 
           {/* Services Table */}
