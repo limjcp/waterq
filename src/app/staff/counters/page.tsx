@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import io from "socket.io-client";
+import Button from "@/components/Button";
 
 type Ticket = {
   id: string;
@@ -81,9 +82,8 @@ function formatTicketNumber(number: number): string {
 // Add a new function to determine text size class based on ticket number length
 function getTicketTextSizeClass(ticket: Ticket): string {
   const displayCode = getTicketDisplayCode(ticket);
-  const ticketText = `${
-    ticket.isPrioritized ? "PWD-" : ""
-  }${displayCode}-${formatTicketNumber(ticket.ticketNumber)}`;
+  const ticketText = `${ticket.isPrioritized ? "PWD-" : ""
+    }${displayCode}-${formatTicketNumber(ticket.ticketNumber)}`;
 
   if (ticketText.length > 12) {
     return "text-6xl";
@@ -846,10 +846,10 @@ export default function StaffDashboard() {
   // For Customer Welfare and New Service Application, filter returning tickets
   const returningTickets = !isPaymentCounter
     ? tickets.filter(
-        (ticket) =>
-          ticket.status === "RETURNING" &&
-          ticket.serviceId === assignedCounterService
-      )
+      (ticket) =>
+        ticket.status === "RETURNING" &&
+        ticket.serviceId === assignedCounterService
+    )
     : [];
 
   // Disable if a ticket is already in CALLED or SERVING
@@ -1071,16 +1071,14 @@ export default function StaffDashboard() {
                             String(newValue)
                           );
                         }}
-                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
-                          showConfirmations ? "bg-sky-600" : "bg-gray-300"
-                        }`}
+                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${showConfirmations ? "bg-sky-600" : "bg-gray-300"
+                          }`}
                       >
                         <span
-                          className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${
-                            showConfirmations
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                          }`}
+                          className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${showConfirmations
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                            }`}
                         />
                       </button>
                     </div>
@@ -1194,12 +1192,11 @@ export default function StaffDashboard() {
                               calledTicketId !== null ||
                               servingTicketId !== null
                             }
-                            className={`${
-                              calledTicketId !== null ||
+                            className={`${calledTicketId !== null ||
                               servingTicketId !== null
-                                ? "bg-amber-400 cursor-not-allowed"
-                                : "bg-amber-50 hover:bg-amber-600 active:scale-95 hover:text-white"
-                            } disabled:text-gray-400 text-amber-600 text-sm font-medium py-1 px-3 disabled:bg-gray-200 rounded transition-all transform flex items-center justify-center gap-1`}
+                              ? "bg-amber-400 cursor-not-allowed"
+                              : "bg-amber-50 hover:bg-amber-600 active:scale-95 hover:text-white"
+                              } disabled:text-gray-400 text-amber-600 text-sm font-medium py-1 px-3 disabled:bg-gray-200 rounded transition-all transform flex items-center justify-center gap-1`}
                           >
                             <svg
                               className="w-4 h-4"
@@ -1264,20 +1261,18 @@ export default function StaffDashboard() {
                               calledTicketId !== null ||
                               servingTicketId !== null
                             }
-                            className={`${
-                              calledTicketId !== null ||
+                            className={`${calledTicketId !== null ||
                               servingTicketId !== null
-                                ? "bg-gray-400 cursor-not-allowed opacity-50"
-                                : "bg-sky-50 hover:bg-sky-800 active:scale-95 hover:text-sky-50"
-                            } text-sky-800 text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                              ? "bg-gray-400 cursor-not-allowed opacity-50"
+                              : "bg-sky-50 hover:bg-sky-800 active:scale-95 hover:text-sky-50"
+                              } text-sky-800 text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                           >
                             <svg
-                              className={`w-4 h-4 ${
-                                calledTicketId !== null ||
+                              className={`w-4 h-4 ${calledTicketId !== null ||
                                 servingTicketId !== null
-                                  ? "opacity-50"
-                                  : ""
-                              }`}
+                                ? "opacity-50"
+                                : ""
+                                }`}
                               viewBox="0 0 20 20"
                               fill="currentColor"
                             >
@@ -1471,37 +1466,33 @@ export default function StaffDashboard() {
                         </div>
 
                         {/* Cancel button */}
-                        <button
-                          onClick={async () => {
-                            try {
-                              const response = await fetch(
-                                `/api/tickets/${currentServingTicket.id}`,
-                                {
-                                  method: "PUT",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                  body: JSON.stringify({
-                                    status: "CANCELLED", // Changed from LAPSED to CANCELLED
-                                  }),
-                                }
-                              );
-
-                              if (response.ok) {
-                                setServingTicketId(null);
-                                fetchTickets();
+                        <Button onClick={async () => {
+                          try {
+                            const response = await fetch(
+                              `/api/tickets/${currentServingTicket.id}`,
+                              {
+                                method: "PUT",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                  status: "CANCELLED", // Changed from LAPSED to CANCELLED
+                                }),
                               }
-                            } catch (error) {
-                              console.error("Error cancelling ticket:", error);
+                            );
+
+                            if (response.ok) {
+                              setServingTicketId(null);
+                              fetchTickets();
                             }
-                          }}
-                          className="w-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
-                        >
-                          Cancel Transaction
-                          <span className="absolute right-0 bg-red-700 text-lg px-6 py-4 rounded-lg ml-4">
+                          } catch (error) {
+                            console.error("Error cancelling ticket:", error);
+                          }
+                        }} variant="danger">
+                          Cancel Transaction 1
+                          <span className="absolute top-0 right-0 bg-red-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
                             X
-                          </span>
-                        </button>
+                          </span></Button>
                       </>
                     ) : (
                       // For non-payment counters - Keep original button
@@ -1653,11 +1644,10 @@ export default function StaffDashboard() {
                       }, 300);
                     }}
                     disabled={!hasPendingTickets}
-                    className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium ${
-                      hasPendingTickets
-                        ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
+                    className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium ${hasPendingTickets
+                      ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
                   >
                     {hasPendingTickets && (
                       <svg
@@ -1919,10 +1909,10 @@ export default function StaffDashboard() {
                     .toLowerCase()
                     .includes(serviceTypeSearchQuery.toLowerCase())
               ).length === 0 && (
-                <p className="text-center text-gray-500 py-4">
-                  No matching service types found
-                </p>
-              )}
+                  <p className="text-center text-gray-500 py-4">
+                    No matching service types found
+                  </p>
+                )}
             </div>
 
             <div className="flex justify-end">
@@ -2163,11 +2153,10 @@ export default function StaffDashboard() {
                     disabled={
                       calledTicketId !== null || servingTicketId !== null
                     }
-                    className={`${
-                      calledTicketId !== null || servingTicketId !== null
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-amber-500 hover:bg-amber-600 active:scale-95"
-                    } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                    className={`${calledTicketId !== null || servingTicketId !== null
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-amber-500 hover:bg-amber-600 active:scale-95"
+                      } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                   >
                     <svg
                       className="w-4 h-4"
@@ -2244,18 +2233,16 @@ export default function StaffDashboard() {
                     disabled={
                       calledTicketId !== null || servingTicketId !== null
                     }
-                    className={`${
-                      calledTicketId !== null || servingTicketId !== null
-                        ? "bg-gray-400 cursor-not-allowed opacity-50"
-                        : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
-                    } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                    className={`${calledTicketId !== null || servingTicketId !== null
+                      ? "bg-gray-400 cursor-not-allowed opacity-50"
+                      : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
+                      } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                   >
                     <svg
-                      className={`w-4 h-4 ${
-                        calledTicketId !== null || servingTicketId !== null
-                          ? "opacity-50"
-                          : ""
-                      }`}
+                      className={`w-4 h-4 ${calledTicketId !== null || servingTicketId !== null
+                        ? "opacity-50"
+                        : ""
+                        }`}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >

@@ -7,6 +7,7 @@ import {
   TrashIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
+import Button from "@/components/Button";
 
 type User = {
   id: string;
@@ -168,7 +169,7 @@ export default function UsersPage() {
       if (!response.ok) {
         setError(
           data.error ||
-            "Registration failed. Please check your information and try again."
+          "Registration failed. Please check your information and try again."
         );
       } else {
         setSuccess(
@@ -212,13 +213,10 @@ export default function UsersPage() {
     <div className="max-w-10xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-sky-800">Staff Management</h1>
-        <button
-          onClick={() => setIsRegisterModalOpen(true)}
-          className="bg-sky-500 hover:bg-sky-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center"
-        >
+        <Button onClick={() => setIsRegisterModalOpen(true)} variant="primary" size={10}>
           <UserPlusIcon className="h-5 w-5 mr-2" />
-          Register New Staff
-        </button>
+          Register New Staff 11
+        </Button>
       </div>
 
       {error && (
@@ -521,13 +519,12 @@ export default function UsersPage() {
                       {user.role.map((role) => (
                         <span
                           key={role}
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            role === "admin"
-                              ? "bg-purple-100 text-purple-800"
-                              : role === "staff"
+                          className={`text-xs px-2 py-1 rounded-full ${role === "admin"
+                            ? "bg-purple-100 text-purple-800"
+                            : role === "staff"
                               ? "bg-blue-100 text-blue-800"
                               : "bg-gray-100 text-gray-800"
-                          }`}
+                            }`}
                         >
                           {role}
                         </span>
@@ -586,11 +583,10 @@ export default function UsersPage() {
               <button
                 key={index + 1}
                 onClick={() => setCurrentPage(index + 1)}
-                className={`px-3 py-1 rounded-lg border ${
-                  currentPage === index + 1
-                    ? "bg-sky-500 text-white"
-                    : "border-sky-200 hover:bg-sky-50"
-                }`}
+                className={`px-3 py-1 rounded-lg border ${currentPage === index + 1
+                  ? "bg-sky-500 text-white"
+                  : "border-sky-200 hover:bg-sky-50"
+                  }`}
               >
                 {index + 1}
               </button>
