@@ -69,9 +69,12 @@ export default function Kiosk() {
   const [showScreensaver, setShowScreensaver] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [screensaverImages, setScreensaverImages] = useState<
-    Array<{ id: string; imageUrl: string; title: string }>
+    Array<{ id: string; imageUrl: string; title: string; isActive: boolean }>
   >([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [lastServiceCode, setLastServiceCode] = useState("");
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -186,98 +189,117 @@ export default function Kiosk() {
       name: "Payment",
       description: "",
     },
-  ];
-
-  // Add print function
+  ]; // Add print function
   function printTicket(ticket: TicketResponse) {
     const printWindow = window.open("", "", "width=300,height=200");
     if (!printWindow) return;
 
     const ticketHtml = `
       <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Queue Ticket</title>
-          <style>
-            @page {
-              size: 80mm 60mm;
-              margin: 0;
-            }
-            html, body {
-              margin: 0;
-              padding: 0;
-              width: 80mm;
-              height: 60mm;
-              overflow: hidden;
-            }
-            .ticket {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              height: 60mm;
-              text-align: center;
-            }
-            .ticket-number {
-              font-size: 36px;
-              font-weight: bold;
-              font-family: 'Courier New', monospace;
-              margin: 0;
-              line-height: 1.2;
-            }
-            .timestamp {
-              font-size: 14px;
-              font-family: 'Courier New', monospace;
-              margin-top: 8px;
-            }
-            @media print {
-              @page {
-                margin: 0;
-              }
-              html, body {
-                width: 80mm;
-                height: 60mm;
-              }
-              .ticket {
-                page-break-after: avoid;
-                page-break-inside: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="ticket">
-            <div class="ticket-number">${formatTicketNumber(
-              ticket.ticketNumber,
-              ticket.isPrioritized
-            )}</div>
-            <div class="timestamp">
-              ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-            </div>
-          </div>
-          <script>
-            window.onload = () => {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            };
-          </script>
-        </body>
-      </html>
+<html>
+  <head>
+    <title>Queue Ticket</title>
+    <style>
+      @page {
+        size: 89mm 51mm portrait;
+        margin: 0;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 89mm;
+        height: 51mm;
+        overflow: hidden;
+      }
+      .ticket-container {
+        width: 65mm;
+        height: 40mm;
+        box-sizing: border-box;
+        border: 2px solid #000000;
+        border-radius: 1px;
+        background-color: #ffffff;
+        padding: 0px;
+        position: absolute;
+      }
+      .ticket {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        text-align: center;
+        width: 100%;
+      }
+      .ticket-number {
+        font-size: 36px;
+        font-weight: bold;
+        font-family: "Courier New", monospace;
+        margin: 0;
+        line-height: 1.2;
+      }
+      .timestamp {
+        font-size: 14px;
+        font-family: "Courier New", monospace;
+        margin-top: 8px;
+      }
+      @media print {
+        @page {
+          margin: 0;
+        }
+        html,
+        body {
+          width: 80mm;
+          height: 60mm;
+        }
+        .ticket {
+          page-break-after: avoid;
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ticket-container">
+      <div class="ticket">
+        <div class="ticket-number">PWD-NSA-001</div>
+        <div class="timestamp">4/22/2025 9:22:27 AM</div>
+      </div>
+    </div>
+    <script>
+      window.onload = () => {
+        window.print();
+        setTimeout(() => window.close(), 500);
+      };
+    </script>
+  </body>
+</html>
+
     `;
 
     printWindow.document.write(ticketHtml);
     printWindow.document.close();
   }
-
   async function handleGenerateTicket(serviceCode: string) {
+    // Store the service code for retry functionality
+    setLastServiceCode(serviceCode);
     setIsLoading(true);
     setError(null);
+    setShowErrorModal(false);
+
+    // Create a timeout promise that rejects after 5 seconds
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Ticket generation timed out. Please try again."));
+      }, 5000); // 5 seconds timeout
+    });
 
     try {
       // Extract the actual service code without the PWD prefix if present
       const actualServiceCode = serviceCode.replace("PWD-", "");
 
-      const res = await fetch("/api/tickets", {
+      // Race between the fetch operation and the timeout
+      const fetchPromise = fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -285,6 +307,12 @@ export default function Kiosk() {
           isPrioritized: isPWD,
         }),
       });
+
+      // Wait for either the fetch to complete or the timeout to occur
+      const res = (await Promise.race([
+        fetchPromise,
+        timeoutPromise,
+      ])) as Response;
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -298,9 +326,11 @@ export default function Kiosk() {
       printTicket(data);
     } catch (err) {
       console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Failed to generate ticket"
-      );
+      const message =
+        err instanceof Error ? err.message : "Failed to generate ticket";
+      setError(message);
+      setErrorMessage(message);
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -310,9 +340,10 @@ export default function Kiosk() {
     setIsPWD(isPWD);
     setCurrentStep(2);
   }
-
   function goBack() {
-    setCurrentStep(1);
+    // Just close the modal without changing steps
+    // This will keep the user on the service selection page
+    setShowErrorModal(false);
     setError(null);
   }
 
@@ -321,6 +352,18 @@ export default function Kiosk() {
     setError(null);
     setCurrentStep(1);
     setCountdown(5);
+    setShowErrorModal(false); // Close modal when resetting
+  }
+
+  // Function to handle "Try Again" button in error modal
+  function handleTryAgain() {
+    setShowErrorModal(false);
+    setError(null);
+
+    // If we have a last service code, retry generating the ticket
+    if (lastServiceCode) {
+      handleGenerateTicket(lastServiceCode);
+    }
   }
 
   // Add countdown effect when ticket is displayed
@@ -347,6 +390,7 @@ export default function Kiosk() {
       {" "}
       {showScreensaver ? (
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center overflow-hidden z-50 backdrop-blur-lg">
+          {" "}
           {screensaverImages.length > 0 ? (
             <div className="relative w-full h-full">
               {screensaverImages.map((image, index) => (
@@ -356,10 +400,12 @@ export default function Kiosk() {
                     index === currentImageIndex ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  <img
+                  <Image
                     src={image.imageUrl}
                     alt={image.title}
                     className="w-full h-full object-contain"
+                    width={1920}
+                    height={1080}
                   />
                 </div>
               ))}
@@ -383,7 +429,6 @@ export default function Kiosk() {
               <div className="h-1 w-48 bg-cyan-300 rounded-full"></div>
             </div>
           )}
-
           {/* Animated waves overlay */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="wave wave1"></div>
@@ -391,7 +436,6 @@ export default function Kiosk() {
             <div className="wave wave3"></div>
             <div className="wave wave4"></div>
           </div>
-
           {/* Falling rain/water drops effect */}
           {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className={`raindrop raindrop-${i}`}></div>
@@ -597,8 +641,8 @@ export default function Kiosk() {
               )}
 
               {currentStep === 3 && ticketData && (
-                <div className="text-center space-y-6 animate-fade-in flex-1 flex flex-col justify-center">
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-100 rounded-xl p-64 border border-blue-200 shadow-lg relative overflow-hidden">
+                <div className="text-center space-y-6 animate-fade-in flex-1 flex flex-col justify-center px-1 py-2">
+                  <div className="bg-gradient-to-br flex-1 from-blue-50 to-cyan-100 rounded-xl p-64 border border-blue-200 shadow-lg relative overflow-hidden">
                     {/* Bubble effect in the background */}
                     <div className="absolute inset-0 opacity-20">
                       <div className="absolute animate-float top-1/4 left-1/4 w-32 h-32 bg-blue-300 rounded-full blur-xl"></div>
@@ -606,10 +650,10 @@ export default function Kiosk() {
                       <div className="absolute animate-float-slow bottom-1/4 right-1/3 w-16 h-16 bg-blue-200 rounded-full blur-lg"></div>
                     </div>
 
-                    <h2 className="text-3xl font-bold text-blue-600 mb-4 drop-shadow-md relative">
+                    <h2 className="text-3xl mt-96 font-bold text-blue-600 mb-4 drop-shadow-md relative">
                       YOUR TICKET NUMBER
                     </h2>
-                    <div className="text-9xl font-bold text-blue-800 animate-pop-in mb-4 drop-shadow-xl relative">
+                    <div className="text-[83px] font-bold text-blue-800 animate-pop-in mb-4 drop-shadow-xl relative">
                       {formatTicketNumber(
                         ticketData.ticketNumber,
                         ticketData.isPrioritized
@@ -646,6 +690,53 @@ export default function Kiosk() {
                   <p className="mt-4 text-blue-700 text-xl font-semibold drop-shadow-sm">
                     Generating your ticket...
                   </p>
+                </div>
+              )}
+
+              {/* Error Modal */}
+              {showErrorModal && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-50 backdrop-blur-sm">
+                  <div className="bg-white rounded-xl p-8 shadow-2xl w-full max-w-md mx-4 animate-bounce-in">
+                    <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
+                      <div className="flex items-center justify-center mb-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-12 w-12 text-red-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-bold text-center mb-2">
+                        Error Occurred
+                      </h3>
+                      <p className="text-center">
+                        {errorMessage ||
+                          "Failed to generate ticket. Please try again."}
+                      </p>
+                    </div>{" "}
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={handleTryAgain}
+                        className="px-4 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded-lg transition-colors duration-200"
+                      >
+                        Try Again
+                      </button>
+                      <button
+                        onClick={goBack}
+                        className="px-4 py-3 bg-red-100 hover:bg-red-200 text-red-700 font-medium rounded-lg transition-colors duration-200"
+                      >
+                        Back
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -716,6 +807,25 @@ export default function Kiosk() {
         }
         .animate-fade-in {
           animation: fade-in 0.6s ease-in-out forwards;
+        }
+
+        @keyframes bounce-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.05);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+
+        .animate-bounce-in {
+          animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+            forwards;
         }
 
         /* Add smooth scrolling behavior */

@@ -28,7 +28,8 @@ const getLocalIpAddress = () => {
 
 const dev = process.env.NODE_ENV !== "production";
 // Get the public hostname for URLs
-const publicHostname = getLocalIpAddress();
+const publicHostname = "192.168.50.240";
+// getLocalIpAddress();
 // Use 0.0.0.0 for binding (listen on all network interfaces)
 const listenHostname = "0.0.0.0";
 const port = 3000;
