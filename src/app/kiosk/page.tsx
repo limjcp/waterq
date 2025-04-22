@@ -692,18 +692,11 @@ export default function Kiosk() {
 
               {currentStep === 3 && ticketData && (
                 <div className="text-center space-y-6 animate-fade-in flex-1 flex flex-col justify-center px-1 py-2">
-                  <div className="bg-gradient-to-br flex-1 from-blue-50 to-cyan-100 rounded-xl p-64 border border-blue-200 shadow-lg relative overflow-hidden">
-                    {/* Bubble effect in the background */}
-                    <div className="absolute inset-0 opacity-20">
-                      <div className="absolute animate-float top-1/4 left-1/4 w-32 h-32 bg-blue-300 rounded-full blur-xl"></div>
-                      <div className="absolute animate-float-delayed top-3/4 right-1/4 w-24 h-24 bg-cyan-300 rounded-full blur-xl"></div>
-                      <div className="absolute animate-float-slow bottom-1/4 right-1/3 w-16 h-16 bg-blue-200 rounded-full blur-lg"></div>
-                    </div>
-
-                    <h2 className="text-5xl mt-96 font-bold text-blue-600 mb-4 drop-shadow-md relative">
+                  <div className="bg-gradient-to-br flex-1 from-blue-50 to-cyan-100 rounded-xl border border-blue-200 shadow-lg relative">
+                    <h2 className="text-5xl mt-[800px] font-bold text-blue-600 mb-4 drop-shadow-md relative">
                       YOUR TICKET NUMBER
                     </h2>
-                    <div className="text-[120px] font-bold text-blue-800 animate-pop-in drop-shadow-xl relative">
+                    <div className="text-[150px] font-bold text-blue-800 animate-pop-in drop-shadow-xl relative">
                       {formatTicketNumber(
                         ticketData.ticketNumber,
                         ticketData.isPrioritized
