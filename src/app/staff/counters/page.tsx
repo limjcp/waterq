@@ -1172,7 +1172,7 @@ export default function StaffDashboard() {
                       {lapsedTickets.slice(0, 2).map((ticket) => (
                         <div
                           key={ticket.id}
-                          className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2"
+                          className="bg-gray-50 p-2 rounded-lg flex flex-col gap-2"
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-amber-600 font-medium">
