@@ -229,94 +229,102 @@ export default function Kiosk() {
 
     const ticketHtml = `
       <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Queue Ticket</title>
-          <style>
-            @page {
-              size: 89mm 51mm portrait;
-              margin: 0;
-            }
-            html, body {
-              margin: 0;
-              padding: 0;
-              width: 89mm;
-              height: 51mm;
-              overflow: hidden;
-            }
-            .ticket-container {
-              width: 65mm;
-              height: 40mm;
-              box-sizing: border-box;
-              border: 2px solid #000000;
-              border-radius: 1px;
-              background-color: #ffffff;
-              padding: 0px;
-              position: absolute;
-            }
-            .ticket {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              height: 100%;
-              text-align: center;
-              width: 100%;
-            }
-            .ticket-number {
-              font-size: 36px;
-              font-weight: bold;
-              font-family: "Courier New", monospace;
-              margin: 0;
-              line-height: 1.2;
-            }
-            .timestamp {
-              font-size: 14px;
-              font-family: "Courier New", monospace;
-              margin-top: 8px;
-            }
-            @media print {
-              @page {
-                margin: 0;
-              }
-              html, body {
-                width: 80mm;
-                height: 60mm;
-              }
-              .ticket {
-                page-break-after: avoid;
-                page-break-inside: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="ticket-container">
-            <div class="ticket">
-              <div class="ticket-number">${
-                typeof ticket === "object"
-                  ? ticket.ticketNumber
-                  : formatTicketNumber(
-                      ticket.ticketNumber,
-                      ticket.isPrioritized
-                    )
-              }</div>
-              <div class="timestamp">${new Date().toLocaleString()}</div>
-              ${
-                ticket.counterName
-                  ? `<div class="counter">Counter: ${ticket.counterName}</div>`
-                  : ""
-              }
-            </div>
-          </div>
-          <script>
-            window.onload = () => {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            };
-          </script>
-        </body>
-      </html>
+<html>
+  <head>
+    <title>Queue Ticket</title>
+    <style>
+      @page {
+        size: 89mm 51mm portrait;
+        margin: 0;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 89mm;
+        height: 51mm;
+        overflow: hidden;
+        /* Center content for preview */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ticket-container {
+        width: 85mm;
+        height: 47mm;
+        box-sizing: border-box;
+        border: 2px solid #000000;
+        border-radius: 1px;
+        background-color: #ffffff;
+        padding: 0px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ticket {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        text-align: center;
+        width: 100%;
+      }
+      .ticket-number {
+        font-size: 36px;
+        font-weight: bold;
+        font-family: "Courier New", monospace;
+        margin: 0;
+        line-height: 1.2;
+      }
+      .timestamp {
+        font-size: 14px;
+        font-family: "Courier New", monospace;
+        margin-top: 8px;
+      }
+      @media print {
+        @page {
+          size: 89mm 51mm landscape;
+          margin: 0;
+        }
+        html,
+        body {
+          width: 89mm;
+          height: 51mm;
+        }
+        .ticket-container {
+          width: 85mm;
+          height: 47mm;
+        }
+        .ticket {
+          page-break-after: avoid;
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ticket-container">
+      <div class="ticket">
+        <div class="ticket-number">
+          ${
+            typeof ticket === "object"
+              ? ticket.ticketNumber
+              : formatTicketNumber(ticket.ticketNumber, ticket.isPrioritized)
+          }
+        </div>
+        <div class="timestamp">${new Date().toLocaleString()}</div>
+      </div>
+    </div>
+    <script>
+      window.onload = () => {
+        window.print();
+        setTimeout(() => window.close(), 500);
+      };
+    </script>
+  </body>
+</html>
     `;
 
     printWindow.document.write(ticketHtml);
