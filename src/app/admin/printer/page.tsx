@@ -15,6 +15,8 @@ type PrintSettings = {
   copies: number;
   scale: number;
   fit: boolean;
+  customWidth: number; // Added for custom dimensions
+  customHeight: number; // Added for custom dimensions
 };
 
 const PAPER_SIZES = [
@@ -22,6 +24,7 @@ const PAPER_SIZES = [
   { value: "a4", label: "A4" },
   { value: "letter", label: "Letter" },
   { value: "legal", label: "Legal" },
+  { value: "custom", label: "Custom Size" }, // Added custom option
 ];
 
 // Paper size dimensions in points (1/72 inch)
@@ -42,6 +45,8 @@ export default function PrinterSettings() {
     copies: 1,
     scale: 100,
     fit: true,
+    customWidth: 227, // Default to thermal width
+    customHeight: 145, // Default to thermal height
   });
   const [loading, setLoading] = useState(true);
   const [alertStatus, setAlertStatus] = useState("");
@@ -65,7 +70,12 @@ export default function PrinterSettings() {
 
         if (settingsResponse.ok) {
           const data = await settingsResponse.json();
-          setSettings(data);
+          // Add default custom dimensions if they don't exist
+          setSettings({
+            ...data,
+            customWidth: data.customWidth || 227,
+            customHeight: data.customHeight || 145,
+          });
         }
       } catch (error) {
         console.error("Error fetching printer data:", error);
@@ -109,11 +119,43 @@ export default function PrinterSettings() {
     setSettings((prev) => ({ ...prev, [field]: value }));
   };
 
+  // When paper size changes, update custom dimensions to match if selecting a preset
+  const handlePaperSizeChange = (value: string) => {
+    if (
+      value !== "custom" &&
+      PAPER_DIMENSIONS[value as keyof typeof PAPER_DIMENSIONS]
+    ) {
+      const dimensions =
+        PAPER_DIMENSIONS[value as keyof typeof PAPER_DIMENSIONS];
+      setSettings((prev) => ({
+        ...prev,
+        paperSize: value,
+        customWidth: dimensions.width,
+        customHeight: dimensions.height,
+      }));
+    } else {
+      setSettings((prev) => ({
+        ...prev,
+        paperSize: value,
+      }));
+    }
+  };
+
   // Calculate preview dimensions
   const getPreviewDimensions = () => {
-    const dimensions =
-      PAPER_DIMENSIONS[settings.paperSize as keyof typeof PAPER_DIMENSIONS] ||
-      PAPER_DIMENSIONS.thermal;
+    let dimensions;
+
+    // Use custom dimensions if custom paper size is selected
+    if (settings.paperSize === "custom") {
+      dimensions = {
+        width: settings.customWidth,
+        height: settings.customHeight,
+      };
+    } else {
+      dimensions =
+        PAPER_DIMENSIONS[settings.paperSize as keyof typeof PAPER_DIMENSIONS] ||
+        PAPER_DIMENSIONS.thermal;
+    }
 
     // Apply orientation
     const { width, height } = dimensions;
@@ -136,6 +178,13 @@ export default function PrinterSettings() {
   };
 
   const previewDimensions = getPreviewDimensions();
+
+  // Convert points to more readable units for display
+  const pointsToReadableUnits = (points: number) => {
+    const inches = (points / 72).toFixed(2);
+    const cm = (points / 28.35).toFixed(2);
+    return `${points} pts (${inches}″ / ${cm} cm)`;
+  };
 
   if (authStatus === "unauthenticated") {
     return <div>You must be signed in to access this page</div>;
@@ -194,7 +243,7 @@ export default function PrinterSettings() {
                 </label>
                 <select
                   value={settings.paperSize}
-                  onChange={(e) => handleChange("paperSize", e.target.value)}
+                  onChange={(e) => handlePaperSizeChange(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
                   {PAPER_SIZES.map((size) => (
@@ -204,6 +253,54 @@ export default function PrinterSettings() {
                   ))}
                 </select>
               </div>
+
+              {/* Custom Dimensions - only shown when paperSize is "custom" */}
+              {settings.paperSize === "custom" && (
+                <div className="mb-6 border-l-4 border-sky-100 pl-3 py-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Width (points)
+                      </label>
+                      <input
+                        type="number"
+                        min="72"
+                        max="2000"
+                        value={settings.customWidth}
+                        onChange={(e) =>
+                          handleChange("customWidth", parseInt(e.target.value))
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Height (points)
+                      </label>
+                      <input
+                        type="number"
+                        min="72"
+                        max="2000"
+                        value={settings.customHeight}
+                        onChange={(e) =>
+                          handleChange("customHeight", parseInt(e.target.value))
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-500">
+                      Width: {pointsToReadableUnits(settings.customWidth)}
+                      <br />
+                      Height: {pointsToReadableUnits(settings.customHeight)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Note: 72 points = 1 inch, 28.35 points = 1 cm
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Orientation */}
               <div className="mb-6">
@@ -327,7 +424,10 @@ export default function PrinterSettings() {
             <div className="text-sm text-gray-500 mt-2">
               <p className="font-medium">
                 Paper size:{" "}
-                {PAPER_SIZES.find((p) => p.value === settings.paperSize)?.label}
+                {settings.paperSize === "custom"
+                  ? `Custom (${settings.customWidth}×${settings.customHeight} pts)`
+                  : PAPER_SIZES.find((p) => p.value === settings.paperSize)
+                      ?.label}
               </p>
               <p className="font-medium">Orientation: {settings.orientation}</p>
               <p className="font-medium">Scale: {settings.scale}%</p>
