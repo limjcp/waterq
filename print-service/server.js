@@ -28,14 +28,69 @@ app.get("/printers", async (req, res) => {
   }
 });
 
-// Print endpoint
+// Default print settings
+const DEFAULT_PRINT_SETTINGS = {
+  printer: "",
+  orientation: "portrait",
+  paperSize: "thermal", // 80mm × 51mm thermal receipt
+  copies: 1,
+  scale: 100,
+  fit: true,
+};
+
+// Global settings object
+let printSettings = {
+  ...DEFAULT_PRINT_SETTINGS,
+  printer: process.env.DEFAULT_PRINTER || "",
+};
+
+// Get all print settings
+app.get("/print-settings", (req, res) => {
+  res.json(printSettings);
+});
+
+// Update print settings
+app.post("/print-settings", (req, res) => {
+  const newSettings = req.body;
+  printSettings = { ...printSettings, ...newSettings };
+
+  // Update environment variable for backward compatibility
+  process.env.DEFAULT_PRINTER = printSettings.printer;
+
+  res.json({ success: true, settings: printSettings });
+});
+
+// Modify the print endpoint to use the settings
 app.post("/print", async (req, res) => {
   try {
     const { ticketNumber, timestamp, counterName, isPrioritized } = req.body;
 
     // Create a PDF with PDFKit
     const pdfPath = path.join(__dirname, "ticket.pdf");
-    const doc = new PDFDocument({ size: [227, 145] }); // 80mm × 51mm thermal receipt size
+
+    // Set document size based on paper size setting
+    let docSize;
+    switch (printSettings.paperSize) {
+      case "a4":
+        docSize =
+          printSettings.orientation === "portrait"
+            ? [595.28, 841.89]
+            : [841.89, 595.28];
+        break;
+      case "letter":
+        docSize =
+          printSettings.orientation === "portrait" ? [612, 792] : [792, 612];
+        break;
+      case "thermal":
+      default:
+        docSize = [227, 145]; // Default thermal receipt size
+        break;
+    }
+
+    const doc = new PDFDocument({
+      size: docSize,
+      layout: printSettings.orientation,
+    });
 
     doc.pipe(fs.createWriteStream(pdfPath));
 
@@ -59,14 +114,20 @@ app.post("/print", async (req, res) => {
     // Wait for PDF to be created
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Print with default printer or specified printer
+    // Update print options to include the settings
     const options = {
-      printer: process.env.DEFAULT_PRINTER || undefined, // Use environment variable or default
+      printer: printSettings.printer || undefined,
       silent: true,
+      scale: printSettings.scale,
+      copies: printSettings.copies,
+      orientation: printSettings.orientation,
     };
 
     await print(pdfPath, options);
-    console.log(`Printed ticket: ${ticketNumber}`);
+    console.log(
+      `Printed ticket: ${ticketNumber} with settings:`,
+      printSettings
+    );
 
     res.status(200).json({ success: true });
   } catch (error) {
@@ -75,14 +136,14 @@ app.post("/print", async (req, res) => {
   }
 });
 
-// Get current default printer
+// For backward compatibility
 app.get("/default-printer", (req, res) => {
-  res.json({ printer: process.env.DEFAULT_PRINTER || "System Default" });
+  res.json({ printer: printSettings.printer || "System Default" });
 });
 
-// Set default printer
 app.post("/default-printer", (req, res) => {
   const { printer } = req.body;
+  printSettings.printer = printer;
   process.env.DEFAULT_PRINTER = printer;
   res.json({ success: true, printer });
 });

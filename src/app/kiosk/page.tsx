@@ -65,7 +65,7 @@ export default function Kiosk() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPWD, setIsPWD] = useState(false);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(99999);
   const [showScreensaver, setShowScreensaver] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [screensaverImages, setScreensaverImages] = useState<
@@ -691,12 +691,12 @@ export default function Kiosk() {
               )}
 
               {currentStep === 3 && ticketData && (
-                <div className="text-center space-y-6 animate-fade-in flex-1 flex flex-col justify-center px-1 py-2">
+                <div className="text-center space-y-10 animate-fade-in flex-1 flex flex-col justify-center px-10 py-10">
                   <div className="bg-gradient-to-br flex-1 from-blue-50 to-cyan-100 rounded-xl border border-blue-200 shadow-lg relative">
-                    <h2 className="text-5xl mt-[800px] font-bold text-blue-600 mb-4 drop-shadow-md relative">
+                    <h2 className="text-5xl mt-[700px] font-bold text-blue-600 mb-4 drop-shadow-md relative">
                       YOUR TICKET NUMBER
                     </h2>
-                    <div className="text-[150px] font-bold text-blue-800 animate-pop-in drop-shadow-xl relative">
+                    <div className="text-[140px] font-bold text-blue-800 animate-pop-in drop-shadow-xl relative">
                       {formatTicketNumber(
                         ticketData.ticketNumber,
                         ticketData.isPrioritized
@@ -716,7 +716,7 @@ export default function Kiosk() {
                   </div>
                   <button
                     onClick={resetForm}
-                    className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-4 px-6 text-3xl rounded-lg transition-all duration-300 focus:ring-4 focus:ring-cyan-300 focus:ring-offset-2 shadow-lg hover:shadow-xl relative overflow-hidden group"
+                    className="w-full bg-gradient-to-r min-h-28 from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-4 px-6 text-4xl rounded-lg transition-all duration-300 focus:ring-4 focus:ring-cyan-300 focus:ring-offset-2 shadow-lg hover:shadow-xl relative overflow-hidden group"
                   >
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-30 transition-opacity duration-700"></div>
                     Get Another Ticket ({countdown})
