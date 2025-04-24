@@ -25,7 +25,8 @@ function getLocalIpAddress() {
 // Update .env file with actual IP address
 function updateEnvFile() {
   const envPath = path.join(__dirname, ".env");
-  const ip = getLocalIpAddress();
+  const ip = "192.168.50.240";
+  // getLocalIpAddress();
 
   console.log(`Updating environment variables with IP: ${ip}`);
 
