@@ -1,5 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import io from "socket.io-client";
@@ -60,7 +63,9 @@ function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) {
     // Get first letter of first name and first letter of last name
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return (
+      parts[0][0] + parts[parts.length - 1][0]
+    ).toUpperCase();
   } else if (parts.length === 1 && parts[0]) {
     // If only one name, get first letter
     return parts[0][0].toUpperCase();
@@ -69,21 +74,33 @@ function getInitials(name: string): string {
 }
 
 // Helper function to get the display service code for tickets
-function getTicketDisplayCode(ticket: Ticket): string {
+function getTicketDisplayCode(
+  ticket: Ticket
+): string {
   // Use the ticket's prefix instead of service code
-  return ticket.prefix || ticket.service?.code || "";
+  return (
+    ticket.prefix || ticket.service?.code || ""
+  );
 }
 
 // Format ticket number with leading zeros
-function formatTicketNumber(number: number): string {
+function formatTicketNumber(
+  number: number
+): string {
   return String(number).padStart(3, "0");
 }
 
 // Add a new function to determine text size class based on ticket number length
-function getTicketTextSizeClass(ticket: Ticket): string {
-  const displayCode = getTicketDisplayCode(ticket);
-  const ticketText = `${ticket.isPrioritized ? "PWD-" : ""
-    }${displayCode}-${formatTicketNumber(ticket.ticketNumber)}`;
+function getTicketTextSizeClass(
+  ticket: Ticket
+): string {
+  const displayCode =
+    getTicketDisplayCode(ticket);
+  const ticketText = `${
+    ticket.isPrioritized ? "PWD-" : ""
+  }${displayCode}-${formatTicketNumber(
+    ticket.ticketNumber
+  )}`;
 
   if (ticketText.length > 12) {
     return "text-6xl";
@@ -96,59 +113,101 @@ function getTicketTextSizeClass(ticket: Ticket): string {
 
 export default function StaffDashboard() {
   const { data: session, status } = useSession();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [calledTicketId, setCalledTicketId] = useState<string | null>(null);
-  const [servingTicketId, setServingTicketId] = useState<string | null>(null);
-  const [assignedCounterId, setAssignedCounterId] = useState<string | null>(
-    null
-  );
-  const [assignedCounterService, setAssignedCounterService] = useState<
-    string | null
-  >(null);
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
-  const [availableServices, setAvailableServices] = useState<Service[]>([]);
-  const [ticketToTransfer, setTicketToTransfer] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<
+    Ticket[]
+  >([]);
+  const [calledTicketId, setCalledTicketId] =
+    useState<string | null>(null);
+  const [servingTicketId, setServingTicketId] =
+    useState<string | null>(null);
+  const [
+    assignedCounterId,
+    setAssignedCounterId,
+  ] = useState<string | null>(null);
+  const [
+    assignedCounterService,
+    setAssignedCounterService,
+  ] = useState<string | null>(null);
+  const [
+    isTransferModalOpen,
+    setIsTransferModalOpen,
+  ] = useState(false);
+  const [
+    selectedServiceId,
+    setSelectedServiceId,
+  ] = useState<string>("");
+  const [
+    availableServices,
+    setAvailableServices,
+  ] = useState<Service[]>([]);
+  const [ticketToTransfer, setTicketToTransfer] =
+    useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   // Add new state for other counters with same service
-  const [otherCounterTickets, setOtherCounterTickets] = useState<
-    CounterStatus[]
-  >([]);
+  const [
+    otherCounterTickets,
+    setOtherCounterTickets,
+  ] = useState<CounterStatus[]>([]);
 
   // New state for timer
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [formattedTime, setFormattedTime] = useState("00:00");
+  const [elapsedTime, setElapsedTime] =
+    useState(0);
+  const [formattedTime, setFormattedTime] =
+    useState("00:00");
 
   // Add new state for user statistics
-  const [userStats, setUserStats] = useState<UserStatistics>({
-    totalServed: 0,
-    todayServed: 0,
-    averageServiceTime: 0,
-  });
+  const [userStats, setUserStats] =
+    useState<UserStatistics>({
+      totalServed: 0,
+      todayServed: 0,
+      averageServiceTime: 0,
+    });
 
   // Add new state for service types and modal
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
-  const [isServiceTypeModalOpen, setIsServiceTypeModalOpen] = useState(false);
-  const [selectedServiceTypeId, setSelectedServiceTypeId] =
-    useState<string>("");
-  const [ticketToComplete, setTicketToComplete] = useState<string | null>(null);
+  const [serviceTypes, setServiceTypes] =
+    useState<ServiceType[]>([]);
+  const [
+    isServiceTypeModalOpen,
+    setIsServiceTypeModalOpen,
+  ] = useState(false);
+  const [
+    selectedServiceTypeId,
+    setSelectedServiceTypeId,
+  ] = useState<string>("");
+  const [ticketToComplete, setTicketToComplete] =
+    useState<string | null>(null);
 
   // Add new state for profile menu
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [
+    isProfileMenuOpen,
+    setIsProfileMenuOpen,
+  ] = useState(false);
 
   // Add a new state to trigger refreshes from socket events
-  const [socketUpdateTrigger, setSocketUpdateTrigger] = useState(0);
+  const [
+    socketUpdateTrigger,
+    setSocketUpdateTrigger,
+  ] = useState(0);
 
   // Add new state for lapsed confirmation modal
-  const [isLapsedConfirmModalOpen, setIsLapsedConfirmModalOpen] =
-    useState(false);
-  const [ticketToLapse, setTicketToLapse] = useState<string | null>(null);
+  const [
+    isLapsedConfirmModalOpen,
+    setIsLapsedConfirmModalOpen,
+  ] = useState(false);
+  const [ticketToLapse, setTicketToLapse] =
+    useState<string | null>(null);
 
   // Add new state for search query
-  const [serviceTypeSearchQuery, setServiceTypeSearchQuery] = useState("");
+  const [
+    serviceTypeSearchQuery,
+    setServiceTypeSearchQuery,
+  ] = useState("");
 
   // Add new state for counter service information
-  const [counterServiceCode, setCounterServiceCode] = useState("");
+  const [
+    counterServiceCode,
+    setCounterServiceCode,
+  ] = useState("");
 
   // Add click handler for sign out
   const handleSignOut = () => {
@@ -156,34 +215,51 @@ export default function StaffDashboard() {
   };
 
   // Add new state for service type confirmation modal
-  const [isServiceTypeConfirmModalOpen, setIsServiceTypeConfirmModalOpen] =
-    useState(false);
-  const [serviceTypeToConfirm, setServiceTypeToConfirm] =
-    useState<ServiceType | null>(null);
+  const [
+    isServiceTypeConfirmModalOpen,
+    setIsServiceTypeConfirmModalOpen,
+  ] = useState(false);
+  const [
+    serviceTypeToConfirm,
+    setServiceTypeToConfirm,
+  ] = useState<ServiceType | null>(null);
 
   // Add new state for transfer confirmation modal
-  const [isTransferConfirmModalOpen, setIsTransferConfirmModalOpen] =
-    useState(false);
-  const [serviceToConfirm, setServiceToConfirm] = useState<Service | null>(
-    null
-  );
+  const [
+    isTransferConfirmModalOpen,
+    setIsTransferConfirmModalOpen,
+  ] = useState(false);
+  const [serviceToConfirm, setServiceToConfirm] =
+    useState<Service | null>(null);
 
   // Add this near the other state variables
-  const [showConfirmations, setShowConfirmations] = useState(true);
+  const [
+    showConfirmations,
+    setShowConfirmations,
+  ] = useState(true);
 
   // Add this useEffect to load the saved preference
   useEffect(() => {
     // Load saved confirmation preference when component mounts
-    const savedPreference = localStorage.getItem("showConfirmations");
+    const savedPreference = localStorage.getItem(
+      "showConfirmations"
+    );
     if (savedPreference !== null) {
-      setShowConfirmations(savedPreference === "true");
+      setShowConfirmations(
+        savedPreference === "true"
+      );
     }
   }, []);
 
   // Add these new state variables near the other state declarations
-  const [isLapsedListModalOpen, setIsLapsedListModalOpen] = useState(false);
-  const [isReturningListModalOpen, setIsReturningListModalOpen] =
-    useState(false);
+  const [
+    isLapsedListModalOpen,
+    setIsLapsedListModalOpen,
+  ] = useState(false);
+  const [
+    isReturningListModalOpen,
+    setIsReturningListModalOpen,
+  ] = useState(false);
 
   // Fetch assigned counter ID when session is available
   useEffect(() => {
@@ -195,13 +271,20 @@ export default function StaffDashboard() {
           );
           if (res.ok) {
             const data = await res.json();
-            setAssignedCounterId(data.assignedCounterId);
+            setAssignedCounterId(
+              data.assignedCounterId
+            );
             if (data.assignedCounter) {
-              setAssignedCounterService(data.assignedCounter.serviceId);
+              setAssignedCounterService(
+                data.assignedCounter.serviceId
+              );
             }
           }
         } catch (error) {
-          console.error("Error fetching assigned counter:", error);
+          console.error(
+            "Error fetching assigned counter:",
+            error
+          );
         } finally {
           setLoading(false);
         }
@@ -223,23 +306,33 @@ export default function StaffDashboard() {
       const currentTicket = tickets.find(
         (ticket) => ticket.id === servingTicketId
       );
-      const ticketServingStart = currentTicket?.servingStart
-        ? new Date(currentTicket.servingStart)
-        : null;
+      const ticketServingStart =
+        currentTicket?.servingStart
+          ? new Date(currentTicket.servingStart)
+          : null;
 
       if (ticketServingStart) {
         timerId = setInterval(() => {
           const now = new Date();
           const seconds = Math.floor(
-            (now.getTime() - ticketServingStart.getTime()) / 1000
+            (now.getTime() -
+              ticketServingStart.getTime()) /
+              1000
           );
           setElapsedTime(seconds);
 
           // Format time as MM:SS
-          const minutes = Math.floor(seconds / 60);
+          const minutes = Math.floor(
+            seconds / 60
+          );
           const remainingSeconds = seconds % 60;
           setFormattedTime(
-            `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+            `${minutes
+              .toString()
+              .padStart(
+                2,
+                "0"
+              )}:${remainingSeconds
               .toString()
               .padStart(2, "0")}`
           );
@@ -261,19 +354,29 @@ export default function StaffDashboard() {
     async function fetchServices() {
       if (assignedCounterService) {
         try {
-          const res = await fetch("/api/services");
+          const res = await fetch(
+            "/api/services"
+          );
           if (res.ok) {
             const services = await res.json();
             // Filter out the current service
-            const filteredServices = services.filter(
-              (service: Service) =>
-                service.id !== assignedCounterService &&
-                (service.code === "CW" || service.code === "NSA") // Only allow transfers to CW or NSA
+            const filteredServices =
+              services.filter(
+                (service: Service) =>
+                  service.id !==
+                    assignedCounterService &&
+                  (service.code === "CW" ||
+                    service.code === "NSA") // Only allow transfers to CW or NSA
+              );
+            setAvailableServices(
+              filteredServices
             );
-            setAvailableServices(filteredServices);
           }
         } catch (error) {
-          console.error("Error fetching services:", error);
+          console.error(
+            "Error fetching services:",
+            error
+          );
         }
       }
     }
@@ -303,7 +406,10 @@ export default function StaffDashboard() {
             setServiceTypes(types);
           }
         } catch (error) {
-          console.error("Error fetching service types:", error);
+          console.error(
+            "Error fetching service types:",
+            error
+          );
         }
       }
     }
@@ -325,26 +431,39 @@ export default function StaffDashboard() {
           setUserStats(stats);
         }
       } catch (error) {
-        console.error("Error fetching user statistics:", error);
+        console.error(
+          "Error fetching user statistics:",
+          error
+        );
       }
     }
   }
 
   // Socket.IO setup effect
   useEffect(() => {
-    if (!assignedCounterId || !assignedCounterService) return;
+    if (
+      !assignedCounterId ||
+      !assignedCounterService
+    )
+      return;
 
     const socket = io();
 
     // Connect and immediately fetch initial data
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
-      socket.emit("joinCounter", assignedCounterId);
+      socket.emit(
+        "joinCounter",
+        assignedCounterId
+      );
     });
 
     // Listen for ticket updates
     socket.on("ticket:update", (ticketData) => {
-      console.log("Ticket update received:", ticketData);
+      console.log(
+        "Ticket update received:",
+        ticketData
+      );
 
       // Update tickets state directly with the new data
       setTickets((prevTickets) => {
@@ -352,7 +471,9 @@ export default function StaffDashboard() {
         const newTickets = [...prevTickets];
 
         // Find if this ticket already exists
-        const ticketIndex = newTickets.findIndex((t) => t.id === ticketData.id);
+        const ticketIndex = newTickets.findIndex(
+          (t) => t.id === ticketData.id
+        );
 
         // If it exists, update it
         if (ticketIndex > -1) {
@@ -360,7 +481,8 @@ export default function StaffDashboard() {
         }
         // If it's new and belongs to our service, add it
         else if (
-          ticketData.serviceId === assignedCounterService &&
+          ticketData.serviceId ===
+            assignedCounterService &&
           (ticketData.status === "PENDING" ||
             (ticketData.status === "RETURNING" &&
               ticketData.counterId === null))
@@ -370,9 +492,12 @@ export default function StaffDashboard() {
 
         // Sort tickets: prioritized first, then by creation time
         return newTickets.sort((a, b) => {
-          if (a.isPrioritized === b.isPrioritized) {
+          if (
+            a.isPrioritized === b.isPrioritized
+          ) {
             return (
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              new Date(a.createdAt).getTime() -
+              new Date(b.createdAt).getTime()
             );
           }
           return b.isPrioritized ? 1 : -1;
@@ -380,16 +505,26 @@ export default function StaffDashboard() {
       });
 
       // Update other state variables based on ticket status
-      if (ticketData.counterId === assignedCounterId) {
+      if (
+        ticketData.counterId === assignedCounterId
+      ) {
         if (ticketData.status === "CALLED") {
           setCalledTicketId(ticketData.id);
-        } else if (ticketData.status === "SERVING") {
+        } else if (
+          ticketData.status === "SERVING"
+        ) {
           setServingTicketId(ticketData.id);
         } else if (
-          ["SERVED", "RETURNING", "LAPSED"].includes(ticketData.status)
+          [
+            "SERVED",
+            "RETURNING",
+            "LAPSED",
+          ].includes(ticketData.status)
         ) {
-          if (calledTicketId === ticketData.id) setCalledTicketId(null);
-          if (servingTicketId === ticketData.id) setServingTicketId(null);
+          if (calledTicketId === ticketData.id)
+            setCalledTicketId(null);
+          if (servingTicketId === ticketData.id)
+            setServingTicketId(null);
         }
       }
     });
@@ -414,33 +549,47 @@ export default function StaffDashboard() {
   }, [assignedCounterId]);
 
   async function fetchTickets() {
-    if (!assignedCounterId || !assignedCounterService) return;
+    if (
+      !assignedCounterId ||
+      !assignedCounterService
+    )
+      return;
 
     try {
       // First, get the counter info to reliably determine service type
-      const counterRes = await fetch(`/api/counter/${assignedCounterId}`);
+      const counterRes = await fetch(
+        `/api/counter/${assignedCounterId}`
+      );
       if (counterRes.ok) {
-        const counterData = await counterRes.json();
+        const counterData =
+          await counterRes.json();
         // Store the service code in state so we can use it throughout the component
-        setCounterServiceCode(counterData.service?.code || "");
+        setCounterServiceCode(
+          counterData.service?.code || ""
+        );
       }
 
       // Fetch all tickets
-      const res = await fetch("/api/tickets/list");
+      const res = await fetch(
+        "/api/tickets/list"
+      );
       const allTickets = await res.json();
 
       // Get tickets assigned to this counter (currently being served or called)
       const assignedToCounter = allTickets.filter(
-        (ticket: Ticket) => ticket.counterId === assignedCounterId
+        (ticket: Ticket) =>
+          ticket.counterId === assignedCounterId
       );
 
       // Get pending tickets for this counter's service that aren't assigned to any counter
-      const pendingServiceTickets = allTickets.filter(
-        (ticket: Ticket) =>
-          ticket.status === "PENDING" &&
-          ticket.serviceId === assignedCounterService &&
-          ticket.counterId === null
-      );
+      const pendingServiceTickets =
+        allTickets.filter(
+          (ticket: Ticket) =>
+            ticket.status === "PENDING" &&
+            ticket.serviceId ===
+              assignedCounterService &&
+            ticket.counterId === null
+        );
 
       // For non-payment counters, also get returning tickets
       let returningTickets: Ticket[] = [];
@@ -448,79 +597,130 @@ export default function StaffDashboard() {
         // All non-payment counters
         // For returning tickets, we just want to fetch ALL returning tickets
         // that have the same service type as this counter
-        const returningRes = await fetch(`/api/tickets/list`);
+        const returningRes = await fetch(
+          `/api/tickets/list`
+        );
         if (returningRes.ok) {
-          const allReturnableTickets = await returningRes.json();
+          const allReturnableTickets =
+            await returningRes.json();
           // Filter returning tickets for this service at the client side
-          returningTickets = allReturnableTickets.filter(
-            (ticket: Ticket) =>
-              ticket.status === "RETURNING" &&
-              ticket.serviceId === assignedCounterService
-          );
+          returningTickets =
+            allReturnableTickets.filter(
+              (ticket: Ticket) =>
+                ticket.status === "RETURNING" &&
+                ticket.serviceId ===
+                  assignedCounterService
+            );
         }
       }
+
+      // Get lapsed tickets for this service, regardless of which counter they're assigned to
+      const lapsedServiceTickets =
+        allTickets.filter(
+          (ticket: Ticket) =>
+            ticket.status === "LAPSED" &&
+            ticket.serviceId ===
+              assignedCounterService
+        );
 
       // Get tickets being handled by other counters with the same service
       const otherCountersRes = await fetch(
         `/api/tickets/same-service?serviceId=${assignedCounterService}&excludeCounterId=${assignedCounterId}`
       );
       if (otherCountersRes.ok) {
-        const otherCounters = await otherCountersRes.json();
+        const otherCounters =
+          await otherCountersRes.json();
         setOtherCounterTickets(otherCounters);
-      }
+      } // Rest of the function remains the same...
+      // Remove duplicate tickets by creating a Map with ticket ID as key
+      const ticketMap = new Map();
 
-      // Rest of the function remains the same...
-      const combinedTickets = [
+      // Combine all tickets, giving priority to the most recent version of each ticket
+      [
         ...assignedToCounter,
         ...pendingServiceTickets,
         ...returningTickets,
-      ];
+        ...lapsedServiceTickets,
+      ].forEach((ticket) => {
+        ticketMap.set(ticket.id, ticket);
+      });
+
+      // Convert the Map back to an array
+      const combinedTickets = Array.from(
+        ticketMap.values()
+      );
 
       // Order tickets: prioritized first, then by creation time
-      const sortedTickets = combinedTickets.sort((a: Ticket, b: Ticket) => {
-        if (a.isPrioritized === b.isPrioritized) {
-          return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
+      const sortedTickets = combinedTickets.sort(
+        (a: Ticket, b: Ticket) => {
+          if (
+            a.isPrioritized === b.isPrioritized
+          ) {
+            return (
+              new Date(a.createdAt).getTime() -
+              new Date(b.createdAt).getTime()
+            );
+          }
+          return b.isPrioritized ? 1 : -1;
         }
-        return b.isPrioritized ? 1 : -1;
-      });
+      );
 
       setTickets(sortedTickets);
 
       const calledTicket = sortedTickets.find(
         (ticket: Ticket) =>
-          ticket.status === "CALLED" && ticket.counterId === assignedCounterId
+          ticket.status === "CALLED" &&
+          ticket.counterId === assignedCounterId
       );
-      setCalledTicketId(calledTicket ? calledTicket.id : null);
+      setCalledTicketId(
+        calledTicket ? calledTicket.id : null
+      );
 
       const servingTicket = sortedTickets.find(
         (ticket: Ticket) =>
-          ticket.status === "SERVING" && ticket.counterId === assignedCounterId
+          ticket.status === "SERVING" &&
+          ticket.counterId === assignedCounterId
       );
-      setServingTicketId(servingTicket ? servingTicket.id : null);
+      setServingTicketId(
+        servingTicket ? servingTicket.id : null
+      );
     } catch (error) {
-      console.error("Error fetching tickets:", error);
+      console.error(
+        "Error fetching tickets:",
+        error
+      );
     }
   }
 
   // Add function to format average time
-  function formatAverageTime(seconds: number): string {
+  function formatAverageTime(
+    seconds: number
+  ): string {
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.round(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    const remainingSeconds = Math.round(
+      seconds % 60
+    );
+    return `${minutes}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
   }
 
   // Modify the callNextTicket function to auto-start serving for payment counters
   async function callNextTicket() {
-    if (!assignedCounterId || !assignedCounterService) return;
+    if (
+      !assignedCounterId ||
+      !assignedCounterService
+    )
+      return;
 
     // First try to find a prioritized pending ticket for this service
     let nextTicket = tickets.find(
       (ticket) =>
-        (ticket.status === "PENDING" || ticket.status === "RETURNING") &&
+        (ticket.status === "PENDING" ||
+          ticket.status === "RETURNING") &&
         ticket.isPrioritized &&
-        (ticket.serviceId === assignedCounterService ||
+        (ticket.serviceId ===
+          assignedCounterService ||
           ticket.status === "RETURNING")
     );
 
@@ -528,8 +728,10 @@ export default function StaffDashboard() {
     if (!nextTicket) {
       nextTicket = tickets.find(
         (ticket) =>
-          (ticket.status === "PENDING" || ticket.status === "RETURNING") &&
-          (ticket.serviceId === assignedCounterService ||
+          (ticket.status === "PENDING" ||
+            ticket.status === "RETURNING") &&
+          (ticket.serviceId ===
+            assignedCounterService ||
             ticket.status === "RETURNING")
       );
     }
@@ -537,26 +739,36 @@ export default function StaffDashboard() {
     if (nextTicket) {
       // For payment counters, start serving immediately
       if (isPaymentCounter) {
-        await fetch(`/api/tickets/${nextTicket.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: "SERVING",
-            counterId: assignedCounterId,
-            servingStart: new Date(),
-          }),
-        });
+        await fetch(
+          `/api/tickets/${nextTicket.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status: "SERVING",
+              counterId: assignedCounterId,
+              servingStart: new Date(),
+            }),
+          }
+        );
         setServingTicketId(nextTicket.id);
       } else {
         // For non-payment counters, just call the ticket as before
-        await fetch(`/api/tickets/${nextTicket.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: "CALLED",
-            counterId: assignedCounterId,
-          }),
-        });
+        await fetch(
+          `/api/tickets/${nextTicket.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status: "CALLED",
+              counterId: assignedCounterId,
+            }),
+          }
+        );
         setCalledTicketId(nextTicket.id);
       }
       fetchTickets();
@@ -564,13 +776,17 @@ export default function StaffDashboard() {
   }
 
   // Modify markServed to open service type modal first
-  function openServiceTypeModal(ticketId: string) {
+  function openServiceTypeModal(
+    ticketId: string
+  ) {
     setTicketToComplete(ticketId);
     setIsServiceTypeModalOpen(true);
   }
 
   // New function to complete transaction with service type
-  function openServiceTypeConfirmation(serviceType: ServiceType) {
+  function openServiceTypeConfirmation(
+    serviceType: ServiceType
+  ) {
     if (showConfirmations) {
       setServiceTypeToConfirm(serviceType);
       setIsServiceTypeConfirmModalOpen(true);
@@ -583,15 +799,21 @@ export default function StaffDashboard() {
         // Direct completion with the selected service type
         (async () => {
           try {
-            const response = await fetch(`/api/tickets/${ticketId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                status: "SERVED",
-                serviceTypeId: serviceType.id,
-                servingEnd: new Date(),
-              }),
-            });
+            const response = await fetch(
+              `/api/tickets/${ticketId}`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+                body: JSON.stringify({
+                  status: "SERVED",
+                  serviceTypeId: serviceType.id,
+                  servingEnd: new Date(),
+                }),
+              }
+            );
 
             if (response.ok) {
               setIsServiceTypeModalOpen(false);
@@ -602,7 +824,10 @@ export default function StaffDashboard() {
               fetchUserStatistics();
             }
           } catch (error) {
-            console.error("Error completing transaction:", error);
+            console.error(
+              "Error completing transaction:",
+              error
+            );
           }
         })();
       }
@@ -610,8 +835,14 @@ export default function StaffDashboard() {
   }
 
   // New function to actually complete the transaction after confirmation
-  async function completeTransaction(confirmed: boolean = false) {
-    if (!confirmed || !ticketToComplete || !serviceTypeToConfirm) {
+  async function completeTransaction(
+    confirmed: boolean = false
+  ) {
+    if (
+      !confirmed ||
+      !ticketToComplete ||
+      !serviceTypeToConfirm
+    ) {
       // If not confirmed or missing data, just close modals and reset state
       setIsServiceTypeConfirmModalOpen(false);
       setServiceTypeToConfirm(null);
@@ -619,19 +850,28 @@ export default function StaffDashboard() {
     }
 
     try {
-      const response = await fetch(`/api/tickets/${ticketToComplete}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "SERVED",
-          serviceTypeId: serviceTypeToConfirm.id,
-          servingEnd: new Date(), // Add serving end time
-        }),
-      });
+      const response = await fetch(
+        `/api/tickets/${ticketToComplete}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "SERVED",
+            serviceTypeId:
+              serviceTypeToConfirm.id,
+            servingEnd: new Date(), // Add serving end time
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error completing transaction:", errorData);
+        console.error(
+          "Error completing transaction:",
+          errorData
+        );
         return;
       }
 
@@ -655,14 +895,19 @@ export default function StaffDashboard() {
         }
       }
     } catch (error) {
-      console.error("Error completing transaction:", error);
+      console.error(
+        "Error completing transaction:",
+        error
+      );
     }
   }
 
   async function markServed(ticketId: string) {
     await fetch(`/api/tickets/${ticketId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ status: "SERVED" }),
     });
     setServingTicketId(null);
@@ -687,28 +932,38 @@ export default function StaffDashboard() {
     setTicketToLapse(null);
 
     try {
-      const response = await fetch(`/api/tickets/${ticketId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "LAPSED",
-          servingEnd: new Date(), // Add end time for the lapsed ticket
-        }),
-      });
+      const response = await fetch(
+        `/api/tickets/${ticketId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "LAPSED",
+            servingEnd: new Date(), // Add end time for the lapsed ticket
+          }),
+        }
+      );
 
       if (response.ok) {
         setCalledTicketId(null); // Clear the called ticket state
         fetchTickets();
       }
     } catch (error) {
-      console.error("Error marking ticket as lapsed:", error);
+      console.error(
+        "Error marking ticket as lapsed:",
+        error
+      );
     }
   }
 
   async function startServing(ticketId: string) {
     await fetch(`/api/tickets/${ticketId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         status: "SERVING",
         counterId: assignedCounterId,
@@ -719,19 +974,41 @@ export default function StaffDashboard() {
     setServingTicketId(ticketId);
     fetchTickets();
   }
-
   async function recallTicket(ticketId: string) {
     if (!assignedCounterId) return;
 
-    await fetch(`/api/tickets/${ticketId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status: "CALLED",
-        counterId: assignedCounterId,
-      }),
-    });
-    fetchTickets();
+    try {
+      const response = await fetch(
+        `/api/tickets/${ticketId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "CALLED",
+            counterId: assignedCounterId, // This assigns the ticket to the counter that's recalling it
+          }),
+        }
+      );
+
+      if (response.ok) {
+        console.log(
+          `Ticket ${ticketId} recalled to counter ${assignedCounterId}`
+        );
+        fetchTickets(); // Refresh the tickets list
+      } else {
+        console.error(
+          "Error recalling ticket:",
+          await response.json()
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error recalling ticket:",
+        error
+      );
+    }
   }
 
   // Modify openTransferModal to just set the ticket ID
@@ -741,7 +1018,9 @@ export default function StaffDashboard() {
   }
 
   // New function to open transfer confirmation
-  function openTransferConfirmation(service: Service) {
+  function openTransferConfirmation(
+    service: Service
+  ) {
     if (showConfirmations) {
       setServiceToConfirm(service);
       setIsTransferConfirmModalOpen(true);
@@ -750,19 +1029,27 @@ export default function StaffDashboard() {
       // Skip confirmation and transfer directly
       const ticketId =
         ticketToTransfer ||
-        (currentServingTicket ? currentServingTicket.id : null);
+        (currentServingTicket
+          ? currentServingTicket.id
+          : null);
 
       if (ticketId) {
         // Direct transfer with the selected service
         (async () => {
           try {
-            const response = await fetch(`/api/tickets/${ticketId}/transfer`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                serviceId: service.id,
-              }),
-            });
+            const response = await fetch(
+              `/api/tickets/${ticketId}/transfer`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+                body: JSON.stringify({
+                  serviceId: service.id,
+                }),
+              }
+            );
 
             if (response.ok) {
               setIsTransferModalOpen(false);
@@ -771,7 +1058,10 @@ export default function StaffDashboard() {
               fetchTickets();
             }
           } catch (error) {
-            console.error("Error transferring ticket:", error);
+            console.error(
+              "Error transferring ticket:",
+              error
+            );
           }
         })();
       }
@@ -779,7 +1069,9 @@ export default function StaffDashboard() {
   }
 
   // Modify the openLapsedConfirmModal function
-  function openLapsedConfirmModal(ticketId: string) {
+  function openLapsedConfirmModal(
+    ticketId: string
+  ) {
     if (showConfirmations) {
       setTicketToLapse(ticketId);
       setIsLapsedConfirmModalOpen(true);
@@ -790,8 +1082,14 @@ export default function StaffDashboard() {
   }
 
   // Add this function with your other handler functions
-  async function handleTransferTicket(confirmed: boolean = false) {
-    if (!confirmed || !ticketToTransfer || !serviceToConfirm) {
+  async function handleTransferTicket(
+    confirmed: boolean = false
+  ) {
+    if (
+      !confirmed ||
+      !ticketToTransfer ||
+      !serviceToConfirm
+    ) {
       // If not confirmed or missing data, just close modals and reset state
       setIsTransferConfirmModalOpen(false);
       setServiceToConfirm(null);
@@ -803,7 +1101,9 @@ export default function StaffDashboard() {
         `/api/tickets/${ticketToTransfer}/transfer`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             serviceId: serviceToConfirm.id,
           }),
@@ -812,7 +1112,10 @@ export default function StaffDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error transferring ticket:", errorData);
+        console.error(
+          "Error transferring ticket:",
+          errorData
+        );
         return;
       }
 
@@ -824,12 +1127,16 @@ export default function StaffDashboard() {
       setServingTicketId(null);
       fetchTickets();
     } catch (error) {
-      console.error("Error transferring ticket:", error);
+      console.error(
+        "Error transferring ticket:",
+        error
+      );
     }
   }
 
   // Get the counter service code
-  const isPaymentCounter = counterServiceCode === "P";
+  const isPaymentCounter =
+    counterServiceCode === "P";
 
   // Update filter for active tickets to exclude called and serving tickets
   const activeTickets = tickets.filter(
@@ -837,23 +1144,29 @@ export default function StaffDashboard() {
       ticket.status !== "LAPSED" &&
       ticket.status !== "CALLED" &&
       ticket.status !== "SERVING" &&
-      (ticket.status === "PENDING" || ticket.status === "RETURNING") &&
+      (ticket.status === "PENDING" ||
+        ticket.status === "RETURNING") &&
       ticket.serviceId === assignedCounterService
   );
 
-  const lapsedTickets = tickets.filter((ticket) => ticket.status === "LAPSED");
+  const lapsedTickets = tickets.filter(
+    (ticket) => ticket.status === "LAPSED"
+  );
 
   // For Customer Welfare and New Service Application, filter returning tickets
   const returningTickets = !isPaymentCounter
     ? tickets.filter(
-      (ticket) =>
-        ticket.status === "RETURNING" &&
-        ticket.serviceId === assignedCounterService
-    )
+        (ticket) =>
+          ticket.status === "RETURNING" &&
+          ticket.serviceId ===
+            assignedCounterService
+      )
     : [];
 
   // Disable if a ticket is already in CALLED or SERVING
-  const isAnyActive = calledTicketId !== null || servingTicketId !== null;
+  const isAnyActive =
+    calledTicketId !== null ||
+    servingTicketId !== null;
 
   // Get current serving ticket
   const currentServingTicket = tickets.find(
@@ -864,27 +1177,41 @@ export default function StaffDashboard() {
   const hasPendingTickets = tickets.some(
     (ticket) =>
       (ticket.status === "PENDING" &&
-        ticket.serviceId === assignedCounterService) ||
-      (ticket.status === "RETURNING" && !isPaymentCounter)
+        ticket.serviceId ===
+          assignedCounterService) ||
+      (ticket.status === "RETURNING" &&
+        !isPaymentCounter)
   );
 
   // Add the function to handle opening the lapsed confirmation modal
-  function openLapsedConfirmModal(ticketId: string) {
+  function openLapsedConfirmModal(
+    ticketId: string
+  ) {
     setTicketToLapse(ticketId);
     setIsLapsedConfirmModalOpen(true);
   }
 
   // Add a ref to store the transfer button handlers
-  const transferButtonRefs = React.useRef<(null | (() => void))[]>([]);
+  const transferButtonRefs = React.useRef<
+    (null | (() => void))[]
+  >([]);
 
   // Add keyboard shortcut handler
   useEffect(() => {
     function handleKeyPress(e: KeyboardEvent) {
       // Only handle keypresses if no input is focused
-      if (document.activeElement?.tagName === "INPUT") return;
+      if (
+        document.activeElement?.tagName ===
+        "INPUT"
+      )
+        return;
 
       // Common actions
-      if (e.key === "n" && !isAnyActive && hasPendingTickets) {
+      if (
+        e.key === "n" &&
+        !isAnyActive &&
+        hasPendingTickets
+      ) {
         callNextTicket();
       }
 
@@ -897,15 +1224,29 @@ export default function StaffDashboard() {
         // Numpad1-9 or 1-9 for transfer
         let idx = -1;
         if (e.code.startsWith("Numpad")) {
-          const num = parseInt(e.code.replace("Numpad", ""), 10);
-          if (!isNaN(num) && num >= 1 && num <= availableServices.length)
+          const num = parseInt(
+            e.code.replace("Numpad", ""),
+            10
+          );
+          if (
+            !isNaN(num) &&
+            num >= 1 &&
+            num <= availableServices.length
+          )
             idx = num - 1;
         } else if (e.key >= "1" && e.key <= "9") {
           const num = parseInt(e.key, 10);
-          if (!isNaN(num) && num >= 1 && num <= availableServices.length)
+          if (
+            !isNaN(num) &&
+            num >= 1 &&
+            num <= availableServices.length
+          )
             idx = num - 1;
         }
-        if (idx !== -1 && transferButtonRefs.current[idx]) {
+        if (
+          idx !== -1 &&
+          transferButtonRefs.current[idx]
+        ) {
           transferButtonRefs.current[idx]!();
         }
       }
@@ -915,19 +1256,25 @@ export default function StaffDashboard() {
           // Complete action
           if (isPaymentCounter) {
             // Find payment service type and complete automatically
-            const paymentType = serviceTypes.find((type) =>
-              type.code.startsWith("P-")
+            const paymentType = serviceTypes.find(
+              (type) => type.code.startsWith("P-")
             );
             if (paymentType) {
-              fetch(`/api/tickets/${currentServingTicket.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  status: "SERVED",
-                  serviceTypeId: paymentType.id,
-                  servingEnd: new Date(),
-                }),
-              }).then(() => {
+              fetch(
+                `/api/tickets/${currentServingTicket.id}`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type":
+                      "application/json",
+                  },
+                  body: JSON.stringify({
+                    status: "SERVED",
+                    serviceTypeId: paymentType.id,
+                    servingEnd: new Date(),
+                  }),
+                }
+              ).then(() => {
                 setServingTicketId(null);
                 setCalledTicketId(null);
                 fetchTickets();
@@ -935,17 +1282,27 @@ export default function StaffDashboard() {
               });
             }
           } else {
-            openServiceTypeModal(currentServingTicket.id);
+            openServiceTypeModal(
+              currentServingTicket.id
+            );
           }
         }
 
         if (e.key === "x") {
           // Cancel action
-          fetch(`/api/tickets/${currentServingTicket.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "CANCELLED" }),
-          }).then(() => {
+          fetch(
+            `/api/tickets/${currentServingTicket.id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                status: "CANCELLED",
+              }),
+            }
+          ).then(() => {
             setServingTicketId(null);
             fetchTickets();
           });
@@ -954,20 +1311,34 @@ export default function StaffDashboard() {
 
       // Called ticket actions
       if (calledTicketId) {
-        const calledTicket = tickets.find((t) => t.id === calledTicketId);
+        const calledTicket = tickets.find(
+          (t) => t.id === calledTicketId
+        );
         if (calledTicket) {
           if (e.key === "s") {
             startServing(calledTicket.id);
           }
-          if (e.key === "l" && !isPaymentCounter) {
-            openLapsedConfirmModal(calledTicket.id);
+          if (
+            e.key === "l" &&
+            !isPaymentCounter
+          ) {
+            openLapsedConfirmModal(
+              calledTicket.id
+            );
           }
         }
       }
     }
 
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    window.addEventListener(
+      "keydown",
+      handleKeyPress
+    );
+    return () =>
+      window.removeEventListener(
+        "keydown",
+        handleKeyPress
+      );
   }, [
     currentServingTicket,
     calledTicketId,
@@ -1010,8 +1381,8 @@ export default function StaffDashboard() {
             Staff Dashboard
           </h1>
           <p className="text-xl text-red-500">
-            You are not assigned to any counter. Please contact an
-            administrator.
+            You are not assigned to any counter.
+            Please contact an administrator.
           </p>
         </div>
       </div>
@@ -1025,11 +1396,17 @@ export default function StaffDashboard() {
         <div className="w-full flex justify-between items-center px-8">
           <div className="flex items-center gap-4">
             {/* Logo */}
-            <Image src="/wdlogo.png" alt="WD Logo" width={120} height={120} />
+            <Image
+              src="/wdlogo.png"
+              alt="WD Logo"
+              width={120}
+              height={120}
+            />
 
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                {session?.user?.assignedCounterName ||
+                {session?.user
+                  ?.assignedCounterName ||
                   `Counter ID: ${assignedCounterId}`}
               </h1>
               {/* <h2 className="text-xl font-medium text-sky-600">
@@ -1043,14 +1420,21 @@ export default function StaffDashboard() {
           {session?.user && (
             <div className="flex items-center relative">
               <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                onClick={() =>
+                  setIsProfileMenuOpen(
+                    !isProfileMenuOpen
+                  )
+                }
                 className="flex items-center cursor-pointer"
               >
                 <div className="bg-white text-sky-600 rounded-full w-20 h-20 flex items-center justify-center font-bold text-lg mr-3">
-                  {getInitials(session.user.name || "")}
+                  {getInitials(
+                    session.user.name || ""
+                  )}
                 </div>
                 <span className="text-white font-extrabold">
-                  {session.user.name || "Staff User"}
+                  {session.user.name ||
+                    "Staff User"}
                 </span>
               </button>
 
@@ -1064,21 +1448,28 @@ export default function StaffDashboard() {
                       </span>
                       <button
                         onClick={() => {
-                          const newValue = !showConfirmations;
-                          setShowConfirmations(newValue);
+                          const newValue =
+                            !showConfirmations;
+                          setShowConfirmations(
+                            newValue
+                          );
                           localStorage.setItem(
                             "showConfirmations",
                             String(newValue)
                           );
                         }}
-                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${showConfirmations ? "bg-sky-600" : "bg-gray-300"
-                          }`}
+                        className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
+                          showConfirmations
+                            ? "bg-sky-600"
+                            : "bg-gray-300"
+                        }`}
                       >
                         <span
-                          className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${showConfirmations
-                            ? "translate-x-6"
-                            : "translate-x-1"
-                            }`}
+                          className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${
+                            showConfirmations
+                              ? "translate-x-6"
+                              : "translate-x-1"
+                          }`}
                         />
                       </button>
                     </div>
@@ -1118,27 +1509,48 @@ export default function StaffDashboard() {
                   <div className="flex flex-col items-center w-full max-w-[500px] mx-auto">
                     <div className="bg-sky-50 rounded-lg w-full h-[80px] lg:h-[100px] xl:h-[100px] flex items-center justify-center mb-4">
                       <span className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-sky-700 text-center px-2 break-all">
-                        {activeTickets[0].isPrioritized ? "PWD-" : ""}
-                        {getTicketDisplayCode(activeTickets[0])}-
-                        {formatTicketNumber(activeTickets[0].ticketNumber)}
+                        {activeTickets[0]
+                          .isPrioritized
+                          ? "PWD-"
+                          : ""}
+                        {getTicketDisplayCode(
+                          activeTickets[0]
+                        )}
+                        -
+                        {formatTicketNumber(
+                          activeTickets[0]
+                            .ticketNumber
+                        )}
                       </span>
                     </div>
                     <p className="text-xl font-medium text-sky-600 mb-2">
-                      {activeTickets[0].service?.name || "Unknown Service"}
+                      {activeTickets[0].service
+                        ?.name ||
+                        "Unknown Service"}
                     </p>
-                    {activeTickets[0].isPrioritized && (
+                    {activeTickets[0]
+                      .isPrioritized && (
                       <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-3">
                         Priority
                       </span>
                     )}
-                    <p className="text-lg text-sky-600 mt-2">Status: Waiting</p>
+                    <p className="text-lg text-sky-600 mt-2">
+                      Status: Waiting
+                    </p>
 
                     {/* Show pending count if there are more waiting tickets */}
                     {activeTickets.length > 1 && (
                       <div className="mt-2  rounded-lg py-3 px-6">
                         <p className="text-center text-sky-700 font-medium text-xl">
-                          Waiting: {activeTickets.length - 1} ticket
-                          {activeTickets.length - 1 !== 1 ? "s" : ""}
+                          Waiting:{" "}
+                          {activeTickets.length -
+                            1}{" "}
+                          ticket
+                          {activeTickets.length -
+                            1 !==
+                          1
+                            ? "s"
+                            : ""}
                         </p>
                       </div>
                     )}
@@ -1161,55 +1573,76 @@ export default function StaffDashboard() {
                       <h3 className="text-sm font-medium text-amber-700 sticky top-0 bg-white">
                         Lapsed Tickets
                       </h3>
-                      {lapsedTickets.length > 2 && (
+                      {lapsedTickets.length >
+                        2 && (
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => setIsLapsedListModalOpen(true)}
+                          onClick={() =>
+                            setIsLapsedListModalOpen(
+                              true
+                            )
+                          }
                           className="text-xs text-amber-600 hover:text-amber-800 font-medium"
                         >
-                          Show All ({lapsedTickets.length})
+                          Show All (
+                          {lapsedTickets.length})
                         </Button>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {lapsedTickets.slice(0, 2).map((ticket) => (
-                        <div
-                          key={ticket.id}
-                          className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-amber-600 font-medium">
-                              {ticket.isPrioritized ? "PWD-" : ""}
-                              {getTicketDisplayCode(ticket)}-
-                              {formatTicketNumber(ticket.ticketNumber)}
-                            </span>
-                            {ticket.isPrioritized && (
-                              <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded font-bold">
-                                PWD
-                              </span>
-                            )}
-                          </div>
-                          <Button
-                            variant="warning"
-                            size="sm"
-                            disabled={
-                              calledTicketId !== null ||
-                              servingTicketId !== null
-                            }
-                            onClick={() => recallTicket(ticket.id)}
+                      {lapsedTickets
+                        .slice(0, 2)
+                        .map((ticket) => (
+                          <div
+                            key={ticket.id}
+                            className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2"
                           >
-                            <svg
-                              className="w-4 h-4"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-amber-600 font-medium">
+                                {ticket.isPrioritized
+                                  ? "PWD-"
+                                  : ""}
+                                {getTicketDisplayCode(
+                                  ticket
+                                )}
+                                -
+                                {formatTicketNumber(
+                                  ticket.ticketNumber
+                                )}
+                              </span>
+                              {ticket.isPrioritized && (
+                                <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded font-bold">
+                                  PWD
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              variant="warning"
+                              size="sm"
+                              disabled={
+                                calledTicketId !==
+                                  null ||
+                                servingTicketId !==
+                                  null
+                              }
+                              onClick={() =>
+                                recallTicket(
+                                  ticket.id
+                                )
+                              }
                             >
-                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                            Recall
-                          </Button>
-                        </div>
-                      ))}
+                              <svg
+                                className="w-4 h-4"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                              </svg>
+                              Recall
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 )}
@@ -1221,67 +1654,95 @@ export default function StaffDashboard() {
                       <h3 className="text-sm font-medium text-sky-700 sticky top-0 bg-white">
                         Returning Tickets
                       </h3>
-                      {returningTickets.length > 2 && (
+                      {returningTickets.length >
+                        2 && (
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => setIsReturningListModalOpen(true)}
+                          onClick={() =>
+                            setIsReturningListModalOpen(
+                              true
+                            )
+                          }
                           className="text-xs text-purple-600 hover:text-purple-800 font-medium"
                         >
-                          Show All ({returningTickets.length})
+                          Show All (
+                          {
+                            returningTickets.length
+                          }
+                          )
                         </Button>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {returningTickets.slice(0, 2).map((ticket) => (
-                        <div
-                          key={ticket.id}
-                          className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-sky-800">
-                              {ticket.isPrioritized ? "PWD-" : ""}
-                              {getTicketDisplayCode(ticket)}-
-                              {formatTicketNumber(ticket.ticketNumber)}
-                            </span>
-                            {ticket.isPrioritized && (
-                              <span className="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded">
-                                PWD
-                              </span>
-                            )}
-                          </div>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            disabled={
-                              calledTicketId !== null ||
-                              servingTicketId !== null
-                            }
-                            onClick={(e) => {
-                              const btn = e.currentTarget;
-                              btn.classList.add("scale-95");
-                              btn.innerHTML =
-                                '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
-                              setTimeout(() => {
-                                recallTicket(ticket.id);
-                              }, 200);
-                            }}
+                      {returningTickets
+                        .slice(0, 2)
+                        .map((ticket) => (
+                          <div
+                            key={ticket.id}
+                            className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
                           >
-                            <svg
-                              className={`w-4 h-4 ${calledTicketId !== null ||
-                                servingTicketId !== null
-                                ? "opacity-50"
-                                : ""
-                                }`}
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-sky-800">
+                                {ticket.isPrioritized
+                                  ? "PWD-"
+                                  : ""}
+                                {getTicketDisplayCode(
+                                  ticket
+                                )}
+                                -
+                                {formatTicketNumber(
+                                  ticket.ticketNumber
+                                )}
+                              </span>
+                              {ticket.isPrioritized && (
+                                <span className="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded">
+                                  PWD
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              disabled={
+                                calledTicketId !==
+                                  null ||
+                                servingTicketId !==
+                                  null
+                              }
+                              onClick={(e) => {
+                                const btn =
+                                  e.currentTarget;
+                                btn.classList.add(
+                                  "scale-95"
+                                );
+                                btn.innerHTML =
+                                  '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+                                setTimeout(() => {
+                                  recallTicket(
+                                    ticket.id
+                                  );
+                                }, 200);
+                              }}
                             >
-                              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                            Call
-                          </Button>
-                        </div>
-                      ))}
+                              <svg
+                                className={`w-4 h-4 ${
+                                  calledTicketId !==
+                                    null ||
+                                  servingTicketId !==
+                                    null
+                                    ? "opacity-50"
+                                    : ""
+                                }`}
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                              </svg>
+                              Call
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 )}
@@ -1305,13 +1766,21 @@ export default function StaffDashboard() {
                         currentServingTicket
                       )} font-bold text-sky-700 text-center px-2 break-all`}
                     >
-                      {currentServingTicket.isPrioritized ? "PWD-" : ""}
-                      {getTicketDisplayCode(currentServingTicket)}-
-                      {formatTicketNumber(currentServingTicket.ticketNumber)}
+                      {currentServingTicket.isPrioritized
+                        ? "PWD-"
+                        : ""}
+                      {getTicketDisplayCode(
+                        currentServingTicket
+                      )}
+                      -
+                      {formatTicketNumber(
+                        currentServingTicket.ticketNumber
+                      )}
                     </span>
                   </div>
                   <p className="text-xl font-medium text-sky-600 mb-2">
-                    {currentServingTicket.service?.name || "Unknown Service"}
+                    {currentServingTicket.service
+                      ?.name || "Unknown Service"}
                   </p>
                   {currentServingTicket.isPrioritized && (
                     <span className="bg-amber-100 text-amber-800 text-base px-3 py-1 rounded-full font-medium mb-1">
@@ -1338,19 +1807,40 @@ export default function StaffDashboard() {
                           withShortcut={true}
                           shortcutKey="C"
                           onClick={async () => {
-                            const paymentType = serviceTypes.find(type => type.code.startsWith("P-"));
+                            const paymentType =
+                              serviceTypes.find(
+                                (type) =>
+                                  type.code.startsWith(
+                                    "P-"
+                                  )
+                              );
                             if (paymentType) {
-                              await fetch(`/api/tickets/${currentServingTicket.id}`, {
-                                method: "PUT",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  status: "SERVED",
-                                  serviceTypeId: paymentType.id,
-                                  servingEnd: new Date()
-                                })
-                              });
-                              setServingTicketId(null);
-                              setCalledTicketId(null);
+                              await fetch(
+                                `/api/tickets/${currentServingTicket.id}`,
+                                {
+                                  method: "PUT",
+                                  headers: {
+                                    "Content-Type":
+                                      "application/json",
+                                  },
+                                  body: JSON.stringify(
+                                    {
+                                      status:
+                                        "SERVED",
+                                      serviceTypeId:
+                                        paymentType.id,
+                                      servingEnd:
+                                        new Date(),
+                                    }
+                                  ),
+                                }
+                              );
+                              setServingTicketId(
+                                null
+                              );
+                              setCalledTicketId(
+                                null
+                              );
                               fetchTickets();
                               fetchUserStatistics();
                             }
@@ -1361,47 +1851,66 @@ export default function StaffDashboard() {
 
                         {/* Transfers - Direct buttons instead of modal */}
                         <div className="grid grid-cols-1 gap-2">
-                          {availableServices.map((service, index) => (
-                            <Button
-                              key={service.id}
-                              variant="secondary"
-                              size="lg"
-                              withShortcut={true}
-                              shortcutKey={(index + 1).toString()}
-                              onClick={async () => {
-                                try {
-                                  const response = await fetch(
-                                    `/api/tickets/${currentServingTicket.id}/transfer`,
-                                    {
-                                      method: "PUT",
-                                      headers: {
-                                        "Content-Type": "application/json",
-                                      },
-                                      body: JSON.stringify({
-                                        serviceId: service.id,
-                                      }),
-                                    }
-                                  );
-
-                                  if (response.ok) {
-                                    setServingTicketId(null);
-                                    fetchTickets();
-                                  }
-                                } catch (error) {
-                                  console.error(
-                                    "Error transferring ticket:",
-                                    error
-                                  );
+                          {availableServices.map(
+                            (service, index) => (
+                              <Button
+                                key={service.id}
+                                variant="secondary"
+                                size="lg"
+                                withShortcut={
+                                  true
                                 }
-                              }}
-                              className="w-full justify-between"
-                            >
-                              <span>{service.name}</span>
-                              <span className="text-xs bg-sky-700 px-2 py-1 rounded">
-                                {service.code}
-                              </span>
-                            </Button>
-                          ))}
+                                shortcutKey={(
+                                  index + 1
+                                ).toString()}
+                                onClick={async () => {
+                                  try {
+                                    const response =
+                                      await fetch(
+                                        `/api/tickets/${currentServingTicket.id}/transfer`,
+                                        {
+                                          method:
+                                            "PUT",
+                                          headers:
+                                            {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                          body: JSON.stringify(
+                                            {
+                                              serviceId:
+                                                service.id,
+                                            }
+                                          ),
+                                        }
+                                      );
+
+                                    if (
+                                      response.ok
+                                    ) {
+                                      setServingTicketId(
+                                        null
+                                      );
+                                      fetchTickets();
+                                    }
+                                  } catch (error) {
+                                    console.error(
+                                      "Error transferring ticket:",
+                                      error
+                                    );
+                                  }
+                                }}
+                                className="w-full justify-between"
+                              >
+                                <span>
+                                  {service.name}
+                                </span>
+                                <span className="text-xs bg-sky-700 px-2 py-1 rounded">
+                                  {service.code}
+                                </span>
+                              </Button>
+                            )
+                          )}
                         </div>
 
                         {/* Cancel button */}
@@ -1411,12 +1920,25 @@ export default function StaffDashboard() {
                           withShortcut={true}
                           shortcutKey="X"
                           onClick={() => {
-                            fetch(`/api/tickets/${currentServingTicket.id}`, {
-                              method: "PUT", 
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ status: "CANCELLED" })
-                            }).then(() => {
-                              setServingTicketId(null);
+                            fetch(
+                              `/api/tickets/${currentServingTicket.id}`,
+                              {
+                                method: "PUT",
+                                headers: {
+                                  "Content-Type":
+                                    "application/json",
+                                },
+                                body: JSON.stringify(
+                                  {
+                                    status:
+                                      "CANCELLED",
+                                  }
+                                ),
+                              }
+                            ).then(() => {
+                              setServingTicketId(
+                                null
+                              );
                               fetchTickets();
                             });
                           }}
@@ -1428,11 +1950,15 @@ export default function StaffDashboard() {
                       // For non-payment counters - Complete Transaction button
                       <div className="flex flex-col space-y-4 w-full">
                         <Button
-                          variant="success" 
+                          variant="success"
                           size="lg"
                           withShortcut={true}
                           shortcutKey="C"
-                          onClick={() => openServiceTypeModal(currentServingTicket.id)}
+                          onClick={() =>
+                            openServiceTypeModal(
+                              currentServingTicket.id
+                            )
+                          }
                         >
                           Complete Transaction
                         </Button>
@@ -1443,7 +1969,10 @@ export default function StaffDashboard() {
               ) : calledTicketId ? (
                 <div className="flex flex-col items-center w-full">
                   {tickets
-                    .filter((t) => t.id === calledTicketId)
+                    .filter(
+                      (t) =>
+                        t.id === calledTicketId
+                    )
                     .map((ticket) => (
                       <div
                         key={ticket.id}
@@ -1455,13 +1984,21 @@ export default function StaffDashboard() {
                               ticket
                             )} font-bold text-green-800 text-center px-2 break-all`}
                           >
-                            {ticket.isPrioritized ? "PWD-" : ""}
-                            {getTicketDisplayCode(ticket)}-
-                            {formatTicketNumber(ticket.ticketNumber)}
+                            {ticket.isPrioritized
+                              ? "PWD-"
+                              : ""}
+                            {getTicketDisplayCode(
+                              ticket
+                            )}
+                            -
+                            {formatTicketNumber(
+                              ticket.ticketNumber
+                            )}
                           </span>
                         </div>
                         <p className="text-xl font-medium text-sky-600 mb-2">
-                          {ticket.service?.name || "Unknown Service"}
+                          {ticket.service?.name ||
+                            "Unknown Service"}
                         </p>
                         {ticket.isPrioritized && (
                           <span className="bg-green-600 text-green-500 text-white px-3 py-1 rounded-full font-medium mb-4">
@@ -1479,7 +2016,11 @@ export default function StaffDashboard() {
                               <Button
                                 variant="success"
                                 size="lg"
-                                onClick={() => startServing(ticket.id)}
+                                onClick={() =>
+                                  startServing(
+                                    ticket.id
+                                  )
+                                }
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1491,7 +2032,8 @@ export default function StaffDashboard() {
                                   <path d="M6 7H2v10h4z" />
                                   <path d="M18 7h-4v10h4z" />
                                 </svg>
-                                Start Payment Process
+                                Start Payment
+                                Process
                               </Button>
                             </div>
                           ) : (
@@ -1500,9 +2042,15 @@ export default function StaffDashboard() {
                               <Button
                                 variant="success"
                                 size="lg"
-                                withShortcut={true}
+                                withShortcut={
+                                  true
+                                }
                                 shortcutKey="S"
-                                onClick={() => startServing(ticket.id)} 
+                                onClick={() =>
+                                  startServing(
+                                    ticket.id
+                                  )
+                                }
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1521,9 +2069,15 @@ export default function StaffDashboard() {
                               <Button
                                 variant="warning"
                                 size="lg"
-                                withShortcut={true}
-                                shortcutKey="L"  
-                                onClick={() => openLapsedConfirmModal(ticket.id)}
+                                withShortcut={
+                                  true
+                                }
+                                shortcutKey="L"
+                                onClick={() =>
+                                  openLapsedConfirmModal(
+                                    ticket.id
+                                  )
+                                }
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1548,15 +2102,19 @@ export default function StaffDashboard() {
               ) : (
                 <div className="flex flex-col items-center w-full">
                   <p className="text-center text-gray-500 mb-6">
-                    No ticket currently being served
+                    No ticket currently being
+                    served
                   </p>
                   <div className="flex flex-col space-y-4 w-full">
-                    <Button 
+                    <Button
                       variant="primary"
                       size="lg"
-                      withShortcut={true} 
+                      withShortcut={true}
                       shortcutKey="N"
-                      disabled={!hasPendingTickets || isAnyActive}
+                      disabled={
+                        !hasPendingTickets ||
+                        isAnyActive
+                      }
                       onClick={callNextTicket}
                     >
                       Call Next Ticket
@@ -1564,7 +2122,8 @@ export default function StaffDashboard() {
 
                     {!hasPendingTickets && (
                       <p className="text-xs text-gray-500 text-center mt-1">
-                        No pending tickets in queue
+                        No pending tickets in
+                        queue
                       </p>
                     )}
                   </div>
@@ -1602,7 +2161,9 @@ export default function StaffDashboard() {
                     Avg. Service Time
                   </p>
                   <p className="text-2xl lg:text-3xl xl:text-4xl font-bold text-amber-800 mt-2">
-                    {formatAverageTime(userStats.averageServiceTime)}
+                    {formatAverageTime(
+                      userStats.averageServiceTime
+                    )}
                   </p>
                 </div>
               </div>
@@ -1615,31 +2176,39 @@ export default function StaffDashboard() {
       {isTransferModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-4 lg:p-6 w-full max-w-[384px] lg:max-w-[480px] shadow-2xl">
-            <h3 className="text-lg font-semibold mb-4">Transfer Ticket</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Transfer Ticket
+            </h3>
             <div className="mb-6">
               <p className="block text-sm font-medium text-gray-700 mb-3">
                 Select Destination Service
               </p>
               <div className="space-y-2">
-                {availableServices.map((service) => (
-                  <Button
-                    key={service.id}
-                    variant="secondary"
-                    size="lg" 
-                    onClick={() => openTransferConfirmation(service)}
-                    className="w-full justify-between"
-                  >
-                    <span>{service.name}</span>
-                    <span className="text-xs bg-sky-700 px-2 py-1 rounded">
-                      {service.code}
-                    </span>
-                  </Button>
-                ))}
+                {availableServices.map(
+                  (service) => (
+                    <Button
+                      key={service.id}
+                      variant="secondary"
+                      size="lg"
+                      onClick={() =>
+                        openTransferConfirmation(
+                          service
+                        )
+                      }
+                      className="w-full justify-between"
+                    >
+                      <span>{service.name}</span>
+                      <span className="text-xs bg-sky-700 px-2 py-1 rounded">
+                        {service.code}
+                      </span>
+                    </Button>
+                  )
+                )}
               </div>
             </div>
             <div className="flex justify-end">
               <Button
-                variant="danger" 
+                variant="danger"
                 size="md"
                 onClick={() => {
                   setIsTransferModalOpen(false);
@@ -1655,96 +2224,117 @@ export default function StaffDashboard() {
       )}
 
       {/* Add new Lapsed Confirmation Modal */}
-      {isLapsedConfirmModalOpen && ticketToLapse && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
-          <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
-            <div className="flex items-center mb-6 text-amber-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 mr-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <h3 className="text-2xl font-bold text-gray-800">
-                Confirm Action
-              </h3>
-            </div>
-
-            <div className="mb-8">
-              <p className="text-lg text-gray-700 mb-6">
-                Are you sure you want to mark this ticket as lapsed? This action
-                indicates the customer did not respond when called.
-              </p>
-
-              <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
-                {tickets
-                  .filter((t) => t.id === ticketToLapse)
-                  .map((ticket) => (
-                    <div key={ticket.id} className="text-center">
-                      <span className="text-3xl font-bold text-amber-700 block">
-                        {ticket.isPrioritized ? "PWD-" : ""}
-                        {getTicketDisplayCode(ticket)}-
-                        {formatTicketNumber(ticket.ticketNumber)}
-                      </span>
-                      <span className="text-xl text-amber-600 block mt-2">
-                        {ticket.service?.name}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <Button
-                variant="danger" 
-                size="md"
-                onClick={() => {
-                  setIsLapsedConfirmModalOpen(false);
-                  setTicketToLapse(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="success"
-                size="md"
-                onClick={() => {
-                  const ticketId = ticketToLapse;
-                  if (ticketId) {
-                    markLapsed(ticketId);
-                  }
-                }}
-              >
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
+                  className="h-12 w-12 mr-4"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                     clipRule="evenodd"
                   />
                 </svg>
-                Confirm
-              </Button>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
-            <h3 className="text-xl font-semibold mb-4">Select Service Type</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
 
             {/* Search bar */}
             <div className="mb-4 relative">
@@ -1752,7 +2342,11 @@ export default function StaffDashboard() {
                 type="text"
                 placeholder="Search service types..."
                 value={serviceTypeSearchQuery}
-                onChange={(e) => setServiceTypeSearchQuery(e.target.value)}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
               <div className="absolute right-3 top-2.5 text-gray-400">
@@ -1773,7 +2367,8 @@ export default function StaffDashboard() {
 
             <div className="mb-6">
               <p className="block text-sm font-medium text-gray-700 mb-3">
-                Choose the type of service provided
+                Choose the type of service
+                provided
               </p>
 
               {/* Grid layout for service types */}
@@ -1783,7 +2378,9 @@ export default function StaffDashboard() {
                     (type) =>
                       type.name
                         .toLowerCase()
-                        .includes(serviceTypeSearchQuery.toLowerCase()) ||
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
                       type.code.toLowerCase.includes(
                         serviceTypeSearchQuery.toLowerCase()
                       )
@@ -1793,16 +2390,20 @@ export default function StaffDashboard() {
                       key={type.id}
                       variant="outline"
                       size="md"
-                      onClick={() => openServiceTypeConfirmation(type)}
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
                       className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
                     >
                       <div className="flex flex-row justify-between w-full">
-                      <span className="font-semibold text-sky-900 mb-1">
-                        {type.name}
-                      </span>
-                      <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
-                        {type.code}
-                      </span>
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
                       </div>
                     </Button>
                   ))}
@@ -1812,23 +2413,29 @@ export default function StaffDashboard() {
                 (type) =>
                   type.name
                     .toLowerCase()
-                    .includes(serviceTypeSearchQuery.toLowerCase()) ||
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
                   type.code
                     .toLowerCase()
-                    .includes(serviceTypeSearchQuery.toLowerCase())
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
               ).length === 0 && (
-                  <p className="text-center text-gray-500 py-4">
-                    No matching service types found
-                  </p>
-                )}
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end">
               <Button
-                variant="danger" 
+                variant="danger"
                 size="md"
                 onClick={() => {
-                  setIsServiceTypeModalOpen(false);
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
                   setTicketToComplete(null);
                   setSelectedServiceTypeId("");
                   setServiceTypeSearchQuery(""); // Clear search when closing modal
@@ -1842,166 +2449,194 @@ export default function StaffDashboard() {
       )}
 
       {/* Add new Lapsed Confirmation Modal */}
-      {isLapsedConfirmModalOpen && ticketToLapse && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
-          <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
-            <div className="flex items-center mb-6 text-amber-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 mr-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <h3 className="text-2xl font-bold text-gray-800">
-                Confirm Action
-              </h3>
-            </div>
-
-            <div className="mb-8">
-              <p className="text-lg text-gray-700 mb-6">
-                Are you sure you want to mark this ticket as lapsed? This action
-                indicates the customer did not respond when called.
-              </p>
-
-              <div className="bg-sky-50 border border-sky-100 rounded-lg p-5 mb-6">
-                {tickets
-                  .filter((t) => t.id === ticketToLapse)
-                  .map((ticket) => (
-                    <div key={ticket.id} className="text-center">
-                      <span className="text-3xl font-bold text-sky-800 block">
-                        {ticket.isPrioritized ? "PWD-" : ""}
-                        {getTicketDisplayCode(ticket)}-
-                        {formatTicketNumber(ticket.ticketNumber)}
-                      </span>
-                      <span className="text-xl text-sky-800 block mt-2">
-                        {ticket.service?.name}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <Button
-                variant="danger" 
-                size="md"
-                onClick={() => {
-                  setIsLapsedConfirmModalOpen(false);
-                  setTicketToLapse(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="success"
-                size="md"
-                onClick={() => {
-                  const ticketId = ticketToLapse;
-                  if (ticketId) {
-                    markLapsed(ticketId);
-                  }
-                }}
-              >
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
+                  className="h-12 w-12 mr-4"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                     clipRule="evenodd"
                   />
                 </svg>
-                Confirm
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
 
-      {/* Add Service Type Confirmation Modal */}
-      {isServiceTypeConfirmModalOpen && serviceTypeToConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
-            <div className="flex items-center mb-6 text-green-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 mr-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm11 13a1 1 0 01-1 1H2a1 1 0 01-1-1v-2a1 1 0 011-1h16a1 1 0 011 1v2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <h3 className="text-2xl font-bold text-gray-800">
-                Confirm Service Type
-              </h3>
-            </div>
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
 
-            <div className="mb-8">
-              <p className="text-lg text-gray-700 mb-6">
-                Are you sure you want to complete this transaction with the
-                following service type?
-              </p>
-
-              <div className="bg-green-50 border border-green-100 rounded-lg p-5 mb-6">
-                <div className="text-center">
-                  <span className="text-3xl font-bold text-green-700 block">
-                    {serviceTypeToConfirm.name}
-                  </span>
-                  <span className="text-xl text-green-600 block mt-2">
-                    Code: {serviceTypeToConfirm.code}
-                  </span>
+                <div className="bg-sky-50 border border-sky-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-sky-800 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-sky-800 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-end space-x-4">
-              <Button
-                variant="danger" 
-                size="md"
-                onClick={() => {
-                  setIsServiceTypeConfirmModalOpen(false);
-                  setServiceTypeToConfirm(null);
-                  setIsServiceTypeModalOpen(true); // Reopen the selection modal
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="md" 
-                onClick={() => completeTransaction(true)}
-              >
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Confirmation Modal */}
+      {isServiceTypeConfirmModalOpen &&
+        serviceTypeToConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-green-500">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
+                  className="h-12 w-12 mr-4"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm11 13a1 1 0 01-1 1H2a1 1 0 01-1-1v-2a1 1 0 011-1h16a1 1 0 011 1v2z"
                     clipRule="evenodd"
                   />
                 </svg>
-                Complete Transaction
-              </Button>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Service Type
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to
+                  complete this transaction
+                  withthe following service type?
+                </p>
+
+                <div className="bg-green-50 border border-green-100 rounded-lg p-5 mb-6">
+                  <div className="text-center">
+                    <span className="text-3xl font-bold text-green-700 block">
+                      {serviceTypeToConfirm.name}
+                    </span>
+                    <span className="text-xl text-green-600 block mt-2">
+                      Code:{" "}
+                      {serviceTypeToConfirm.code}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsServiceTypeConfirmModalOpen(
+                      false
+                    );
+                    setServiceTypeToConfirm(null);
+                    setIsServiceTypeModalOpen(
+                      true
+                    ); // Reopen the selection modal
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() =>
+                    completeTransaction(true)
+                  }
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Complete Transaction
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Lapsed List Modal */}
       {isLapsedListModalOpen && (
@@ -2014,7 +2649,9 @@ export default function StaffDashboard() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setIsLapsedListModalOpen(false)}
+                onClick={() =>
+                  setIsLapsedListModalOpen(false)
+                }
                 className="text-gray-500 hover:text-gray-700"
               >
                 <svg
@@ -2041,9 +2678,16 @@ export default function StaffDashboard() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
-                      {ticket.isPrioritized ? "PWD-" : ""}
-                      {getTicketDisplayCode(ticket)}-
-                      {formatTicketNumber(ticket.ticketNumber)}
+                      {ticket.isPrioritized
+                        ? "PWD-"
+                        : ""}
+                      {getTicketDisplayCode(
+                        ticket
+                      )}
+                      -
+                      {formatTicketNumber(
+                        ticket.ticketNumber
+                      )}
                     </span>
                     {ticket.isPrioritized && (
                       <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded">
@@ -2055,9 +2699,12 @@ export default function StaffDashboard() {
                     variant="warning"
                     size="sm"
                     disabled={
-                      calledTicketId !== null || servingTicketId !== null
+                      calledTicketId !== null ||
+                      servingTicketId !== null
                     }
-                    onClick={() => recallTicket(ticket.id)}
+                    onClick={() =>
+                      recallTicket(ticket.id)
+                    }
                   >
                     <svg
                       className="w-4 h-4"
@@ -2086,7 +2733,11 @@ export default function StaffDashboard() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setIsReturningListModalOpen(false)}
+                onClick={() =>
+                  setIsReturningListModalOpen(
+                    false
+                  )
+                }
                 className="text-gray-500 hover:text-gray-700"
               >
                 <svg
@@ -2113,9 +2764,16 @@ export default function StaffDashboard() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
-                      {ticket.isPrioritized ? "PWD-" : ""}
-                      {getTicketDisplayCode(ticket)}-
-                      {formatTicketNumber(ticket.ticketNumber)}
+                      {ticket.isPrioritized
+                        ? "PWD-"
+                        : ""}
+                      {getTicketDisplayCode(
+                        ticket
+                      )}
+                      -
+                      {formatTicketNumber(
+                        ticket.ticketNumber
+                      )}
                     </span>
                     {ticket.isPrioritized && (
                       <span className="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded">
@@ -2127,11 +2785,14 @@ export default function StaffDashboard() {
                     variant="primary"
                     size="sm"
                     disabled={
-                      calledTicketId !== null || servingTicketId !== null
+                      calledTicketId !== null ||
+                      servingTicketId !== null
                     }
                     onClick={(e) => {
                       const btn = e.currentTarget;
-                      btn.classList.add("scale-95");
+                      btn.classList.add(
+                        "scale-95"
+                      );
                       btn.innerHTML =
                         '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
                       setTimeout(() => {
@@ -2140,10 +2801,12 @@ export default function StaffDashboard() {
                     }}
                   >
                     <svg
-                      className={`w-4 h-4 ${calledTicketId !== null || servingTicketId !== null
-                        ? "opacity-50"
-                        : ""
-                        }`}
+                      className={`w-4 h-4 ${
+                        calledTicketId !== null ||
+                        servingTicketId !== null
+                          ? "opacity-50"
+                          : ""
+                      }`}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >

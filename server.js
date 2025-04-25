@@ -18,7 +18,10 @@ const getLocalIpAddress = () => {
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
       // Skip over non-IPv4 and internal (loopback) addresses
-      if (iface.family === "IPv4" && !iface.internal) {
+      if (
+        iface.family === "IPv4" &&
+        !iface.internal
+      ) {
         return iface.address;
       }
     }
@@ -28,8 +31,7 @@ const getLocalIpAddress = () => {
 
 const dev = process.env.NODE_ENV !== "production";
 // Get the public hostname for URLs
-const publicHostname = "192.168.50.218";
-// getLocalIpAddress();
+const publicHostname = getLocalIpAddress();
 // Use 0.0.0.0 for binding (listen on all network interfaces)
 const listenHostname = "0.0.0.0";
 const port = 3000;
@@ -55,16 +57,22 @@ const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
   // Create HTTP server
-  const server = createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error("Error occurred handling", req.url, err);
-      res.statusCode = 500;
-      res.end("Internal Server Error");
+  const server = createServer(
+    async (req, res) => {
+      try {
+        const parsedUrl = parse(req.url, true);
+        await handle(req, res, parsedUrl);
+      } catch (err) {
+        console.error(
+          "Error occurred handling",
+          req.url,
+          err
+        );
+        res.statusCode = 500;
+        res.end("Internal Server Error");
+      }
     }
-  });
+  );
 
   // Initialize Socket.IO with the same server
   const io = new Server(server, {
@@ -94,7 +102,9 @@ app.prepare().then(() => {
 
       // Join new counter room
       socket.join(`counter:${counterId}`);
-      console.log(`Client ${socket.id} joined counter ${counterId}`);
+      console.log(
+        `Client ${socket.id} joined counter ${counterId}`
+      );
     });
 
     // Handle ticket updates with full data payload
@@ -104,10 +114,9 @@ app.prepare().then(() => {
 
       // If ticket is assigned to a counter, send specific update
       if (ticketData.counterId) {
-        io.to(`counter:${ticketData.counterId}`).emit(
-          "counter:ticket",
-          ticketData
-        );
+        io.to(
+          `counter:${ticketData.counterId}`
+        ).emit("counter:ticket", ticketData);
       }
     });
 
@@ -117,7 +126,10 @@ app.prepare().then(() => {
     });
 
     socket.on("disconnect", () => {
-      console.log("Client disconnected:", socket.id);
+      console.log(
+        "Client disconnected:",
+        socket.id
+      );
     });
 
     // Handle errors
@@ -129,10 +141,18 @@ app.prepare().then(() => {
   // Start the server - LISTEN ON ALL INTERFACES (0.0.0.0)
   server.listen(port, listenHostname, (err) => {
     if (err) throw err;
-    console.log(`> Server listening on ${listenHostname}:${port}`);
-    console.log(`> Public URL: http://${publicHostname}:${port}`);
-    console.log(`> AUTH_URL set to: ${process.env.AUTH_URL}`);
-    console.log(`> NEXTAUTH_URL set to: ${process.env.NEXTAUTH_URL}`);
+    console.log(
+      `> Server listening on ${listenHostname}:${port}`
+    );
+    console.log(
+      `> Public URL: http://${publicHostname}:${port}`
+    );
+    console.log(
+      `> AUTH_URL set to: ${process.env.AUTH_URL}`
+    );
+    console.log(
+      `> NEXTAUTH_URL set to: ${process.env.NEXTAUTH_URL}`
+    );
     console.log("> Socket.IO server initialized");
   });
 });

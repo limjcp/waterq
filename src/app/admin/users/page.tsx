@@ -31,27 +31,38 @@ export default function UsersPage() {
   const { status } = useSession();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
-  const [counters, setCounters] = useState<Counter[]>([]);
-  const [editUserId, setEditUserId] = useState<string | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    password: "",
-    assignedCounterId: "",
-  });
+  const [counters, setCounters] = useState<
+    Counter[]
+  >([]);
+  const [editUserId, setEditUserId] = useState<
+    string | null
+  >(null);
+  const [editFormData, setEditFormData] =
+    useState({
+      password: "",
+      assignedCounterId: "",
+    });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [registerFormData, setRegisterFormData] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    email: "",
-    username: "",
-    password: "",
-    role: "staff",
-  });
-  const [registerLoading, setRegisterLoading] = useState(false);
+  const [
+    isRegisterModalOpen,
+    setIsRegisterModalOpen,
+  ] = useState(false);
+  const [registerFormData, setRegisterFormData] =
+    useState({
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      email: "",
+      username: "",
+      password: "",
+      role: "staff",
+    });
+  const [registerLoading, setRegisterLoading] =
+    useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] =
+    useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
 
@@ -71,7 +82,11 @@ export default function UsersPage() {
       const data = await response.json();
       setUsers(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to fetch users");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch users"
+      );
     } finally {
       setLoading(false);
     }
@@ -79,70 +94,114 @@ export default function UsersPage() {
 
   const fetchCounters = async () => {
     try {
-      const response = await fetch("/api/counters");
+      const response = await fetch(
+        "/api/counters"
+      );
       const data = await response.json();
       setCounters(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to fetch counters");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch counters"
+      );
     }
   };
 
   const handleEditChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement
+    >
   ) => {
-    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+    setEditFormData({
+      ...editFormData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
+  const handleEditSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
     try {
-      const response = await fetch(`/api/users/${editUserId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editFormData),
-      });
+      const response = await fetch(
+        `/api/users/${editUserId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editFormData),
+        }
+      );
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error || "Something went wrong while updating user");
+        setError(
+          data.error ||
+            "Something went wrong while updating user"
+        );
       } else {
         setSuccess("User updated successfully!");
         setEditUserId(null);
-        setEditFormData({ password: "", assignedCounterId: "" });
+        setEditFormData({
+          password: "",
+          assignedCounterId: "",
+        });
         fetchUsers();
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update user");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update user"
+      );
     }
   };
 
-  const handleArchive = async (userId: string) => {
-    if (!confirm("Are you sure you want to archive this user?")) return;
+  const handleArchive = async (
+    userId: string
+  ) => {
+    if (
+      !confirm(
+        "Are you sure you want to archive this user?"
+      )
+    )
+      return;
 
     setError("");
     setSuccess("");
 
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/users/${userId}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!response.ok) {
-        setError("Something went wrong while archiving the user");
+        setError(
+          "Something went wrong while archiving the user"
+        );
       } else {
         setSuccess("User archived successfully!");
         fetchUsers();
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to archive user");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to archive user"
+      );
     }
   };
 
   const handleRegisterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement
+    >
   ) => {
     setRegisterFormData({
       ...registerFormData,
@@ -150,26 +209,31 @@ export default function UsersPage() {
     });
   };
 
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
     setError("");
     setSuccess("");
     setRegisterLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(registerFormData),
-      });
+      const response = await fetch(
+        "/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(registerFormData),
+        }
+      );
 
       const data = await response.json();
       if (!response.ok) {
         setError(
           data.error ||
-          "Registration failed. Please check your information and try again."
+            "Registration failed. Please check your information and try again."
         );
       } else {
         setSuccess(
@@ -188,7 +252,11 @@ export default function UsersPage() {
         fetchUsers(); // Refresh the users list
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to register user");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to register user"
+      );
     } finally {
       setRegisterLoading(false);
     }
@@ -200,7 +268,9 @@ export default function UsersPage() {
   );
 
   useEffect(() => {
-    setTotalPages(Math.ceil(users.length / itemsPerPage));
+    setTotalPages(
+      Math.ceil(users.length / itemsPerPage)
+    );
   }, [users]);
 
   if (status === "loading" || loading) {
@@ -212,8 +282,16 @@ export default function UsersPage() {
   return (
     <div className="  bg-white rounded-2xl shadow-2xl p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-sky-800">Staff Management</h1>
-        <Button onClick={() => setIsRegisterModalOpen(true)} variant="primary" size={"md"}>
+        <h1 className="text-3xl font-bold text-sky-800">
+          Staff Management
+        </h1>
+        <Button
+          onClick={() =>
+            setIsRegisterModalOpen(true)
+          }
+          variant="primary"
+          size={"md"}
+        >
           <UserPlusIcon className="h-5 w-5 mr-2" />
           Register New Staff
         </Button>
@@ -234,12 +312,18 @@ export default function UsersPage() {
       {/* Edit User Form */}
       {editUserId && (
         <div className="mb-8 bg-sky-50 p-6 rounded-xl border border-sky-100">
-          <h2 className="text-xl font-semibold text-sky-700 mb-4">Edit User</h2>
-          <form onSubmit={handleEditSubmit} className="space-y-4">
+          <h2 className="text-xl font-semibold text-sky-700 mb-4">
+            Edit User
+          </h2>
+          <form
+            onSubmit={handleEditSubmit}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-sky-700 mb-2">
-                  New Password (leave empty to keep current)
+                  New Password (leave empty to
+                  keep current)
                 </label>
                 <input
                   name="password"
@@ -257,14 +341,21 @@ export default function UsersPage() {
                 </label>
                 <select
                   name="assignedCounterId"
-                  value={editFormData.assignedCounterId}
+                  value={
+                    editFormData.assignedCounterId
+                  }
                   onChange={handleEditChange}
                   className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                   aria-label="Assign counter to user"
                 >
-                  <option value="">None (Unassign)</option>
+                  <option value="">
+                    None (Unassign)
+                  </option>
                   {counters.map((counter) => (
-                    <option key={counter.id} value={counter.id}>
+                    <option
+                      key={counter.id}
+                      value={counter.id}
+                    >
                       {counter.name}
                     </option>
                   ))}
@@ -275,7 +366,9 @@ export default function UsersPage() {
             <div className="flex justify-end gap-4 pt-2">
               <Button
                 type="button"
-                onClick={() => setEditUserId(null)}
+                onClick={() =>
+                  setEditUserId(null)
+                }
                 size="md"
                 variant="danger"
               >
@@ -297,7 +390,7 @@ export default function UsersPage() {
       {/* Registration Modal */}
       {isRegisterModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full max-h-[100vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center">
                 <UserPlusIcon className="h-8 w-8 text-sky-600 mr-3" />
@@ -306,7 +399,9 @@ export default function UsersPage() {
                 </h2>
               </div>
               <Button
-                onClick={() => setIsRegisterModalOpen(false)}
+                onClick={() =>
+                  setIsRegisterModalOpen(false)
+                }
                 size="sm"
                 variant="danger"
                 className="text-gray-500 hover:text-gray-700"
@@ -340,7 +435,10 @@ export default function UsersPage() {
               </div>
             )}
 
-            <form onSubmit={handleRegisterSubmit} className="space-y-6">
+            <form
+              onSubmit={handleRegisterSubmit}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-sky-700 mb-2">
@@ -348,8 +446,12 @@ export default function UsersPage() {
                   </label>
                   <input
                     name="firstName"
-                    value={registerFormData.firstName}
-                    onChange={handleRegisterChange}
+                    value={
+                      registerFormData.firstName
+                    }
+                    onChange={
+                      handleRegisterChange
+                    }
                     required
                     placeholder="Enter first name"
                     className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -359,12 +461,18 @@ export default function UsersPage() {
                 <div>
                   <label className="block text-sm font-medium text-sky-700 mb-2">
                     Middle Name{" "}
-                    <span className="text-gray-400 text-xs">(optional)</span>
+                    <span className="text-gray-400 text-xs">
+                      (optional)
+                    </span>
                   </label>
                   <input
                     name="middleName"
-                    value={registerFormData.middleName}
-                    onChange={handleRegisterChange}
+                    value={
+                      registerFormData.middleName
+                    }
+                    onChange={
+                      handleRegisterChange
+                    }
                     placeholder="Enter middle name"
                     className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
@@ -376,8 +484,12 @@ export default function UsersPage() {
                   </label>
                   <input
                     name="lastName"
-                    value={registerFormData.lastName}
-                    onChange={handleRegisterChange}
+                    value={
+                      registerFormData.lastName
+                    }
+                    onChange={
+                      handleRegisterChange
+                    }
                     required
                     placeholder="Enter last name"
                     className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -394,7 +506,9 @@ export default function UsersPage() {
                     name="email"
                     type="email"
                     value={registerFormData.email}
-                    onChange={handleRegisterChange}
+                    onChange={
+                      handleRegisterChange
+                    }
                     required
                     placeholder="email@example.com"
                     className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -407,8 +521,12 @@ export default function UsersPage() {
                   </label>
                   <input
                     name="username"
-                    value={registerFormData.username}
-                    onChange={handleRegisterChange}
+                    value={
+                      registerFormData.username
+                    }
+                    onChange={
+                      handleRegisterChange
+                    }
                     required
                     placeholder="Choose a username"
                     className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -424,8 +542,12 @@ export default function UsersPage() {
                   <input
                     name="password"
                     type="password"
-                    value={registerFormData.password}
-                    onChange={handleRegisterChange}
+                    value={
+                      registerFormData.password
+                    }
+                    onChange={
+                      handleRegisterChange
+                    }
                     required
                     placeholder="Create a strong password"
                     className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -439,12 +561,18 @@ export default function UsersPage() {
                   <select
                     name="role"
                     value={registerFormData.role}
-                    onChange={handleRegisterChange}
+                    onChange={
+                      handleRegisterChange
+                    }
                     className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                     aria-label="Select staff role"
                   >
-                    <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
+                    <option value="admin">
+                      Admin
+                    </option>
+                    <option value="staff">
+                      Staff
+                    </option>
                   </select>
                 </div>
               </div>
@@ -452,7 +580,9 @@ export default function UsersPage() {
               <div className="flex justify-end gap-4 pt-4">
                 <Button
                   type="button"
-                  onClick={() => setIsRegisterModalOpen(false)}
+                  onClick={() =>
+                    setIsRegisterModalOpen(false)
+                  }
                   size="md"
                   variant="danger"
                 >
@@ -486,121 +616,169 @@ export default function UsersPage() {
       {/* Users Table */}
       <div className="overflow-x-auto flex flex-col justify-between h-[79vh]">
         <div>
-        <table className="min-w-full bg-white border border-sky-100">
-          <thead>
-            <tr className="bg-sky-50">
-              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                Name
-              </th>
-              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                Username
-              </th>
-              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                Email
-              </th>
-              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                Role
-              </th>
-              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                Assigned Counter
-              </th>
-              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="border-b border-sky-50 hover:bg-sky-50"
-                >
-                  <td className="py-3 px-4">
-                    {user.firstName}{" "}
-                    {user.middleName ? user.middleName + " " : ""}
-                    {user.lastName}
-                  </td>
-                  <td className="py-3 px-4">{user.username}</td>
-                  <td className="py-3 px-4">{user.email}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex flex-wrap gap-1">
-                      {user.role.map((role) => (
-                        <span
-                          key={role}
-                          className={`text-xs px-2 py-1 rounded-full ${role === "admin"
-                            ? "bg-purple-100 text-purple-800"
-                            : role === "staff"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
+          <table className="min-w-full bg-white border border-sky-100">
+            <thead>
+              <tr className="bg-sky-50">
+                <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                  Name
+                </th>
+                <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                  Username
+                </th>
+                <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                  Email
+                </th>
+                <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                  Role
+                </th>
+                <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                  Assigned Counter
+                </th>
+                <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedUsers.length > 0 ? (
+                paginatedUsers.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="border-b border-sky-50 hover:bg-sky-50"
+                  >
+                    <td className="py-3 px-4">
+                      {user.firstName}{" "}
+                      {user.middleName
+                        ? user.middleName + " "
+                        : ""}
+                      {user.lastName}
+                    </td>
+                    <td className="py-3 px-4">
+                      {user.username}
+                    </td>
+                    <td className="py-3 px-4">
+                      {user.email}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1">
+                        {user.role.map((role) => (
+                          <span
+                            key={role}
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              role === "admin"
+                                ? "bg-purple-100 text-purple-800"
+                                : role === "staff"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-800"
                             }`}
-                        >
-                          {role}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    {user.assignedCounter?.name || "None"}
-                  </td>
-                  <td className="flex flex-row gap-1 py-3 px-4 text-right">
-                    <Button variant="primary" onClick={() => setEditUserId(user.id)}> <PencilIcon className="h-5 w-5 inline" /></Button>
-                    <Button variant="danger" onClick={() => handleArchive(user.id)}><TrashIcon className="h-5 w-5 inline" /></Button>
+                          >
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {user.assignedCounter
+                        ?.name || "None"}
+                    </td>
+                    <td className="flex flex-row gap-1 py-3 px-4 text-right">
+                      <Button
+                        variant="primary"
+                        onClick={() =>
+                          setEditUserId(user.id)
+                        }
+                      >
+                        {" "}
+                        <PencilIcon className="h-5 w-5 inline" />
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() =>
+                          handleArchive(user.id)
+                        }
+                      >
+                        <TrashIcon className="h-5 w-5 inline" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-8 text-center text-sky-600"
+                  >
+                    No users found. Register your
+                    first staff member!
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="py-8 text-center text-sky-600">
-                  No users found. Register your first staff member!
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Add Pagination Controls */}
-      {users.length > 0 && (
-        <div className="mt-6 flex justify-between items-center">
-          <div className="text-sm text-sky-600">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, users.length)} of{" "}
-            {users.length} entries
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              size="sm"
-              variant="secondary"
-            >
-              Previous
-            </Button>
-            {[...Array(totalPages)].map((_, index) => (
-              <Button
-                key={index + 1}
-                onClick={() => setCurrentPage(index + 1)}
-                size="sm"
-                variant={currentPage === index + 1 ? "primary" : "secondary"}
-              >
-                {index + 1}
-              </Button>
-            ))}
-            <Button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              size="sm"
-              variant="secondary"
-            >
-              Next
-            </Button>
-          </div>
+              )}
+            </tbody>
+          </table>
         </div>
 
-      )}
+        {/* Add Pagination Controls */}
+        {users.length > 0 && (
+          <div className="mt-6 flex justify-between items-center">
+            <div className="text-sm text-sky-600">
+              Showing{" "}
+              {(currentPage - 1) * itemsPerPage +
+                1}{" "}
+              to{" "}
+              {Math.min(
+                currentPage * itemsPerPage,
+                users.length
+              )}{" "}
+              of {users.length} entries
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() =>
+                  setCurrentPage((prev) =>
+                    Math.max(prev - 1, 1)
+                  )
+                }
+                disabled={currentPage === 1}
+                size="sm"
+                variant="secondary"
+              >
+                Previous
+              </Button>
+              {[...Array(totalPages)].map(
+                (_, index) => (
+                  <Button
+                    key={index + 1}
+                    onClick={() =>
+                      setCurrentPage(index + 1)
+                    }
+                    size="sm"
+                    variant={
+                      currentPage === index + 1
+                        ? "primary"
+                        : "secondary"
+                    }
+                  >
+                    {index + 1}
+                  </Button>
+                )
+              )}
+              <Button
+                onClick={() =>
+                  setCurrentPage((prev) =>
+                    Math.min(prev + 1, totalPages)
+                  )
+                }
+                disabled={
+                  currentPage === totalPages
+                }
+                size="sm"
+                variant="secondary"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
