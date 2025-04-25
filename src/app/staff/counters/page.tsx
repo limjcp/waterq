@@ -438,8 +438,43 @@ export default function StaffDashboard() {
       }
     }
   }
+  useEffect(() => {
+    // Create a bell sound instance that can be reused
+    const bell = new Audio("/bell.mp3");
+    bell.volume = 1.0;
+    bell.preload = "auto";
 
-  // Update the ringBell function
+    // Add event listeners for debugging
+    bell.addEventListener("error", (e) => {
+      console.error(
+        "Error loading bell sound:",
+        e
+      );
+    });
+
+    bell.addEventListener(
+      "canplaythrough",
+      () => {
+        console.log(
+          "Bell sound successfully loaded and can play"
+        );
+      }
+    );
+
+    // Store in a ref so it can be accessed by the ringBell function
+    window.bellSound = bell;
+
+    return () => {
+      // Clean up event listeners
+      bell.removeEventListener("error", () => {});
+      bell.removeEventListener(
+        "canplaythrough",
+        () => {}
+      );
+    };
+  }, []);
+
+  // Then update the ringBell function to use this bell sound:
   async function ringBell() {
     if (!assignedCounterId) return;
 
@@ -465,7 +500,19 @@ export default function StaffDashboard() {
         counterId: assignedCounterId,
       });
 
-      // Add this stronger visual indication of event
+      // Also play the sound locally for immediate feedback
+      if (window.bellSound) {
+        window.bellSound.currentTime = 0;
+        window.bellSound
+          .play()
+          .catch((err) =>
+            console.error(
+              "Error playing local bell sound:",
+              err
+            )
+          );
+      }
+
       console.log(
         "%c BELL RING SENT 🔔",
         "background: #FFD700; color: #000; font-weight: bold; padding: 4px;"
@@ -492,23 +539,6 @@ export default function StaffDashboard() {
         assignedCounterId
       );
     });
-
-    // Add this inside the bell sound initialization useEffect
-    bell.addEventListener("error", (e) => {
-      console.error(
-        "Error loading bell sound:",
-        e
-      );
-    });
-
-    bell.addEventListener(
-      "canplaythrough",
-      () => {
-        console.log(
-          "Bell sound successfully loaded and can play"
-        );
-      }
-    );
 
     // Listen for ticket updates
     socket.on("ticket:update", (ticketData) => {
