@@ -439,6 +439,41 @@ export default function StaffDashboard() {
     }
   }
 
+  // Update the ringBell function
+  async function ringBell() {
+    if (!assignedCounterId) return;
+
+    try {
+      // Use a persistent socket connection rather than creating a new one each time
+      if (!window.bellSocket) {
+        window.bellSocket = io();
+        console.log(
+          "Created persistent bell socket"
+        );
+      }
+
+      // Check if socket is connected, reconnect if needed
+      if (!window.bellSocket.connected) {
+        console.log(
+          "Reconnecting bell socket..."
+        );
+        window.bellSocket.connect();
+      }
+
+      // Emit the event
+      window.bellSocket.emit("ring:bell", {
+        counterId: assignedCounterId,
+      });
+
+      // Add this stronger visual indication of event
+      console.log(
+        "%c BELL RING SENT 🔔",
+        "background: #FFD700; color: #000; font-weight: bold; padding: 4px;"
+      );
+    } catch (error) {
+      console.error("Error ringing bell:", error);
+    }
+  }
   // Socket.IO setup effect
   useEffect(() => {
     if (
@@ -457,6 +492,23 @@ export default function StaffDashboard() {
         assignedCounterId
       );
     });
+
+    // Add this inside the bell sound initialization useEffect
+    bell.addEventListener("error", (e) => {
+      console.error(
+        "Error loading bell sound:",
+        e
+      );
+    });
+
+    bell.addEventListener(
+      "canplaythrough",
+      () => {
+        console.log(
+          "Bell sound successfully loaded and can play"
+        );
+      }
+    );
 
     // Listen for ticket updates
     socket.on("ticket:update", (ticketData) => {
@@ -1321,6 +1373,10 @@ export default function StaffDashboard() {
           if (e.key === "s") {
             startServing(calledTicket.id);
           }
+          if (e.key === "r") {
+            // Ring bell - new shortcut
+            ringBell();
+          }
           if (
             e.key === "l" &&
             !isPaymentCounter
@@ -2068,6 +2124,25 @@ export default function StaffDashboard() {
                                   />
                                 </svg>
                                 Start Serving
+                              </Button>
+                              <Button
+                                variant="warning"
+                                size="lg"
+                                withShortcut={
+                                  true
+                                }
+                                shortcutKey="R"
+                                onClick={ringBell}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-6 w-6 mr-2"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                                </svg>
+                                Ring
                               </Button>
                               <Button
                                 variant="warning"

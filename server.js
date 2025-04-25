@@ -125,6 +125,21 @@ app.prepare().then(() => {
       io.emit("stats:update", statsData);
     });
 
+    // Update this section in the ring:bell handler
+    socket.on("ring:bell", ({ counterId }) => {
+      if (counterId) {
+        // Change this line to broadcast to all clients
+        io.emit("ring:bell", { counterId }); // Send to all connected clients
+        // You can keep the targeted emit too for redundancy
+        io.to(`counter:${counterId}`).emit(
+          "ring:bell"
+        );
+        console.log(
+          `Bell ring event sent to counter:${counterId}`
+        );
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log(
         "Client disconnected:",
