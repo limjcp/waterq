@@ -54,23 +54,19 @@ export async function PUT(
       // Get current lapsed tickets
       const lapsedTickets = await prisma.queueTicket.findMany({
         where: { status: "LAPSED" },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "desc" }, // Most recent first
       });
 
-      // If we already have 2 or more lapsed tickets, convert oldest to cancelled
-      if (lapsedTickets.length >= 5) {
-        // Get all tickets beyond the first 2 (they will be cancelled)
-        const ticketsToCancel = lapsedTickets.slice(1); // Keep newest, cancel the rest
+      // If we have 6 or more lapsed tickets, convert the oldest one to cancelled
+      if (lapsedTickets.length >= 6) {
+        // Get the oldest ticket (last in the array since we ordered by desc)
+        const oldestTicket = lapsedTickets[lapsedTickets.length - 1];
         
-        // Update old lapsed tickets to cancelled
-        await prisma.$transaction(
-          ticketsToCancel.map((ticket) =>
-            prisma.queueTicket.update({
-              where: { id: ticket.id },
-              data: { status: "CANCELLED" },
-            })
-          )
-        );
+        // Cancel only the oldest ticket
+        await prisma.queueTicket.update({
+          where: { id: oldestTicket.id },
+          data: { status: "CANCELLED" },
+        });
       }
     }
 

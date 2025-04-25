@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Trash2, UploadCloud, ChevronUp, ChevronDown, X } from "lucide-react";
+import Button from "@/components/Button";
 
 type ScreensaverImage = {
   id: string;
@@ -140,12 +141,13 @@ export default function ScreensaverManager() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Screensaver Images</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+        <Button 
+          onClick={() => setIsModalOpen(true)} 
+          variant="primary"
+          size="md"
         >
           Add New Image
-        </button>
+        </Button>
       </div>
 
       {/* Modal */}
@@ -154,12 +156,13 @@ export default function ScreensaverManager() {
           <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Upload New Image</h2>
-              <button
+              <Button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
+                variant="danger"
+                size="sm"
               >
                 <X className="h-6 w-6" />
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -226,20 +229,22 @@ export default function ScreensaverManager() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  variant="danger"
+                  size="md"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={!uploadForm.file || uploading}
-                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors disabled:bg-gray-400"
+                  variant="success"
+                  size="md"
                 >
                   {uploading ? "Uploading..." : "Upload"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -287,48 +292,42 @@ export default function ScreensaverManager() {
                     <td className="py-3 px-4 font-medium">{image.title}</td>
                     <td className="py-3 px-4">
                       <div className="flex justify-center gap-1">
-                        <button
+                        <Button
                           onClick={() => moveImage(index, "up")}
                           disabled={index === 0}
-                          className={`p-1 rounded hover:bg-gray-100 ${
-                            index === 0 ? "text-gray-300" : "text-sky-600"
-                          }`}
+                          variant="secondary"
+                          size="sm"
                         >
                           <ChevronUp className="h-5 w-5" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => moveImage(index, "down")}
                           disabled={index === images.length - 1}
-                          className={`p-1 rounded hover:bg-gray-100 ${
-                            index === images.length - 1
-                              ? "text-gray-300"
-                              : "text-sky-600"
-                          }`}
+                          variant="secondary"
+                          size="sm"
                         >
                           <ChevronDown className="h-5 w-5" />
-                        </button>
+                        </Button>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <button
+                      <Button
                         onClick={() => toggleImageStatus(image)}
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          image.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                        variant={image.isActive ? "success" : "secondary"}
+                        size="sm"
                       >
                         {image.isActive ? "Active" : "Inactive"}
-                      </button>
+                      </Button>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
+                      <Button
                         onClick={() => deleteImage(image.id)}
-                        className="text-red-500 hover:text-red-700"
+                        variant="danger"
+                        size="sm"
                         title="Delete Image"
                       >
                         <Trash2 className="h-5 w-5" />
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))

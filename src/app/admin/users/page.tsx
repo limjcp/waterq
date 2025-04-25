@@ -210,12 +210,12 @@ export default function UsersPage() {
   }
 
   return (
-    <div className=" min-h-screen  bg-white rounded-2xl shadow-2xl p-8">
+    <div className="  bg-white rounded-2xl shadow-2xl p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-sky-800">Staff Management</h1>
-        <Button onClick={() => setIsRegisterModalOpen(true)} variant="primary" size={10}>
+        <Button onClick={() => setIsRegisterModalOpen(true)} variant="primary" size={"md"}>
           <UserPlusIcon className="h-5 w-5 mr-2" />
-          Register New Staff 11
+          Register New Staff
         </Button>
       </div>
 
@@ -273,19 +273,22 @@ export default function UsersPage() {
             </div>
 
             <div className="flex justify-end gap-4 pt-2">
-              <button
+              <Button
                 type="button"
                 onClick={() => setEditUserId(null)}
-                className="px-4 py-2 text-sky-600 hover:text-sky-700"
+                size="md"
+                variant="danger"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg"
+                onClick={handleEditSubmit}
+                size="md"
+                variant="success"
               >
                 Update User
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -302,8 +305,10 @@ export default function UsersPage() {
                   Register New Staff
                 </h2>
               </div>
-              <button
+              <Button
                 onClick={() => setIsRegisterModalOpen(false)}
+                size="sm"
+                variant="danger"
                 className="text-gray-500 hover:text-gray-700"
                 aria-label="Close registration modal"
               >
@@ -320,7 +325,7 @@ export default function UsersPage() {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </button>
+              </Button>
             </div>
 
             {error && (
@@ -445,17 +450,20 @@ export default function UsersPage() {
               </div>
 
               <div className="flex justify-end gap-4 pt-4">
-                <button
+                <Button
                   type="button"
                   onClick={() => setIsRegisterModalOpen(false)}
-                  className="px-4 py-2 text-sky-600 hover:text-sky-700"
+                  size="md"
+                  variant="danger"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  onClick={handleRegisterSubmit}
                   disabled={registerLoading}
-                  className="px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-lg transition-colors flex items-center"
+                  size="md"
+                  variant="success"
                 >
                   {registerLoading ? (
                     <>
@@ -468,7 +476,7 @@ export default function UsersPage() {
                       Register New Staff
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -476,7 +484,8 @@ export default function UsersPage() {
       )}
 
       {/* Users Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto flex flex-col justify-between h-[79vh]">
+        <div>
         <table className="min-w-full bg-white border border-sky-100">
           <thead>
             <tr className="bg-sky-50">
@@ -495,7 +504,7 @@ export default function UsersPage() {
               <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                 Assigned Counter
               </th>
-              <th className="py-3 px-4 text-right font-medium text-sky-700 border-b">
+              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                 Actions
               </th>
             </tr>
@@ -534,21 +543,9 @@ export default function UsersPage() {
                   <td className="py-3 px-4">
                     {user.assignedCounter?.name || "None"}
                   </td>
-                  <td className="py-3 px-4 text-right">
-                    <button
-                      onClick={() => setEditUserId(user.id)}
-                      className="text-blue-500 hover:text-blue-700 mr-2"
-                      title="Edit User"
-                    >
-                      <PencilIcon className="h-5 w-5 inline" />
-                    </button>
-                    <button
-                      onClick={() => handleArchive(user.id)}
-                      className="text-red-500 hover:text-red-700"
-                      title="Archive User"
-                    >
-                      <TrashIcon className="h-5 w-5 inline" />
-                    </button>
+                  <td className="flex flex-row gap-1 py-3 px-4 text-right">
+                    <Button variant="primary" onClick={() => setEditUserId(user.id)}> <PencilIcon className="h-5 w-5 inline" /></Button>
+                    <Button variant="danger" onClick={() => handleArchive(user.id)}><TrashIcon className="h-5 w-5 inline" /></Button>
                   </td>
                 </tr>
               ))
@@ -572,37 +569,39 @@ export default function UsersPage() {
             {users.length} entries
           </div>
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+              size="sm"
+              variant="secondary"
             >
               Previous
-            </button>
+            </Button>
             {[...Array(totalPages)].map((_, index) => (
-              <button
+              <Button
                 key={index + 1}
                 onClick={() => setCurrentPage(index + 1)}
-                className={`px-3 py-1 rounded-lg border ${currentPage === index + 1
-                  ? "bg-sky-500 text-white"
-                  : "border-sky-200 hover:bg-sky-50"
-                  }`}
+                size="sm"
+                variant={currentPage === index + 1 ? "primary" : "secondary"}
               >
                 {index + 1}
-              </button>
+              </Button>
             ))}
-            <button
+            <Button
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+              size="sm"
+              variant="secondary"
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
+
       )}
+      </div>
     </div>
   );
 }

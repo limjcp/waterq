@@ -1088,12 +1088,14 @@ export default function StaffDashboard() {
                         : "Actions will be performed without confirmation"}
                     </p>
                   </div>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
                     onClick={handleSignOut}
                     className="w-full text-left px-4 py-2 text-gray-700 hover:bg-sky-50 transition-colors"
                   >
                     Sign Out
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -1160,12 +1162,14 @@ export default function StaffDashboard() {
                         Lapsed Tickets
                       </h3>
                       {lapsedTickets.length > 2 && (
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setIsLapsedListModalOpen(true)}
                           className="text-xs text-amber-600 hover:text-amber-800 font-medium"
                         >
                           Show All ({lapsedTickets.length})
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -1186,17 +1190,14 @@ export default function StaffDashboard() {
                               </span>
                             )}
                           </div>
-                          <button
-                            onClick={() => recallTicket(ticket.id)}
+                          <Button
+                            variant="warning"
+                            size="sm"
                             disabled={
                               calledTicketId !== null ||
                               servingTicketId !== null
                             }
-                            className={`${calledTicketId !== null ||
-                              servingTicketId !== null
-                              ? "bg-amber-400 cursor-not-allowed"
-                              : "bg-amber-50 hover:bg-amber-600 active:scale-95 hover:text-white"
-                              } disabled:text-gray-400 text-amber-600 text-sm font-medium py-1 px-3 disabled:bg-gray-200 rounded transition-all transform flex items-center justify-center gap-1`}
+                            onClick={() => recallTicket(ticket.id)}
                           >
                             <svg
                               className="w-4 h-4"
@@ -1206,7 +1207,7 @@ export default function StaffDashboard() {
                               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                             </svg>
                             Recall
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -1221,12 +1222,14 @@ export default function StaffDashboard() {
                         Returning Tickets
                       </h3>
                       {returningTickets.length > 2 && (
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => setIsReturningListModalOpen(true)}
                           className="text-xs text-purple-600 hover:text-purple-800 font-medium"
                         >
                           Show All ({returningTickets.length})
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -1247,7 +1250,13 @@ export default function StaffDashboard() {
                               </span>
                             )}
                           </div>
-                          <button
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={
+                              calledTicketId !== null ||
+                              servingTicketId !== null
+                            }
                             onClick={(e) => {
                               const btn = e.currentTarget;
                               btn.classList.add("scale-95");
@@ -1257,15 +1266,6 @@ export default function StaffDashboard() {
                                 recallTicket(ticket.id);
                               }, 200);
                             }}
-                            disabled={
-                              calledTicketId !== null ||
-                              servingTicketId !== null
-                            }
-                            className={`${calledTicketId !== null ||
-                              servingTicketId !== null
-                              ? "bg-gray-400 cursor-not-allowed opacity-50"
-                              : "bg-sky-50 hover:bg-sky-800 active:scale-95 hover:text-sky-50"
-                              } text-sky-800 text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                           >
                             <svg
                               className={`w-4 h-4 ${calledTicketId !== null ||
@@ -1279,7 +1279,7 @@ export default function StaffDashboard() {
                               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                             </svg>
                             Call
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -1330,56 +1330,44 @@ export default function StaffDashboard() {
                   </div>
                   <div className="mt-4 w-full space-y-3">
                     {isPaymentCounter ? (
-                      <>
-                        {/* For Payment Counter - Complete button */}
-                        <button
+                      // For Payment Counter buttons
+                      <div className="flex flex-col space-y-4 w-full">
+                        <Button
+                          variant="success"
+                          size="lg"
+                          withShortcut={true}
+                          shortcutKey="C"
                           onClick={async () => {
-                            try {
-                              // Find payment service type and complete with it automatically
-                              const paymentType = serviceTypes.find((type) =>
-                                type.code.startsWith("P-")
-                              );
-
-                              if (paymentType) {
-                                const response = await fetch(
-                                  `/api/tickets/${currentServingTicket.id}`,
-                                  {
-                                    method: "PUT",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      status: "SERVED",
-                                      serviceTypeId: paymentType.id,
-                                      servingEnd: new Date(),
-                                    }),
-                                  }
-                                );
-
-                                if (response.ok) {
-                                  setServingTicketId(null);
-                                  setCalledTicketId(null);
-                                  fetchTickets();
-                                  fetchUserStatistics();
-                                }
-                              }
-                            } catch (error) {
-                              console.error("Error completing payment:", error);
+                            const paymentType = serviceTypes.find(type => type.code.startsWith("P-"));
+                            if (paymentType) {
+                              await fetch(`/api/tickets/${currentServingTicket.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  status: "SERVED",
+                                  serviceTypeId: paymentType.id,
+                                  servingEnd: new Date()
+                                })
+                              });
+                              setServingTicketId(null);
+                              setCalledTicketId(null);
+                              fetchTickets();
+                              fetchUserStatistics();
                             }
                           }}
-                          className="w-full transform flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
                         >
                           Complete Payment
-                          <span className="absolute  right-0 bg-green-700 text-lg px-6 py-4 rounded-lg ml-4 ">
-                            C
-                          </span>
-                        </button>
+                        </Button>
 
                         {/* Transfers - Direct buttons instead of modal */}
                         <div className="grid grid-cols-1 gap-2">
                           {availableServices.map((service, index) => (
-                            <button
+                            <Button
                               key={service.id}
+                              variant="secondary"
+                              size="lg"
+                              withShortcut={true}
+                              shortcutKey={(index + 1).toString()}
                               onClick={async () => {
                                 try {
                                   const response = await fetch(
@@ -1406,107 +1394,49 @@ export default function StaffDashboard() {
                                   );
                                 }
                               }}
-                              ref={() => {
-                                // Save the handler for hotkey
-                                transferButtonRefs.current[index] =
-                                  async () => {
-                                    try {
-                                      const response = await fetch(
-                                        `/api/tickets/${currentServingTicket.id}/transfer`,
-                                        {
-                                          method: "PUT",
-                                          headers: {
-                                            "Content-Type": "application/json",
-                                          },
-                                          body: JSON.stringify({
-                                            serviceId: service.id,
-                                          }),
-                                        }
-                                      );
-                                      if (response.ok) {
-                                        setServingTicketId(null);
-                                        fetchTickets();
-                                      }
-                                    } catch (error) {
-                                      console.error(
-                                        "Error transferring ticket:",
-                                        error
-                                      );
-                                    }
-                                  };
-                              }}
-                              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center relative"
-                              style={{
-                                backgroundColor: "#0891b2",
-                                color: "#000000",
-                              }}
+                              className="w-full justify-between"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 mr-2"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path d="M8 7h4v10H8z" />
-                                <path d="M6 7H2v10h4z" />
-                                <path d="M18 7h-4v10h4z" />
-                              </svg>
-                              Transfer to {service.name}
-                              <span
-                                className="absolute right-0 bg-purple-700 text-lg px-4 py-2 rounded-lg ml-4"
-                                style={{
-                                  backgroundColor: "#075985",
-                                  color: "#FFFFFF",
-                                }}
-                              >
-                                {index + 1}
+                              <span>{service.name}</span>
+                              <span className="text-xs bg-sky-700 px-2 py-1 rounded">
+                                {service.code}
                               </span>
-                            </button>
+                            </Button>
                           ))}
                         </div>
 
                         {/* Cancel button */}
-                        <Button onClick={async () => {
-                          try {
-                            const response = await fetch(
-                              `/api/tickets/${currentServingTicket.id}`,
-                              {
-                                method: "PUT",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                  status: "CANCELLED", // Changed from LAPSED to CANCELLED
-                                }),
-                              }
-                            );
-
-                            if (response.ok) {
+                        <Button
+                          variant="danger"
+                          size="lg"
+                          withShortcut={true}
+                          shortcutKey="X"
+                          onClick={() => {
+                            fetch(`/api/tickets/${currentServingTicket.id}`, {
+                              method: "PUT", 
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ status: "CANCELLED" })
+                            }).then(() => {
                               setServingTicketId(null);
                               fetchTickets();
-                            }
-                          } catch (error) {
-                            console.error("Error cancelling ticket:", error);
-                          }
-                        }} variant="danger">
-                          Cancel Transaction 1
-                          <span className="absolute top-0 right-0 bg-red-700 text-xs px-2 py-1 rounded-tr-lg rounded-bl-lg">
-                            X
-                          </span></Button>
-                      </>
+                            });
+                          }}
+                        >
+                          Cancel Transaction
+                        </Button>
+                      </div>
                     ) : (
-                      // For non-payment counters - Keep original button
-                      <button
-                        onClick={() =>
-                          openServiceTypeModal(currentServingTicket.id)
-                        }
-                        className="w-full flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-medium text-xl py-4 px-6 rounded-lg transition-colors relative"
-                      >
-                        Complete Transaction
-                        <span className="absolute right-0 bg-green-700 text-lg px-6 py-4 rounded-lg ml-4">
-                          C
-                        </span>
-                      </button>
+                      // For non-payment counters - Complete Transaction button
+                      <div className="flex flex-col space-y-4 w-full">
+                        <Button
+                          variant="success" 
+                          size="lg"
+                          withShortcut={true}
+                          shortcutKey="C"
+                          onClick={() => openServiceTypeModal(currentServingTicket.id)}
+                        >
+                          Complete Transaction
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1545,40 +1475,34 @@ export default function StaffDashboard() {
                           {isPaymentCounter ? (
                             // For payment counter, we show Start Serving button which works the same
                             // as the regular Start Serving button but without confirmation dialog
-                            <button
-                              onClick={() => startServing(ticket.id)}
-                              className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all flex items-center justify-center"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-7 w-7 mr-3"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
+                            <div className="flex flex-col space-y-4 w-full">
+                              <Button
+                                variant="success"
+                                size="lg"
+                                onClick={() => startServing(ticket.id)}
                               >
-                                <path d="M8 7h4v10H8z" />
-                                <path d="M6 7H2v10h4z" />
-                                <path d="M18 7h-4v10h4z" />
-                              </svg>
-                              Start Payment Process
-                            </button>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-7 w-7 mr-3"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path d="M8 7h4v10H8z" />
+                                  <path d="M6 7H2v10h4z" />
+                                  <path d="M18 7h-4v10h4z" />
+                                </svg>
+                                Start Payment Process
+                              </Button>
+                            </div>
                           ) : (
                             // For non-payment counters, keep original buttons
-                            <>
-                              <button
-                                onClick={() => {
-                                  const btn =
-                                    document.activeElement as HTMLButtonElement;
-                                  btn?.classList.add("scale-95", "opacity-80");
-                                  setTimeout(() => {
-                                    btn?.classList.remove(
-                                      "scale-95",
-                                      "opacity-80"
-                                    );
-                                    startServing(ticket.id);
-                                  }, 150);
-                                }}
-                                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-green-700 flex items-center justify-center relative"
-                                title="Press 'S' to start serving"
+                            <div className="flex flex-col space-y-4 w-full">
+                              <Button
+                                variant="success"
+                                size="lg"
+                                withShortcut={true}
+                                shortcutKey="S"
+                                onClick={() => startServing(ticket.id)} 
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1593,16 +1517,13 @@ export default function StaffDashboard() {
                                   />
                                 </svg>
                                 Start Serving
-                                <span className="absolute right-0 bg-green-700 text-lg px-6 py-4 rounded-lg ml-4">
-                                  S
-                                </span>
-                              </button>
-                              <button
-                                onClick={() =>
-                                  openLapsedConfirmModal(ticket.id)
-                                }
-                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-4 px-6 text-xl rounded-lg transition-all transform active:scale-95 active:bg-amber-700 flex items-center justify-center relative"
-                                title="Press 'L' to mark as lapsed"
+                              </Button>
+                              <Button
+                                variant="warning"
+                                size="lg"
+                                withShortcut={true}
+                                shortcutKey="L"  
+                                onClick={() => openLapsedConfirmModal(ticket.id)}
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1617,11 +1538,8 @@ export default function StaffDashboard() {
                                   />
                                 </svg>
                                 Mark as Lapsed
-                                <span className="absolute right-0 bg-amber-700 text-lg px-6 py-4 rounded-lg ml-4">
-                                  L
-                                </span>
-                              </button>
-                            </>
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1632,43 +1550,24 @@ export default function StaffDashboard() {
                   <p className="text-center text-gray-500 mb-6">
                     No ticket currently being served
                   </p>
-                  <button
-                    onClick={(e) => {
-                      if (!hasPendingTickets) return;
-                      const btn = e.currentTarget;
-                      btn.innerText = "Calling...";
-                      btn.classList.add("scale-95", "bg-sky-700");
-                      btn.disabled = true;
-                      setTimeout(() => {
-                        callNextTicket();
-                      }, 300);
-                    }}
-                    disabled={!hasPendingTickets}
-                    className={`w-full py-3 px-4 rounded-lg transition-all transform flex items-center justify-center font-medium ${hasPendingTickets
-                      ? "bg-sky-500 hover:bg-sky-600 text-white active:scale-95"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
-                  >
-                    {hasPendingTickets && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                      </svg>
+                  <div className="flex flex-col space-y-4 w-full">
+                    <Button 
+                      variant="primary"
+                      size="lg"
+                      withShortcut={true} 
+                      shortcutKey="N"
+                      disabled={!hasPendingTickets || isAnyActive}
+                      onClick={callNextTicket}
+                    >
+                      Call Next Ticket
+                    </Button>
+
+                    {!hasPendingTickets && (
+                      <p className="text-xs text-gray-500 text-center mt-1">
+                        No pending tickets in queue
+                      </p>
                     )}
-                    Call Next Ticket
-                    <span className="absolute right-0 bg-sky-700 text-lg px-4 py-2 rounded-lg ml-4">
-                      N
-                    </span>
-                  </button>
-                  {!hasPendingTickets && (
-                    <p className="text-xs text-gray-500 text-center mt-1">
-                      No pending tickets in queue
-                    </p>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -1723,30 +1622,33 @@ export default function StaffDashboard() {
               </p>
               <div className="space-y-2">
                 {availableServices.map((service) => (
-                  <button
+                  <Button
                     key={service.id}
+                    variant="secondary"
+                    size="lg" 
                     onClick={() => openTransferConfirmation(service)}
-                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-between"
+                    className="w-full justify-between"
                   >
                     <span>{service.name}</span>
                     <span className="text-xs bg-sky-700 px-2 py-1 rounded">
                       {service.code}
                     </span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
             <div className="flex justify-end">
-              <button
+              <Button
+                variant="danger" 
+                size="md"
                 onClick={() => {
                   setIsTransferModalOpen(false);
                   setTicketToTransfer(null);
                   setSelectedServiceId("");
                 }}
-                className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1799,23 +1701,25 @@ export default function StaffDashboard() {
             </div>
 
             <div className="flex justify-end space-x-4">
-              <button
+              <Button
+                variant="danger" 
+                size="md"
                 onClick={() => {
                   setIsLapsedConfirmModalOpen(false);
                   setTicketToLapse(null);
                 }}
-                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors text-lg"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="success"
+                size="md"
                 onClick={() => {
                   const ticketId = ticketToLapse;
                   if (ticketId) {
                     markLapsed(ticketId);
                   }
                 }}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1830,7 +1734,7 @@ export default function StaffDashboard() {
                   />
                 </svg>
                 Confirm
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1885,18 +1789,22 @@ export default function StaffDashboard() {
                       )
                   )
                   .map((type) => (
-                    <button
+                    <Button
                       key={type.id}
+                      variant="outline"
+                      size="md"
                       onClick={() => openServiceTypeConfirmation(type)}
-                      className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors flex flex-col items-start"
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
                     >
-                      <span className="font-semiboldtext-sky-900 mb-1">
+                      <div className="flex flex-row justify-between w-full">
+                      <span className="font-semibold text-sky-900 mb-1">
                         {type.name}
                       </span>
                       <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
                         {type.code}
                       </span>
-                    </button>
+                      </div>
+                    </Button>
                   ))}
               </div>
 
@@ -1916,17 +1824,18 @@ export default function StaffDashboard() {
             </div>
 
             <div className="flex justify-end">
-              <button
+              <Button
+                variant="danger" 
+                size="md"
                 onClick={() => {
                   setIsServiceTypeModalOpen(false);
                   setTicketToComplete(null);
                   setSelectedServiceTypeId("");
                   setServiceTypeSearchQuery(""); // Clear search when closing modal
                 }}
-                className="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1979,35 +1888,25 @@ export default function StaffDashboard() {
             </div>
 
             <div className="flex justify-end space-x-4">
-              <button
+              <Button
+                variant="danger" 
+                size="md"
                 onClick={() => {
                   setIsLapsedConfirmModalOpen(false);
                   setTicketToLapse(null);
                 }}
-                className="px-6 py-3 bg-red-700 hover:bg-red-600 text-white font-medium rounded-md transition-colors text-lg flex items-center"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="success"
+                size="md"
                 onClick={() => {
                   const ticketId = ticketToLapse;
                   if (ticketId) {
                     markLapsed(ticketId);
                   }
                 }}
-                className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-medium rounded-md transition-colors flex items-center text-lg"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2017,12 +1916,12 @@ export default function StaffDashboard() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
                     clipRule="evenodd"
                   />
                 </svg>
                 Confirm
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -2069,19 +1968,21 @@ export default function StaffDashboard() {
             </div>
 
             <div className="flex justify-end space-x-4">
-              <button
+              <Button
+                variant="danger" 
+                size="md"
                 onClick={() => {
                   setIsServiceTypeConfirmModalOpen(false);
                   setServiceTypeToConfirm(null);
                   setIsServiceTypeModalOpen(true); // Reopen the selection modal
                 }}
-                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md transition-colors text-lg"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="md" 
                 onClick={() => completeTransaction(true)}
-                className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-md transition-colors flex items-center text-lg"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2096,7 +1997,7 @@ export default function StaffDashboard() {
                   />
                 </svg>
                 Complete Transaction
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -2110,7 +2011,9 @@ export default function StaffDashboard() {
               <h3 className="text-xl font-semibold text-amber-700">
                 All Lapsed Tickets
               </h3>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setIsLapsedListModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -2127,7 +2030,7 @@ export default function StaffDashboard() {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </button>
+              </Button>
             </div>
             <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-[60vh] p-2">
               {lapsedTickets.map((ticket) => (
@@ -2148,15 +2051,13 @@ export default function StaffDashboard() {
                       </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => recallTicket(ticket.id)}
+                  <Button
+                    variant="warning"
+                    size="sm"
                     disabled={
                       calledTicketId !== null || servingTicketId !== null
                     }
-                    className={`${calledTicketId !== null || servingTicketId !== null
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-amber-500 hover:bg-amber-600 active:scale-95"
-                      } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
+                    onClick={() => recallTicket(ticket.id)}
                   >
                     <svg
                       className="w-4 h-4"
@@ -2166,7 +2067,7 @@ export default function StaffDashboard() {
                       <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                     </svg>
                     Recall
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -2182,7 +2083,9 @@ export default function StaffDashboard() {
               <h3 className="text-xl font-semibold text-purple-700">
                 All Returning Tickets
               </h3>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setIsReturningListModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -2199,7 +2102,7 @@ export default function StaffDashboard() {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </button>
+              </Button>
             </div>
             <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-[60vh] p-2">
               {returningTickets.map((ticket) => (
@@ -2220,7 +2123,12 @@ export default function StaffDashboard() {
                       </span>
                     )}
                   </div>
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={
+                      calledTicketId !== null || servingTicketId !== null
+                    }
                     onClick={(e) => {
                       const btn = e.currentTarget;
                       btn.classList.add("scale-95");
@@ -2230,13 +2138,6 @@ export default function StaffDashboard() {
                         recallTicket(ticket.id);
                       }, 200);
                     }}
-                    disabled={
-                      calledTicketId !== null || servingTicketId !== null
-                    }
-                    className={`${calledTicketId !== null || servingTicketId !== null
-                      ? "bg-gray-400 cursor-not-allowed opacity-50"
-                      : "bg-purple-500 hover:bg-purple-600 active:scale-95 active:bg-purple-700"
-                      } text-white text-sm font-medium py-1 px-3 rounded transition-all transform flex items-center justify-center gap-1`}
                   >
                     <svg
                       className={`w-4 h-4 ${calledTicketId !== null || servingTicketId !== null
@@ -2249,7 +2150,7 @@ export default function StaffDashboard() {
                       <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                     </svg>
                     Call
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
