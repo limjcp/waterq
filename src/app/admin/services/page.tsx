@@ -241,13 +241,18 @@ export default function ServicesManagement() {
   return (
     <div className=" bg-gradient-to-br from-sky-50 to-sky-100">
       <div className="max-w-10xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 min-h-screen">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 h-[93vh]">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-sky-800">
               Services Management
             </h1>
-            <Button onClick={() => setIsAddingType(true)} variant={"primary"}>Add Service Type 1</Button>
-            <Button onClick={() => alert("Hello")}>Hello</Button>
+            <Button 
+              onClick={() => setIsAddingType(true)} 
+              size="md" 
+              variant="primary"
+            >
+              Add Service Type
+            </Button>
           </div>
 
           {/* Services Table */}
@@ -277,9 +282,10 @@ export default function ServicesManagement() {
                           <span className="text-sm text-sky-600">
                             {service.serviceTypes.length} types
                           </span>
-                          <button
+                          <Button
                             onClick={() => toggleService(service.id)}
-                            className="text-sky-600 hover:text-sky-700 flex items-center gap-1"
+                            size="sm"
+                            variant="secondary"
                           >
                             {expandedService === service.id ? (
                               <>
@@ -292,7 +298,7 @@ export default function ServicesManagement() {
                                 <ChevronDownIcon className="h-4 w-4" />
                               </>
                             )}
-                          </button>
+                          </Button>
                         </div>
 
                         {expandedService === service.id && (
@@ -323,12 +329,13 @@ export default function ServicesManagement() {
                                           {type.code}
                                         </div>
                                       </div>
-                                      <button
+                                      <Button
                                         onClick={() =>
                                           confirmDeleteType(service.id, type.id)
                                         }
-                                        className="text-red-500 hover:text-red-700 focus:outline-none ml-2"
-                                        title="Delete service type"
+                                        size="sm"
+                                        variant="danger"
+                                        className="ml-2"
                                       >
                                         <svg
                                           xmlns="http://www.w3.org/2000/svg"
@@ -344,7 +351,7 @@ export default function ServicesManagement() {
                                             d="M6 18L18 6M6 6l12 12"
                                           />
                                         </svg>
-                                      </button>
+                                      </Button>
                                     </div>
                                   )
                                 )}
@@ -379,23 +386,25 @@ export default function ServicesManagement() {
                 )}
 
                 <div className="flex justify-end gap-4">
-                  <button
+                  <Button
                     onClick={() => {
                       setDeleteConfirmVisible(false);
                       setDeletingTypeId(null);
                       setDeleteServiceId("");
                       setError(null);
                     }}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    size="md"
+                    variant="danger"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={handleDeleteServiceType}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+                    size="md"
+                    variant="danger"
                   >
                     Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -468,19 +477,22 @@ export default function ServicesManagement() {
                     </p>
                   </div>
                   <div className="flex justify-end gap-4">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setIsAddingType(false)}
-                      className="px-4 py-2 text-sky-600 hover:text-sky-700"
+                      size="md"
+                      variant="danger"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg"
+                      onClick={handleAddServiceType}
+                      size="md"
+                      variant="success"
                     >
                       Add Type
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>

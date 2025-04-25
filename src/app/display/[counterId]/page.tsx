@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import { Socket } from "socket.io-client";
 import Image from "next/image";
 
+import Header from "@/components/Header";
 type Service = {
   id: string;
   name: string;
@@ -247,7 +248,7 @@ export default function CounterDisplayPage() {
   const counter = data?.counter;
 
   return (
-    <div className="min-h-screen w-full bg-sky-50 flex flex-col items-center justify-center p-6">
+    <div className="">
       {/* Add blinking animation style */}
       <style jsx>{`
         @keyframes blink {
@@ -267,18 +268,16 @@ export default function CounterDisplayPage() {
       `}</style>
 
       {/* Header Section */}
-      <header className="w-full flex items-center justify-between p-4 bg-sky-700 text-white shadow-lg fixed top-0 left-0 right-0">
-        <div className="flex items-center">
-          <Image width={100} height={100} src="/wdlogo.png" alt="Logo" />
-          <h1 className="text-6xl font-bold">
+      
+      {/* <Header>
+      <h1 className="text-6xl font-bold text-white">
             GENERAL SANTOS CITY WATER DISTRICT
           </h1>
-        </div>
-      </header>
+      </Header> */}
 
-      <div className="w-full flex flex-col items-center justify-center">
+      <div className="w-full h-[100vh] flex flex-col items-center justify-center">
         {/* Counter name in fixed position below header */}
-        <div className="fixed top-[120px] left-0 right-0 bg-sky-50 py-4 z-10">
+        <div className="fixed top-[120px] left-0 right-0 py-4 z-10">
           <h1 className="text-8xl font-bold text-sky-800 text-center">
             {counter?.name || "Counter Display"}
           </h1>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { format } from "date-fns";
+import Button from "@/components/Button";
 
 // Format time (seconds) as MM:SS
 const formatTime = (seconds: number): string => {
@@ -314,18 +315,14 @@ export default function StaffReports() {
             </div>
           </div>
           <div className="flex justify-center">
-            <button
+            <Button
               onClick={generateReport}
               disabled={
                 (reportMode === "staff" ? !selectedStaff : !selectedService) ||
                 isGenerating
               }
-              className={`px-8 py-3 rounded-lg transition-colors text-white font-medium ${
-                (reportMode === "staff" ? !selectedStaff : !selectedService) ||
-                isGenerating
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-sky-500 hover:bg-sky-600"
-              }`}
+              variant="success"
+              size="md"
             >
               {isGenerating ? (
                 <span className="flex items-center">
@@ -335,7 +332,7 @@ export default function StaffReports() {
               ) : (
                 "Generate Report"
               )}
-            </button>
+            </Button>
           </div>
         </div>
         {reportData && (
@@ -344,10 +341,11 @@ export default function StaffReports() {
               <h2 className="text-2xl font-bold text-sky-800">
                 Report for {reportData.name}
               </h2>
-              <button
+              <Button
                 onClick={downloadPdf}
                 disabled={isDownloadingPdf}
-                className="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center disabled:bg-gray-400"
+                variant="success"
+                size="md"
               >
                 {isDownloadingPdf ? (
                   <>
@@ -357,7 +355,7 @@ export default function StaffReports() {
                 ) : (
                   "Download PDF Report"
                 )}
-              </button>
+              </Button>
             </div>
             {/* Summary Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -495,43 +493,47 @@ export default function StaffReports() {
                   {/* Pagination controls */}
                   {totalPages > 1 && (
                     <div className="flex justify-center mt-4 gap-2">
-                      <button
+                      <Button
                         onClick={() => setCurrentPage(1)}
                         disabled={currentPage === 1}
-                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                        variant="secondary"
+                        size="sm"
                       >
                         First
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() =>
                           setCurrentPage((prev) => Math.max(prev - 1, 1))
                         }
                         disabled={currentPage === 1}
-                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                        variant="secondary"
+                        size="sm"
                       >
                         Prev
-                      </button>
+                      </Button>
                       <div className="px-3 py-1">
                         Page {currentPage} of {totalPages}
                       </div>
-                      <button
+                      <Button
                         onClick={() =>
                           setCurrentPage((prev) =>
                             Math.min(prev + 1, totalPages)
                           )
                         }
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                        variant="secondary"
+                        size="sm"
                       >
                         Next
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => setCurrentPage(totalPages)}
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1 border rounded bg-sky-50 disabled:text-gray-400 disabled:bg-gray-100"
+                        variant="secondary"
+                        size="sm"
                       >
                         Last
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>

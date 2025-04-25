@@ -7,6 +7,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import Button from "@/components/Button";
 
 type Counter = {
   id: string;
@@ -229,17 +230,14 @@ export default function CountersManagement() {
   }
 
   return (
-    <div className="max-w-10xl mx-auto bg-white rounded-2xl shadow-2xl p-8">
+    <div className="max-w-10xl mx-auto bg-white rounded-2xl shadow-2xl p-8 h-[93vh]">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-sky-800">Counter Management</h1>
         {!isAddingCounter && (
-          <button
-            onClick={() => setIsAddingCounter(true)}
-            className="bg-sky-500 hover:bg-sky-600 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center"
-          >
+          <Button variant="primary" onClick={() => setIsAddingCounter(true)}>
             <PlusCircleIcon className="h-5 w-5 mr-2" />
             Add Counter
-          </button>
+          </Button>
         )}
       </div>
 
@@ -330,19 +328,22 @@ export default function CountersManagement() {
             </div>
 
             <div className="flex justify-end gap-4 pt-4">
-              <button
+              <Button
                 type="button"
                 onClick={cancelForm}
-                className="px-4 py-2 text-sky-600 hover:text-sky-700"
+                size="md"
+                variant="danger"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg"
+                onClick={handleSubmit}
+                size="md"
+                variant="success"
               >
                 {editingCounter ? "Update Counter" : "Create Counter"}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -362,7 +363,7 @@ export default function CountersManagement() {
               <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                 Service
               </th>
-              <th className="py-3 px-4 text-right font-medium text-sky-700 border-b">
+              <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                 Actions
               </th>
             </tr>
@@ -385,21 +386,19 @@ export default function CountersManagement() {
                       <span className="text-gray-400">No service assigned</span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-right">
-                    <button
+                  <td className="flex flex-row gap-1  py-3 px-4 text-right">
+                    <Button
+                      variant="primary"
                       onClick={() => handleEdit(counter)}
-                      className="text-blue-500 hover:text-blue-700 mr-2"
-                      title="Edit Counter"
                     >
                       <PencilIcon className="h-5 w-5 inline" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="danger"
                       onClick={() => handleDelete(counter.id)}
-                      className="text-red-500 hover:text-red-700"
-                      title="Delete Counter"
                     >
                       <TrashIcon className="h-5 w-5 inline" />
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))
@@ -423,35 +422,34 @@ export default function CountersManagement() {
             {counters.length} entries
           </div>
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+              size="sm"
+              variant="secondary"
             >
               Previous
-            </button>
+            </Button>
             {[...Array(totalPages)].map((_, index) => (
-              <button
+              <Button
                 key={index + 1}
                 onClick={() => setCurrentPage(index + 1)}
-                className={`px-3 py-1 rounded-lg border ${
-                  currentPage === index + 1
-                    ? "bg-sky-500 text-white"
-                    : "border-sky-200 hover:bg-sky-50"
-                }`}
+                size="sm"
+                variant={currentPage === index + 1 ? "primary" : "secondary"}
               >
                 {index + 1}
-              </button>
+              </Button>
             ))}
-            <button
+            <Button
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-lg border border-sky-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sky-50"
+              size="sm"
+              variant="secondary"
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}

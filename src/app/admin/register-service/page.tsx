@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
+import Button from "@/components/Button";
 
 type Service = {
   id: string;
@@ -139,13 +140,15 @@ export default function RegisterService() {
           </div>
 
           <div>
-            <button
+            <Button
               type="submit"
-              className="px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-lg transition-colors flex items-center"
+              onClick={handleSubmit}
+              size="md"
+              variant="success"
             >
               <PlusCircleIcon className="h-5 w-5 mr-2" />
               Register Service
-            </button>
+            </Button>
           </div>
         </form>
       </div>
