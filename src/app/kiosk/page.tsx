@@ -1,5 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+} from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { User } from "lucide-react";
 import { Wheelchair } from "@phosphor-icons/react";
@@ -25,7 +28,10 @@ function formatTicketNumber(
     if (number && !isNaN(parseInt(number))) {
       // Format with PWD prefix if needed
       return isPWD
-        ? `PWD-${prefix}-${number.padStart(3, "0")}`
+        ? `PWD-${prefix}-${number.padStart(
+            3,
+            "0"
+          )}`
         : `${prefix}-${number.padStart(3, "0")}`;
     }
     return ticketNumber;
@@ -36,8 +42,12 @@ function formatTicketNumber(
   if (numberIndex === -1) return ticketNumber;
 
   // Split prefix and number
-  const prefix = ticketNumber.substring(0, numberIndex);
-  const number = ticketNumber.substring(numberIndex);
+  const prefix = ticketNumber.substring(
+    0,
+    numberIndex
+  );
+  const number =
+    ticketNumber.substring(numberIndex);
 
   // Format with PWD prefix if needed
   return isPWD
@@ -60,21 +70,43 @@ type ServiceOption = {
 };
 
 export default function Kiosk() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [ticketData, setTicketData] = useState<TicketResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] =
+    useState(1);
+  const [ticketData, setTicketData] =
+    useState<TicketResponse | null>(null);
+  const [isLoading, setIsLoading] =
+    useState(false);
+  const [error, setError] = useState<
+    string | null
+  >(null);
   const [isPWD, setIsPWD] = useState(false);
-  const [countdown, setCountdown] = useState(99999);
-  const [showScreensaver, setShowScreensaver] = useState(false);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [screensaverImages, setScreensaverImages] = useState<
-    Array<{ id: string; imageUrl: string; title: string; isActive: boolean }>
+  const [countdown, setCountdown] =
+    useState(99999);
+  const [showScreensaver, setShowScreensaver] =
+    useState(false);
+  const [scrollPosition, setScrollPosition] =
+    useState(0);
+  const [
+    screensaverImages,
+    setScreensaverImages,
+  ] = useState<
+    Array<{
+      id: string;
+      imageUrl: string;
+      title: string;
+      isActive: boolean;
+    }>
   >([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [lastServiceCode, setLastServiceCode] = useState("");
+  const [
+    currentImageIndex,
+    setCurrentImageIndex,
+  ] = useState(0);
+  const [showErrorModal, setShowErrorModal] =
+    useState(false);
+  const [errorMessage, setErrorMessage] =
+    useState("");
+  const [lastServiceCode, setLastServiceCode] =
+    useState("");
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -82,18 +114,21 @@ export default function Kiosk() {
 
     const resetScreensaverTimer = () => {
       if (timeoutId) clearTimeout(timeoutId);
-      if (scrollInterval) clearInterval(scrollInterval);
+      if (scrollInterval)
+        clearInterval(scrollInterval);
       timeoutId = setTimeout(() => {
         setShowScreensaver(true);
         // Start auto-scrolling when screensaver shows
         scrollInterval = setInterval(() => {
           setScrollPosition((prev) => {
-            const scrollContainer = document.querySelector(
-              ".screensaver-content"
-            );
+            const scrollContainer =
+              document.querySelector(
+                ".screensaver-content"
+              );
             if (scrollContainer) {
               const maxScroll =
-                scrollContainer.scrollHeight - scrollContainer.clientHeight;
+                scrollContainer.scrollHeight -
+                scrollContainer.clientHeight;
               // Reset to top when reaching bottom
               if (prev >= maxScroll) {
                 return 0;
@@ -111,31 +146,55 @@ export default function Kiosk() {
       if (showScreensaver) {
         setShowScreensaver(false);
         setScrollPosition(0);
-        if (scrollInterval) clearInterval(scrollInterval);
+        if (scrollInterval)
+          clearInterval(scrollInterval);
       }
       resetScreensaverTimer();
     };
 
     resetScreensaverTimer();
-    window.addEventListener("mousemove", handleUserActivity);
-    window.addEventListener("click", handleUserActivity);
-    window.addEventListener("keydown", handleUserActivity);
+    window.addEventListener(
+      "mousemove",
+      handleUserActivity
+    );
+    window.addEventListener(
+      "click",
+      handleUserActivity
+    );
+    window.addEventListener(
+      "keydown",
+      handleUserActivity
+    );
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
-      if (scrollInterval) clearInterval(scrollInterval);
-      window.removeEventListener("mousemove", handleUserActivity);
-      window.removeEventListener("click", handleUserActivity);
-      window.removeEventListener("keydown", handleUserActivity);
+      if (scrollInterval)
+        clearInterval(scrollInterval);
+      window.removeEventListener(
+        "mousemove",
+        handleUserActivity
+      );
+      window.removeEventListener(
+        "click",
+        handleUserActivity
+      );
+      window.removeEventListener(
+        "keydown",
+        handleUserActivity
+      );
     };
   }, [showScreensaver]);
 
   // Add effect to update scroll position
   useEffect(() => {
     if (showScreensaver) {
-      const scrollContainer = document.querySelector(".screensaver-content");
+      const scrollContainer =
+        document.querySelector(
+          ".screensaver-content"
+        );
       if (scrollContainer) {
-        scrollContainer.scrollTop = scrollPosition;
+        scrollContainer.scrollTop =
+          scrollPosition;
       }
     }
   }, [scrollPosition, showScreensaver]);
@@ -144,13 +203,20 @@ export default function Kiosk() {
   useEffect(() => {
     async function fetchScreensaverImages() {
       try {
-        const res = await fetch("/api/screensaver");
+        const res = await fetch(
+          "/api/screensaver"
+        );
         const data = await res.json();
         // Only keep active images
-        const activeImages = data.filter((img: any) => img.isActive === true);
+        const activeImages = data.filter(
+          (img: any) => img.isActive === true
+        );
         setScreensaverImages(activeImages);
       } catch (error) {
-        console.error("Failed to fetch screensaver images:", error);
+        console.error(
+          "Failed to fetch screensaver images:",
+          error
+        );
       }
     }
     fetchScreensaverImages();
@@ -160,16 +226,22 @@ export default function Kiosk() {
   useEffect(() => {
     let imageRotationTimer: NodeJS.Timeout;
 
-    if (showScreensaver && screensaverImages.length > 0) {
+    if (
+      showScreensaver &&
+      screensaverImages.length > 0
+    ) {
       imageRotationTimer = setInterval(() => {
         setCurrentImageIndex((prev) =>
-          prev === screensaverImages.length - 1 ? 0 : prev + 1
+          prev === screensaverImages.length - 1
+            ? 0
+            : prev + 1
         );
       }, 5000); // Change image every 5 seconds
     }
 
     return () => {
-      if (imageRotationTimer) clearInterval(imageRotationTimer);
+      if (imageRotationTimer)
+        clearInterval(imageRotationTimer);
     };
   }, [showScreensaver, screensaverImages.length]);
 
@@ -211,7 +283,10 @@ export default function Kiosk() {
         },
         body: JSON.stringify(ticketData),
       }).catch((err) => {
-        console.error("Error sending print job:", err);
+        console.error(
+          "Error sending print job:",
+          err
+        );
         // Fallback to browser printing if local service fails
         fallbackBrowserPrint(ticketData);
       });
@@ -224,7 +299,11 @@ export default function Kiosk() {
 
   // Fallback function if local printing fails
   function fallbackBrowserPrint(ticket: any) {
-    const printWindow = window.open("", "", "width=300,height=200");
+    const printWindow = window.open(
+      "",
+      "",
+      "width=300,height=200"
+    );
     if (!printWindow) return;
 
     const ticketHtml = `
@@ -311,7 +390,10 @@ export default function Kiosk() {
           ${
             typeof ticket === "object"
               ? ticket.ticketNumber
-              : formatTicketNumber(ticket.ticketNumber, ticket.isPrioritized)
+              : formatTicketNumber(
+                  ticket.ticketNumber,
+                  ticket.isPrioritized
+                )
           }
         </div>
         <div class="timestamp">${new Date().toLocaleString()}</div>
@@ -330,7 +412,9 @@ export default function Kiosk() {
     printWindow.document.write(ticketHtml);
     printWindow.document.close();
   }
-  async function handleGenerateTicket(serviceCode: string) {
+  async function handleGenerateTicket(
+    serviceCode: string
+  ) {
     // Store the service code for retry functionality
     setLastServiceCode(serviceCode);
     setIsLoading(true);
@@ -338,20 +422,29 @@ export default function Kiosk() {
     setShowErrorModal(false);
 
     // Create a timeout promise that rejects after 5 seconds
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error("Ticket generation timed out. Please try again."));
-      }, 5000); // 5 seconds timeout
-    });
+    const timeoutPromise = new Promise(
+      (_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              "Ticket generation timed out. Please try again."
+            )
+          );
+        }, 5000); // 5 seconds timeout
+      }
+    );
 
     try {
       // Extract the actual service code without the PWD prefix if present
-      const actualServiceCode = serviceCode.replace("PWD-", "");
+      const actualServiceCode =
+        serviceCode.replace("PWD-", "");
 
       // Race between the fetch operation and the timeout
       const fetchPromise = fetch("/api/tickets", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           serviceCode: actualServiceCode,
           isPrioritized: isPWD,
@@ -366,7 +459,10 @@ export default function Kiosk() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to generate ticket");
+        throw new Error(
+          errorData.error ||
+            "Failed to generate ticket"
+        );
       }
 
       const data = await res.json();
@@ -377,7 +473,9 @@ export default function Kiosk() {
     } catch (err) {
       console.error(err);
       const message =
-        err instanceof Error ? err.message : "Failed to generate ticket";
+        err instanceof Error
+          ? err.message
+          : "Failed to generate ticket";
       setError(message);
       setErrorMessage(message);
       setShowErrorModal(true);
@@ -391,10 +489,11 @@ export default function Kiosk() {
     setCurrentStep(2);
   }
   function goBack() {
-    // Just close the modal without changing steps
-    // This will keep the user on the service selection page
+    // Always return to customer type selection
+    setCurrentStep(1);
     setShowErrorModal(false);
     setError(null);
+    setTicketData(null);
   }
 
   function resetForm() {
@@ -443,22 +542,26 @@ export default function Kiosk() {
           {" "}
           {screensaverImages.length > 0 ? (
             <div className="relative w-full h-full">
-              {screensaverImages.map((image, index) => (
-                <div
-                  key={image.id}
-                  className={`absolute inset-0 transition-opacity duration-1000 ${
-                    index === currentImageIndex ? "opacity-100" : "opacity-0"
-                  }`}
-                >
-                  <Image
-                    src={image.imageUrl}
-                    alt={image.title}
-                    className="w-full h-full object-contain"
-                    width={1920}
-                    height={1080}
-                  />
-                </div>
-              ))}
+              {screensaverImages.map(
+                (image, index) => (
+                  <div
+                    key={image.id}
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                      index === currentImageIndex
+                        ? "opacity-100"
+                        : "opacity-0"
+                    }`}
+                  >
+                    <Image
+                      src={image.imageUrl}
+                      alt={image.title}
+                      className="w-full h-full object-contain"
+                      width={1920}
+                      height={1080}
+                    />
+                  </div>
+                )
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full">
@@ -487,9 +590,14 @@ export default function Kiosk() {
             <div className="wave wave4"></div>
           </div>
           {/* Falling rain/water drops effect */}
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className={`raindrop raindrop-${i}`}></div>
-          ))}
+          {Array.from({ length: 20 }).map(
+            (_, i) => (
+              <div
+                key={i}
+                className={`raindrop raindrop-${i}`}
+              ></div>
+            )
+          )}
         </div>
       ) : (
         <>
@@ -510,9 +618,14 @@ export default function Kiosk() {
           </div>
 
           {/* Falling rain/water drops effect */}
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className={`raindrop raindrop-${i}`}></div>
-          ))}
+          {Array.from({ length: 20 }).map(
+            (_, i) => (
+              <div
+                key={i}
+                className={`raindrop raindrop-${i}`}
+              ></div>
+            )
+          )}
 
           <div className="flex-1 flex items-center justify-center w-full h-full z-10">
             {/* Remove p-6, md:p-8, rounded-xl, border, border-blue-100 */}
@@ -556,7 +669,8 @@ export default function Kiosk() {
                       GET YOUR NUMBER HERE
                     </p>
                     <p className="text-lg md:text-4xl text-blue-700 mt-4 drop-shadow-md">
-                      Please select your user type to proceed.
+                      Please select your user type
+                      to proceed.
                     </p>
                   </div>
                   {error && (
@@ -574,7 +688,9 @@ export default function Kiosk() {
                     <h2 className="text-2xl font-semibold text-blue-800 text-center mb-6 drop-shadow-sm"></h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow p-10">
                       <button
-                        onClick={() => selectUserType(true)}
+                        onClick={() =>
+                          selectUserType(true)
+                        }
                         className="flex flex-col items-center justify-center text-white bg-gradient-to-br from-blue-400 to-cyan-500 border-2 border-blue-200 hover:border-blue-500 hover:from-blue-50 hover:to-cyan-50 hover:text-blue-800 font-bold py-12 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
                       >
                         {/* Water ripple effect on hover */}
@@ -594,13 +710,21 @@ export default function Kiosk() {
                           </span>
                         </div>
                         <div className="text-center drop-shadow-md">
-                          <span className="text-7xl block">PWD</span>
-                          <span className="text-7xl block">PREGNANT</span>
-                          <span className="text-7xl block">SENIOR CITIZEN</span>
+                          <span className="text-7xl block">
+                            PWD
+                          </span>
+                          <span className="text-7xl block">
+                            PREGNANT
+                          </span>
+                          <span className="text-7xl block">
+                            SENIOR CITIZEN
+                          </span>
                         </div>
                       </button>
                       <button
-                        onClick={() => selectUserType(false)}
+                        onClick={() =>
+                          selectUserType(false)
+                        }
                         className="flex flex-col items-center justify-center text-white bg-gradient-to-br from-blue-400 to-cyan-500 border-2 border-blue-200 hover:border-blue-500 hover:from-blue-50 hover:to-cyan-50 hover:text-blue-800 font-bold py-12 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
                       >
                         {/* Water ripple effect on hover */}
@@ -622,7 +746,9 @@ export default function Kiosk() {
                           </span>
                         </div>
                         <div className="text-center drop-shadow-md">
-                          <span className="text-7xl block">REGULAR</span>
+                          <span className="text-7xl block">
+                            REGULAR
+                          </span>
                           <span className="text-7xl invisible block">
                             SPACER
                           </span>
@@ -649,7 +775,9 @@ export default function Kiosk() {
                         key={service.code}
                         onClick={() =>
                           handleGenerateTicket(
-                            isPWD ? `PWD-${service.code}` : service.code
+                            isPWD
+                              ? `PWD-${service.code}`
+                              : service.code
                           )
                         }
                         className="bg-gradient-to-r from-blue-400 to-cyan-500 border text-white border-blue-200 hover:border-blue-500 hover:text-blue-800 hover:from-blue-50 hover:to-cyan-50 rounded-xl p-12 flex flex-col h-full transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-cyan-300 relative overflow-hidden group"
@@ -684,45 +812,54 @@ export default function Kiosk() {
                     >
                       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-30 transition-opacity duration-700"></div>
                       <ArrowLeftIcon className="h-8 w-8 mr-4" />
-                      <span>Back to Customer Type Selection</span>
+                      <span>
+                        Back to Customer Type
+                        Selection
+                      </span>
                     </button>
                   </div>
                 </div>
               )}
 
-              {currentStep === 3 && ticketData && (
-                <div className="text-center space-y-10 animate-fade-in flex-1 flex flex-col justify-center px-10 py-10">
-                  <div className="bg-gradient-to-br flex-1 from-blue-50 to-cyan-100 rounded-xl border border-blue-200 shadow-lg relative">
-                    <h2 className="text-5xl mt-[700px] font-bold text-blue-600 mb-4 drop-shadow-md relative">
-                      YOUR TICKET NUMBER
-                    </h2>
-                    <div className="text-[140px] font-bold text-blue-800 animate-pop-in drop-shadow-xl relative">
-                      {formatTicketNumber(
-                        ticketData.ticketNumber,
-                        ticketData.isPrioritized
+              {currentStep === 3 &&
+                ticketData && (
+                  <div className="text-center space-y-10 animate-fade-in flex-1 flex flex-col justify-center px-10 py-10">
+                    <div className="bg-gradient-to-br flex-1 from-blue-50 to-cyan-100 rounded-xl border border-blue-200 shadow-lg relative">
+                      <h2 className="text-5xl mt-[700px] font-bold text-blue-600 mb-4 drop-shadow-md relative">
+                        YOUR TICKET NUMBER
+                      </h2>
+                      <div className="text-[140px] font-bold text-blue-800 animate-pop-in drop-shadow-xl relative">
+                        {formatTicketNumber(
+                          ticketData.ticketNumber,
+                          ticketData.isPrioritized
+                        )}
+                      </div>
+
+                      {ticketData.counterName && (
+                        <div className="mt-6 text-blue-700 relative">
+                          <p className="font-medium text-xl drop-shadow-sm">
+                            Assigned to:{" "}
+                            {
+                              ticketData.counterName
+                            }
+                          </p>
+                          <p className="text-md text-blue-600 mt-2">
+                            Please proceed to this
+                            counter
+                          </p>
+                        </div>
                       )}
                     </div>
-
-                    {ticketData.counterName && (
-                      <div className="mt-6 text-blue-700 relative">
-                        <p className="font-medium text-xl drop-shadow-sm">
-                          Assigned to: {ticketData.counterName}
-                        </p>
-                        <p className="text-md text-blue-600 mt-2">
-                          Please proceed to this counter
-                        </p>
-                      </div>
-                    )}
+                    <button
+                      onClick={resetForm}
+                      className="w-full bg-gradient-to-r min-h-28 from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-4 px-6 text-4xl rounded-lg transition-all duration-300 focus:ring-4 focus:ring-cyan-300 focus:ring-offset-2 shadow-lg hover:shadow-xl relative overflow-hidden group"
+                    >
+                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-30 transition-opacity duration-700"></div>
+                      Get Another Ticket (
+                      {countdown})
+                    </button>
                   </div>
-                  <button
-                    onClick={resetForm}
-                    className="w-full bg-gradient-to-r min-h-28 from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-4 px-6 text-4xl rounded-lg transition-all duration-300 focus:ring-4 focus:ring-cyan-300 focus:ring-offset-2 shadow-lg hover:shadow-xl relative overflow-hidden group"
-                  >
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-30 transition-opacity duration-700"></div>
-                    Get Another Ticket ({countdown})
-                  </button>
-                </div>
-              )}
+                )}
 
               {isLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/90 to-cyan-100/90 backdrop-blur-sm z-50">
@@ -818,10 +955,12 @@ export default function Kiosk() {
           animation: float 8s ease-in-out infinite;
         }
         .animate-float-delayed {
-          animation: float-delayed 6s ease-in-out infinite 1s;
+          animation: float-delayed 6s ease-in-out
+            infinite 1s;
         }
         .animate-float-slow {
-          animation: float-slow 10s ease-in-out infinite 2s;
+          animation: float-slow 10s ease-in-out
+            infinite 2s;
         }
         @keyframes pop-in {
           0% {
@@ -838,7 +977,8 @@ export default function Kiosk() {
           }
         }
         .animate-pop-in {
-          animation: pop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: pop-in 0.6s
+            cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes fade-in {
           0% {
@@ -849,7 +989,8 @@ export default function Kiosk() {
           }
         }
         .animate-fade-in {
-          animation: fade-in 0.6s ease-in-out forwards;
+          animation: fade-in 0.6s ease-in-out
+            forwards;
         }
 
         @keyframes bounce-in {
@@ -867,7 +1008,13 @@ export default function Kiosk() {
         }
 
         .animate-bounce-in {
-          animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          animation: bounce-in 0.5s
+            cubic-bezier(
+              0.175,
+              0.885,
+              0.32,
+              1.275
+            )
             forwards;
         }
 
@@ -886,19 +1033,22 @@ export default function Kiosk() {
           background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230099ff' fill-opacity='0.2' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
             repeat-x;
           background-size: 100% 100px;
-          animation: wave-animation 12s linear infinite;
+          animation: wave-animation 12s linear
+            infinite;
         }
 
         .wave1 {
           bottom: -25px;
           opacity: 0.3;
-          animation: wave-animation 10s linear infinite;
+          animation: wave-animation 10s linear
+            infinite;
         }
 
         .wave2 {
           bottom: -35px;
           opacity: 0.2;
-          animation: wave-animation 14s linear reverse infinite;
+          animation: wave-animation 14s linear
+            reverse infinite;
           background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2300ccff' fill-opacity='0.2' d='M0,64L48,80C96,96,192,128,288,138.7C384,149,480,139,576,144C672,149,768,171,864,165.3C960,160,1056,128,1152,117.3C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
             repeat-x;
         }
@@ -906,7 +1056,8 @@ export default function Kiosk() {
         .wave3 {
           bottom: -45px;
           opacity: 0.15;
-          animation: wave-animation 17s linear infinite;
+          animation: wave-animation 17s linear
+            infinite;
           background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230088ff' fill-opacity='0.2' d='M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,218.7C672,203,768,149,864,154.7C960,160,1056,224,1152,218.7C1248,213,1344,139,1392,101.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
             repeat-x;
         }
@@ -914,7 +1065,8 @@ export default function Kiosk() {
         .wave4 {
           bottom: -55px;
           opacity: 0.1;
-          animation: wave-animation 20s linear reverse infinite;
+          animation: wave-animation 20s linear
+            reverse infinite;
           background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230066ff' fill-opacity='0.2' d='M0,128L48,128C96,128,192,128,288,149.3C384,171,480,213,576,224C672,235,768,213,864,192C960,171,1056,149,1152,160C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")
             repeat-x;
         }
@@ -934,8 +1086,12 @@ export default function Kiosk() {
             (_, i) => `
           .raindrop-${i} {
             left: ${Math.random() * 100}%;
-            animation-delay: ${Math.random() * 5}s;
-            animation-duration: ${Math.random() * 3 + 2}s;
+            animation-delay: ${
+              Math.random() * 5
+            }s;
+            animation-duration: ${
+              Math.random() * 3 + 2
+            }s;
           }
         `
           )

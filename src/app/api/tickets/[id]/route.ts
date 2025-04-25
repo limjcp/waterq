@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 import { QueueStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -15,27 +18,39 @@ export async function GET(
   const { id } = context.params;
 
   try {
-    const ticket = await prisma.queueTicket.findUnique({
-      where: { id },
-      include: {
-        service: true,
-        serviceType: true,
-        counter: true,
-      },
-    });
+    const ticket =
+      await prisma.queueTicket.findUnique({
+        where: { id },
+        include: {
+          service: true,
+          serviceType: true,
+          counter: true,
+        },
+      });
 
     if (!ticket) {
-      return new NextResponse(JSON.stringify({ error: "Ticket not found" }), {
-        status: 404,
-      });
+      return new NextResponse(
+        JSON.stringify({
+          error: "Ticket not found",
+        }),
+        {
+          status: 404,
+        }
+      );
     }
 
     return NextResponse.json(ticket);
   } catch (error) {
-    console.error("Error fetching ticket:", error);
-    return new NextResponse(JSON.stringify({ error: "Server error" }), {
-      status: 500,
-    });
+    console.error(
+      "Error fetching ticket:",
+      error
+    );
+    return new NextResponse(
+      JSON.stringify({ error: "Server error" }),
+      {
+        status: 500,
+      }
+    );
   }
 }
 
@@ -52,51 +67,82 @@ export async function PUT(
     // Add special handling for LAPSED status
     if (data.status === "LAPSED") {
       // Get current lapsed tickets
-      const lapsedTickets = await prisma.queueTicket.findMany({
-        where: { status: "LAPSED" },
-        orderBy: { createdAt: "desc" }, // Most recent first
-      });
+      const lapsedTickets =
+        await prisma.queueTicket.findMany({
+          where: { status: "LAPSED" },
+          orderBy: { createdAt: "desc" }, // Most recent first
+        });
 
       // If we have 6 or more lapsed tickets, convert the oldest one to cancelled
-      if (lapsedTickets.length >= 6) {
+      if (lapsedTickets.length >= 5) {
         // Get the oldest ticket (last in the array since we ordered by desc)
-        const oldestTicket = lapsedTickets[lapsedTickets.length - 1];
-        
+        const oldestTicket =
+          lapsedTickets[lapsedTickets.length - 1];
         // Cancel only the oldest ticket
         await prisma.queueTicket.update({
           where: { id: oldestTicket.id },
           data: { status: "CANCELLED" },
         });
+        // Emit update for the cancelled ticket so all counters update in real time
+        const cancelledTicket =
+          await prisma.queueTicket.findUnique({
+            where: { id: oldestTicket.id },
+            include: {
+              service: true,
+              serviceType: true,
+              counter: true,
+            },
+          });
+        if (cancelledTicket) {
+          emitTicketUpdate(cancelledTicket);
+        }
       }
     }
 
     // Validate status provided and allowed update
-    if (!data.status || !Object.values(QueueStatus).includes(data.status)) {
+    if (
+      !data.status ||
+      !Object.values(QueueStatus).includes(
+        data.status
+      )
+    ) {
       return new NextResponse(
-        JSON.stringify({ error: "Invalid or missing status" }),
+        JSON.stringify({
+          error: "Invalid or missing status",
+        }),
         { status: 400 }
       );
     }
 
     // If a counterId is provided, verify counter belongs to same service as ticket
     if (data.counterId) {
-      const [ticket, counter] = await Promise.all([
-        prisma.queueTicket.findUnique({ where: { id } }),
-        prisma.counter.findUnique({ where: { id: data.counterId } }),
-      ]);
+      const [ticket, counter] = await Promise.all(
+        [
+          prisma.queueTicket.findUnique({
+            where: { id },
+          }),
+          prisma.counter.findUnique({
+            where: { id: data.counterId },
+          }),
+        ]
+      );
 
       if (!ticket || !counter) {
         return new NextResponse(
-          JSON.stringify({ error: "Ticket or counter not found" }),
+          JSON.stringify({
+            error: "Ticket or counter not found",
+          }),
           { status: 404 }
         );
       }
 
-      const serviceMismatch = ticket.serviceId !== counter.serviceId;
+      const serviceMismatch =
+        ticket.serviceId !== counter.serviceId;
       if (serviceMismatch) {
         return new NextResponse(
           JSON.stringify({
-            error: "The provided counter does not match the ticket's service.",
+            error:
+              "The provided counter does not match the ticket's service.",
           }),
           { status: 400 }
         );
@@ -104,43 +150,59 @@ export async function PUT(
     }
 
     // Update the ticket with complete data
-    const updatedTicket = await prisma.queueTicket.update({
-      where: { id },
-      data: {
-        status: data.status as QueueStatus,
-        counter: data.counterId
-          ? { connect: { id: data.counterId } }
-          : data.status === "RETURNING"
-          ? { disconnect: true }
-          : undefined,
-        serviceType: data.serviceTypeId
-          ? { connect: { id: data.serviceTypeId } }
-          : undefined,
-        servingStart: data.servingStart
-          ? new Date(data.servingStart)
-          : undefined,
-        servingEnd: data.servingEnd ? new Date(data.servingEnd) : undefined,
-      },
-      include: {
-        service: true,
-        serviceType: true,
-        counter: true,
-      },
-    });
+    const updatedTicket =
+      await prisma.queueTicket.update({
+        where: { id },
+        data: {
+          status: data.status as QueueStatus,
+          counter: data.counterId
+            ? { connect: { id: data.counterId } }
+            : data.status === "RETURNING"
+            ? { disconnect: true }
+            : undefined,
+          serviceType: data.serviceTypeId
+            ? {
+                connect: {
+                  id: data.serviceTypeId,
+                },
+              }
+            : undefined,
+          servingStart: data.servingStart
+            ? new Date(data.servingStart)
+            : undefined,
+          servingEnd: data.servingEnd
+            ? new Date(data.servingEnd)
+            : undefined,
+        },
+        include: {
+          service: true,
+          serviceType: true,
+          counter: true,
+        },
+      });
 
     // Emit Socket.IO events with complete data
     emitTicketUpdate(updatedTicket);
 
     // If ticket is assigned to a counter, also emit counter-specific update
     if (updatedTicket.counterId) {
-      emitCounterUpdate(updatedTicket.counterId, updatedTicket);
+      emitCounterUpdate(
+        updatedTicket.counterId,
+        updatedTicket
+      );
     }
 
     // If ticket is completed (SERVED), emit stats update
-    if (data.status === "SERVED" && updatedTicket.counterId) {
+    if (
+      data.status === "SERVED" &&
+      updatedTicket.counterId
+    ) {
       // Fetch updated user stats
       const user = await prisma.user.findFirst({
-        where: { assignedCounterId: updatedTicket.counterId },
+        where: {
+          assignedCounterId:
+            updatedTicket.counterId,
+        },
       });
 
       if (user) {
@@ -148,7 +210,11 @@ export async function PUT(
         today.setHours(0, 0, 0, 0);
 
         // Get updated statistics
-        const [totalServed, todayServed, ticketsWithTime] = await Promise.all([
+        const [
+          totalServed,
+          todayServed,
+          ticketsWithTime,
+        ] = await Promise.all([
           prisma.queueTicket.count({
             where: {
               counterId: updatedTicket.counterId,
@@ -181,19 +247,29 @@ export async function PUT(
         // Calculate average service time
         let averageServiceTime = 0;
         if (ticketsWithTime.length > 0) {
-          const totalServiceTime = ticketsWithTime.reduce((acc, ticket) => {
-            if (ticket.servingStart && ticket.servingEnd) {
-              const serviceDuration = Math.floor(
-                (ticket.servingEnd.getTime() - ticket.servingStart.getTime()) /
-                  1000
-              );
-              return acc + serviceDuration;
-            }
-            return acc;
-          }, 0);
+          const totalServiceTime =
+            ticketsWithTime.reduce(
+              (acc, ticket) => {
+                if (
+                  ticket.servingStart &&
+                  ticket.servingEnd
+                ) {
+                  const serviceDuration =
+                    Math.floor(
+                      (ticket.servingEnd.getTime() -
+                        ticket.servingStart.getTime()) /
+                        1000
+                    );
+                  return acc + serviceDuration;
+                }
+                return acc;
+              },
+              0
+            );
 
           averageServiceTime = Math.round(
-            totalServiceTime / ticketsWithTime.length
+            totalServiceTime /
+              ticketsWithTime.length
           );
         }
 
@@ -209,7 +285,10 @@ export async function PUT(
 
     return NextResponse.json(updatedTicket);
   } catch (error) {
-    console.error("Error updating ticket:", error);
+    console.error(
+      "Error updating ticket:",
+      error
+    );
     return NextResponse.json(
       { error: "Failed to update ticket" },
       { status: 500 }

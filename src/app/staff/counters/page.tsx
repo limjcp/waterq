@@ -614,7 +614,7 @@ export default function StaffDashboard() {
         }
       }
 
-      // Get lapsed tickets for this service, regardless of which counter they're assigned to
+      // Show all lapsed tickets for this service, regardless of counter assignment
       const lapsedServiceTickets =
         allTickets.filter(
           (ticket: Ticket) =>
@@ -1149,8 +1149,11 @@ export default function StaffDashboard() {
       ticket.serviceId === assignedCounterService
   );
 
+  // Show all lapsed tickets for this service, regardless of counter assignment
   const lapsedTickets = tickets.filter(
-    (ticket) => ticket.status === "LAPSED"
+    (ticket) =>
+      ticket.status === "LAPSED" &&
+      ticket.serviceId === assignedCounterService
   );
 
   // For Customer Welfare and New Service Application, filter returning tickets
@@ -2087,7 +2090,7 @@ export default function StaffDashboard() {
                                 >
                                   <path
                                     fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 10-1.414 1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-4a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
                                     clipRule="evenodd"
                                   />
                                 </svg>
@@ -2237,7 +2240,232 @@ export default function StaffDashboard() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://wwww3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service
+                provided
+              </p>
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
+                  )
+                  .map((type) => (
+                    <Button
+                      key={type.id}
+                      variant="outline"
+                      size="md"
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      <div className="flex flex-row justify-between w-full">
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-centermb-6 text-amber-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 mr-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
                     clipRule="evenodd"
                   />
                 </svg>
@@ -2462,7 +2690,7 @@ export default function StaffDashboard() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
                     clipRule="evenodd"
                   />
                 </svg>
@@ -2479,7 +2707,7 @@ export default function StaffDashboard() {
                   did not respond when called.
                 </p>
 
-                <div className="bg-sky-50 border border-sky-100 rounded-lg p-5 mb-6">
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
                   {tickets
                     .filter(
                       (t) =>
@@ -2490,7 +2718,7 @@ export default function StaffDashboard() {
                         key={ticket.id}
                         className="text-center"
                       >
-                        <span className="text-3xl font-bold text-sky-800 block">
+                        <span className="text-3xl font-bold text-amber-700 block">
                           {ticket.isPrioritized
                             ? "PWD-"
                             : ""}
@@ -2502,7 +2730,1357 @@ export default function StaffDashboard() {
                             ticket.ticketNumber
                           )}
                         </span>
-                        <span className="text-xl text-sky-800 block mt-2">
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://wwww3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service
+                provided
+              </p>
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
+                  )
+                  .map((type) => (
+                    <Button
+                      key={type.id}
+                      variant="outline"
+                      size="md"
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      <div className="flex flex-row justify-between w-full">
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 mr-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://wwww3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service
+                provided
+              </p>
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
+                  )
+                  .map((type) => (
+                    <Button
+                      key={type.id}
+                      variant="outline"
+                      size="md"
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      <div className="flex flex-row justify-between w-full">
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 mr-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://wwww3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service
+                provided
+              </p>
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
+                  )
+                  .map((type) => (
+                    <Button
+                      key={type.id}
+                      variant="outline"
+                      size="md"
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      <div className="flex flex-row justify-between w-full">
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 mr-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://wwww3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service
+                provided
+              </p>
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
+                  )
+                  .map((type) => (
+                    <Button
+                      key={type.id}
+                      variant="outline"
+                      size="md"
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      <div className="flex flex-row justify-between w-full">
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 mr-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://wwww3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service
+                provided
+              </p>
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
+                  )
+                  .map((type) => (
+                    <Button
+                      key={type.id}
+                      variant="outline"
+                      size="md"
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      <div className="flex flex-row justify-between w-full">
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 mr-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
+                          {ticket.service?.name}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    setIsLapsedConfirmModalOpen(
+                      false
+                    );
+                    setTicketToLapse(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  size="md"
+                  onClick={() => {
+                    const ticketId =
+                      ticketToLapse;
+                    if (ticketId) {
+                      markLapsed(ticketId);
+                    }
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Add Service Type Modal */}
+      {isServiceTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
+            <h3 className="text-xl font-semibold mb-4">
+              Select Service Type
+            </h3>
+
+            {/* Search bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search service types..."
+                value={serviceTypeSearchQuery}
+                onChange={(e) =>
+                  setServiceTypeSearchQuery(
+                    e.target.value
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <div className="absolute right-3 top-2.5 text-gray-400">
+                <svg
+                  xmlns="http://wwww3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="block text-sm font-medium text-gray-700 mb-3">
+                Choose the type of service
+                provided
+              </p>
+
+              {/* Grid layout for service types */}
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {serviceTypes
+                  .filter(
+                    (type) =>
+                      type.name
+                        .toLowerCase()
+                        .includes(
+                          serviceTypeSearchQuery.toLowerCase()
+                        ) ||
+                      type.code.toLowerCase.includes(
+                        serviceTypeSearchQuery.toLowerCase()
+                      )
+                  )
+                  .map((type) => (
+                    <Button
+                      key={type.id}
+                      variant="outline"
+                      size="md"
+                      onClick={() =>
+                        openServiceTypeConfirmation(
+                          type
+                        )
+                      }
+                      className="   text-sky-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                    >
+                      <div className="flex flex-row justify-between w-full">
+                        <span className="font-semibold text-sky-900 mb-1">
+                          {type.name}
+                        </span>
+                        <span className="text-xs bg-sky-600 text-white px-2 py-0.5 rounded">
+                          {type.code}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+
+              {serviceTypes.filter(
+                (type) =>
+                  type.name
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    ) ||
+                  type.code
+                    .toLowerCase()
+                    .includes(
+                      serviceTypeSearchQuery.toLowerCase()
+                    )
+              ).length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No matching service types found
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  setIsServiceTypeModalOpen(
+                    false
+                  );
+                  setTicketToComplete(null);
+                  setSelectedServiceTypeId("");
+                  setServiceTypeSearchQuery(""); // Clear search when closing modal
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add new Lapsed Confirmation Modal */}
+      {isLapsedConfirmModalOpen &&
+        ticketToLapse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+            <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
+              <div className="flex items-center mb-6 text-amber-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 mr-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Confirm Action
+                </h3>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-lg text-gray-700 mb-6">
+                  Are you sure you want to mark
+                  this ticket as lapsed? This
+                  action indicates the customer
+                  did not respond when called.
+                </p>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5 mb-6">
+                  {tickets
+                    .filter(
+                      (t) =>
+                        t.id === ticketToLapse
+                    )
+                    .map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="text-center"
+                      >
+                        <span className="text-3xl font-bold text-amber-700 block">
+                          {ticket.isPrioritized
+                            ? "PWD-"
+                            : ""}
+                          {getTicketDisplayCode(
+                            ticket
+                          )}
+                          -
+                          {formatTicketNumber(
+                            ticket.ticketNumber
+                          )}
+                        </span>
+                        <span className="text-xl text-amber-600 block mt-2">
                           {ticket.service?.name}
                         </span>
                       </div>
@@ -2627,7 +4205,7 @@ export default function StaffDashboard() {
                   >
                     <path
                       fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a11 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L10 8.586l7.293-7.293a1 1 0 011.414 0z"
                       clipRule="evenodd"
                     />
                   </svg>
@@ -2763,7 +4341,7 @@ export default function StaffDashboard() {
                   className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium text-sky-800">
                       {ticket.isPrioritized
                         ? "PWD-"
                         : ""}
