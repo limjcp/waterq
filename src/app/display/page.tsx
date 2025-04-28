@@ -1,5 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import Image from "next/image";
@@ -32,8 +35,12 @@ const WaterDrops = () => {
           className="water-drop"
           style={{
             left: `${Math.random() * 100}%`,
-            animationDuration: `${Math.random() * 3 + 2}s`,
-            animationDelay: `${Math.random() * 5}s`,
+            animationDuration: `${
+              Math.random() * 3 + 2
+            }s`,
+            animationDelay: `${
+              Math.random() * 5
+            }s`,
             opacity: Math.random() * 0.5 + 0.2,
           }}
         />
@@ -61,7 +68,9 @@ const WaterDrops = () => {
             rgba(77, 208, 225, 0.6) 100%
           );
           border-radius: 0 0 5px 5px;
-          filter: drop-shadow(0 0 5px rgba(77, 208, 225, 0.3));
+          filter: drop-shadow(
+            0 0 5px rgba(77, 208, 225, 0.3)
+          );
           animation: fall linear infinite;
         }
 
@@ -70,10 +79,14 @@ const WaterDrops = () => {
             transform: translateY(-50px) scale(1);
           }
           70% {
-            transform: translateY(calc(100vh - 50px)) scale(1);
+            transform: translateY(
+                calc(100vh - 50px)
+              )
+              scale(1);
           }
           100% {
-            transform: translateY(calc(100vh)) scale(0);
+            transform: translateY(calc(100vh))
+              scale(0);
             opacity: 0;
           }
         }
@@ -101,7 +114,11 @@ const WaterRipple = () => {
 
       // Remove ripple after animation completes
       setTimeout(() => {
-        setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
+        setRipples((prev) =>
+          prev.filter(
+            (r) => r.id !== newRipple.id
+          )
+        );
       }, 4000);
     }, 3000);
 
@@ -144,11 +161,13 @@ const WaterRipple = () => {
 
         @keyframes ripple {
           0% {
-            box-shadow: 0 0 0 0 rgba(77, 208, 225, 0.3);
+            box-shadow: 0 0 0 0
+              rgba(77, 208, 225, 0.3);
             opacity: 0.8;
           }
           100% {
-            box-shadow: 0 0 0 100px rgba(77, 208, 225, 0);
+            box-shadow: 0 0 0 100px
+              rgba(77, 208, 225, 0);
             opacity: 0;
           }
         }
@@ -168,32 +187,39 @@ const ScrollingFooter = () => {
           </span>
           <span className="mx-4">|</span>
           <span className="mx-4">
-            E. Fernandez St., Brgy. Lagao, General Santos City, 9500,
-            Philippines
+            E. Fernandez St., Brgy. Lagao, General
+            Santos City, 9500, Philippines
           </span>
-          <span className="mx-4">|</span>
-          <span className="mx-4">Customer hotline: (083) 552 3824</span>
           <span className="mx-4">|</span>
           <span className="mx-4">
-            Mobile Nos: 0998 5307 893, 0998 8485 714, 0917 7049 979, 0917 7049
-            867
+            Customer hotline: (083) 552 3824
+          </span>
+          <span className="mx-4">|</span>
+          <span className="mx-4">
+            Mobile Nos: 0998 5307 893, 0998 8485
+            714, 0917 7049 979, 0917 7049 867
           </span>
         </div>
-        <div className="marquee-content" aria-hidden="true">
+        <div
+          className="marquee-content"
+          aria-hidden="true"
+        >
           <span className="mx-4 font-semibold">
             ©2021 General Santos Water District
           </span>
           <span className="mx-4">|</span>
           <span className="mx-4">
-            E. Fernandez St., Brgy. Lagao, General Santos City, 9500,
-            Philippines
+            E. Fernandez St., Brgy. Lagao, General
+            Santos City, 9500, Philippines
           </span>
           <span className="mx-4">|</span>
-          <span className="mx-4">Customer hotline: (083) 552 3824</span>
+          <span className="mx-4">
+            Customer hotline: (083) 552 3824
+          </span>
           <span className="mx-4">|</span>
           <span className="mx-4">
-            Mobile Nos: 0998 5307 893, 0998 8485 714, 0917 7049 979, 0917 7049
-            867
+            Mobile Nos: 0998 5307 893, 0998 8485
+            714, 0917 7049 979, 0917 7049 867
           </span>
         </div>
       </div>
@@ -231,11 +257,15 @@ const ScrollingFooter = () => {
 };
 
 export default function DisplayBoard() {
-  const [counters, setCounters] = useState<DisplayCounter[]>([]);
-  const [selectedCounterIds, setSelectedCounterIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [counters, setCounters] = useState<
+    DisplayCounter[]
+  >([]);
+  const [
+    selectedCounterIds,
+    setSelectedCounterIds,
+  ] = useState<Set<string>>(new Set());
+  const [isFilterOpen, setIsFilterOpen] =
+    useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -247,7 +277,9 @@ export default function DisplayBoard() {
 
     // Listen for ticket updates
     socket.on("ticket:update", () => {
-      console.log("Ticket updated, refreshing counters");
+      console.log(
+        "Ticket updated, refreshing counters"
+      );
       fetchCounters();
     });
 
@@ -263,7 +295,9 @@ export default function DisplayBoard() {
     setCounters(data);
   }
 
-  const handleCounterToggle = (counterId: string) => {
+  const handleCounterToggle = (
+    counterId: string
+  ) => {
     setSelectedCounterIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(counterId)) {
@@ -276,7 +310,9 @@ export default function DisplayBoard() {
   };
 
   // Format ticket names to display as SERVICE-NUMBER or PWD-SERVICE-NUMBER for priority
-  const formatTicketName = (ticket?: DisplayCounter["currentTicket"]) => {
+  const formatTicketName = (
+    ticket?: DisplayCounter["currentTicket"]
+  ) => {
     if (!ticket) return "---";
 
     return ticket.isPrioritized
@@ -287,7 +323,9 @@ export default function DisplayBoard() {
   // Filter counters based on selection
   const displayedCounters =
     selectedCounterIds.size > 0
-      ? counters.filter((c) => selectedCounterIds.has(c.id))
+      ? counters.filter((c) =>
+          selectedCounterIds.has(c.id)
+        )
       : counters;
 
   // Group counters by service type and sort them by their number
@@ -295,36 +333,48 @@ export default function DisplayBoard() {
     CW: displayedCounters
       .filter((c) => c.code.startsWith("CW"))
       .sort((a, b) => {
-        const numA = parseInt(a.code.replace("CW", "")) || 0;
-        const numB = parseInt(b.code.replace("CW", "")) || 0;
+        const numA =
+          parseInt(a.code.replace("CW", "")) || 0;
+        const numB =
+          parseInt(b.code.replace("CW", "")) || 0;
         return numA - numB;
       }),
-    NSA: displayedCounters
-      .filter((c) => c.code.startsWith("NSA"))
+    A: displayedCounters
+      .filter((c) => c.code.startsWith("A"))
       .sort((a, b) => {
-        const numA = parseInt(a.code.replace("NSA", "")) || 0;
-        const numB = parseInt(b.code.replace("NSA", "")) || 0;
+        const numA =
+          parseInt(a.code.replace("A", "")) || 0;
+        const numB =
+          parseInt(b.code.replace("A", "")) || 0;
         return numA - numB;
       }),
     P: displayedCounters
       .filter((c) => c.code.startsWith("P"))
       .sort((a, b) => {
-        const numA = parseInt(a.code.replace("P", "")) || 0;
-        const numB = parseInt(b.code.replace("P", "")) || 0;
+        const numA =
+          parseInt(a.code.replace("P", "")) || 0;
+        const numB =
+          parseInt(b.code.replace("P", "")) || 0;
         return numA - numB;
       }),
   };
 
   // Group all counters by service type for the filter section
   const allGroupedCounters = {
-    CW: counters.filter((c) => c.code.startsWith("CW")),
-    NSA: counters.filter((c) => c.code.startsWith("NSA")),
-    P: counters.filter((c) => c.code.startsWith("P")),
+    CW: counters.filter((c) =>
+      c.code.startsWith("CW")
+    ),
+    A: counters.filter((c) =>
+      c.code.startsWith("A")
+    ),
+    P: counters.filter((c) =>
+      c.code.startsWith("P")
+    ),
   };
 
   const serviceNames = {
     CW: "Customer Welfare",
-    NSA: "New Service Application",
+    A: "New Service Application",
     P: "Payment",
   };
 
@@ -374,7 +424,9 @@ export default function DisplayBoard() {
       <div className="w-full z-10 relative flex flex-col h-screen pb-14">
         <div className="flex flex-col items-center justify-center pt-4">
           <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            onClick={() =>
+              setIsFilterOpen(!isFilterOpen)
+            }
             className="mb-4 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition shadow-md hover:shadow-lg font-medium flex items-center space-x-2"
           >
             <svg
@@ -402,7 +454,11 @@ export default function DisplayBoard() {
                 </h3>
                 {selectedCounterIds.size > 0 && (
                   <button
-                    onClick={() => setSelectedCounterIds(new Set())}
+                    onClick={() =>
+                      setSelectedCounterIds(
+                        new Set()
+                      )
+                    }
                     className="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white text-sm rounded-lg transition shadow-sm hover:shadow-md font-medium"
                   >
                     Clear All
@@ -410,31 +466,48 @@ export default function DisplayBoard() {
                 )}
               </div>
               <div className="space-y-4">
-                {(["CW", "NSA", "P"] as const).map((serviceCode) => (
-                  <div key={serviceCode} className="space-y-2">
-                    <h4 className="font-medium text-sky-700">
-                      {serviceNames[serviceCode]}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {allGroupedCounters[serviceCode].map((counter) => (
-                        <label
-                          key={counter.id}
-                          className="flex items-center space-x-2 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedCounterIds.has(counter.id)}
-                            onChange={() => handleCounterToggle(counter.id)}
-                            className="form-checkbox h-4 w-4 text-sky-600 rounded border-sky-300 focus:ring-sky-500"
-                          />
-                          <span className="text-sm text-sky-700">
-                            {counter.name}
-                          </span>
-                        </label>
-                      ))}
+                {(["CW", "A", "P"] as const).map(
+                  (serviceCode) => (
+                    <div
+                      key={serviceCode}
+                      className="space-y-2"
+                    >
+                      <h4 className="font-medium text-sky-700">
+                        {
+                          serviceNames[
+                            serviceCode
+                          ]
+                        }
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {allGroupedCounters[
+                          serviceCode
+                        ].map((counter) => (
+                          <label
+                            key={counter.id}
+                            className="flex items-center space-x-2 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedCounterIds.has(
+                                counter.id
+                              )}
+                              onChange={() =>
+                                handleCounterToggle(
+                                  counter.id
+                                )
+                              }
+                              className="form-checkbox h-4 w-4 text-sky-600 rounded border-sky-300 focus:ring-sky-500"
+                            />
+                            <span className="text-sm text-sky-700">
+                              {counter.name}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
           )}
@@ -442,18 +515,28 @@ export default function DisplayBoard() {
 
         <div className="flex-1 py-2 px-6 md:px-10 lg:px-14 overflow-y-auto">
           {/* Render counters by service group */}
-          {(["CW", "NSA", "P"] as const).map(
+          {(["CW", "A", "P"] as const).map(
             (serviceCode) =>
-              groupedCounters[serviceCode].length > 0 && (
-                <div key={serviceCode} className="mb-10">
+              groupedCounters[serviceCode]
+                .length > 0 && (
+                <div
+                  key={serviceCode}
+                  className="mb-10"
+                >
                   <h2 className="text-2xl font-semibold text-sky-800 mb-6 pl-2 border-l-4 border-sky-500">
                     {serviceNames[serviceCode]}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {groupedCounters[serviceCode].map((c) => (
+                    {groupedCounters[
+                      serviceCode
+                    ].map((c) => (
                       <div
                         key={c.id}
-                        onClick={() => router.push(`/display/${c.id}`)}
+                        onClick={() =>
+                          router.push(
+                            `/display/${c.id}`
+                          )
+                        }
                         className="bg-gradient-to-br from-cyan-100/80 to-blue-200/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 border border-blue-100 cursor-pointer hover:from-cyan-200/90 hover:to-blue-300/90 group h-full flex flex-col"
                       >
                         <h2 className="text-xl font-semibold text-cyan-800 mb-5 text-center group-hover:text-blue-900">
@@ -468,17 +551,21 @@ export default function DisplayBoard() {
                                 : "text-sky-800"
                             }`}
                           >
-                            {formatTicketName(c.currentTicket)}
+                            {formatTicketName(
+                              c.currentTicket
+                            )}
                           </p>
                         </div>
                         <p className="text-sm text-cyan-700 mt-3 text-center font-medium">
                           {c.currentTicket
-                            ? c.currentTicket.status?.toLowerCase() === "called"
+                            ? c.currentTicket.status?.toLowerCase() ===
+                              "called"
                               ? "Now Calling"
                               : c.currentTicket.status?.toLowerCase() ===
                                 "serving"
                               ? "Currently Serving"
-                              : c.currentTicket.status
+                              : c.currentTicket
+                                  .status
                             : "No ticket called yet"}
                         </p>
                       </div>

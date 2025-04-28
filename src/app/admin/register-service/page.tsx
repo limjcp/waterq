@@ -13,7 +13,9 @@ type Service = {
 
 export default function RegisterService() {
   const { data: session, status } = useSession();
-  const [services, setServices] = useState<Service[]>([]);
+  const [services, setServices] = useState<
+    Service[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -35,9 +37,13 @@ export default function RegisterService() {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/services");
+      const response = await fetch(
+        "/api/services"
+      );
       if (!response.ok) {
-        throw new Error("Failed to fetch services");
+        throw new Error(
+          "Failed to fetch services"
+        );
       }
       const data = await response.json();
       setServices(data);
@@ -48,25 +54,40 @@ export default function RegisterService() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
     try {
-      const response = await fetch("/api/services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        "/api/services",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create service");
+        throw new Error(
+          errorData.error ||
+            "Failed to create service"
+        );
       }
 
       // Reset form and refresh data
@@ -104,7 +125,10 @@ export default function RegisterService() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-md">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 max-w-md"
+        >
           <div>
             <label className="block text-sm font-medium text-sky-700 mb-2">
               Service Name
@@ -134,7 +158,8 @@ export default function RegisterService() {
               className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
             <p className="text-xs text-sky-600 mt-1">
-              Use short codes like CW for Customer Welfare, NSA for New Service
+              Use short codes like CW for Customer
+              Welfare, A for New Service
               Application, P for Payment
             </p>
           </div>
@@ -178,14 +203,22 @@ export default function RegisterService() {
                     key={service.id}
                     className="border-b border-sky-50 hover:bg-sky-50"
                   >
-                    <td className="py-3 px-4">{service.name}</td>
-                    <td className="py-3 px-4">{service.code}</td>
+                    <td className="py-3 px-4">
+                      {service.name}
+                    </td>
+                    <td className="py-3 px-4">
+                      {service.code}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={2} className="py-8 text-center text-sky-600">
-                    No services found. Create your first service!
+                  <td
+                    colSpan={2}
+                    className="py-8 text-center text-sky-600"
+                  >
+                    No services found. Create your
+                    first service!
                   </td>
                 </tr>
               )}

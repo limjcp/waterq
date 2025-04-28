@@ -366,7 +366,7 @@ export default function StaffDashboard() {
                   service.id !==
                     assignedCounterService &&
                   (service.code === "CW" ||
-                    service.code === "NSA") // Only allow transfers to CW or NSA
+                    service.code === "A") // Only allow transfers to CW or A
               );
             setAvailableServices(
               filteredServices
@@ -1268,19 +1268,18 @@ export default function StaffDashboard() {
         !isPaymentCounter)
   );
 
-  // Add the function to handle opening the lapsed confirmation modal
-  function openLapsedConfirmModal(
-    ticketId: string
-  ) {
-    setTicketToLapse(ticketId);
-    setIsLapsedConfirmModalOpen(true);
-  }
-
   // Add a ref to store the transfer button handlers
   const transferButtonRefs = React.useRef<
     (null | (() => void))[]
   >([]);
 
+  // Near your other useEffect hooks
+  useEffect(() => {
+    // Initialize the ref array with the correct length
+    transferButtonRefs.current = new Array(
+      availableServices.length
+    ).fill(null);
+  }, [availableServices]);
   // Add keyboard shortcut handler
   useEffect(() => {
     function handleKeyPress(e: KeyboardEvent) {
@@ -1941,18 +1940,10 @@ export default function StaffDashboard() {
                         {/* Transfers - Direct buttons instead of modal */}
                         <div className="grid grid-cols-1 gap-2">
                           {availableServices.map(
-                            (service, index) => (
-                              <Button
-                                key={service.id}
-                                variant="secondary"
-                                size="lg"
-                                withShortcut={
-                                  true
-                                }
-                                shortcutKey={(
-                                  index + 1
-                                ).toString()}
-                                onClick={async () => {
+                            (service, index) => {
+                              // Define the click handler function separately
+                              const handleTransfer =
+                                async () => {
                                   try {
                                     const response =
                                       await fetch(
@@ -1988,17 +1979,38 @@ export default function StaffDashboard() {
                                       error
                                     );
                                   }
-                                }}
-                                className="w-full justify-between"
-                              >
-                                <span>
-                                  {service.name}
-                                </span>
-                                <span className="text-xs bg-sky-700 px-2 py-1 rounded">
-                                  {service.code}
-                                </span>
-                              </Button>
-                            )
+                                };
+
+                              // Store the handler in the ref array
+                              transferButtonRefs.current[
+                                index
+                              ] = handleTransfer;
+
+                              return (
+                                <Button
+                                  key={service.id}
+                                  variant="secondary"
+                                  size="lg"
+                                  withShortcut={
+                                    true
+                                  }
+                                  shortcutKey={(
+                                    index + 1
+                                  ).toString()}
+                                  onClick={
+                                    handleTransfer
+                                  } // Use the same handler here
+                                  className="w-full justify-between"
+                                >
+                                  <span>
+                                    {service.name}
+                                  </span>
+                                  <span className="text-xs bg-sky-700 px-2 py-1 rounded">
+                                    {service.code}
+                                  </span>
+                                </Button>
+                              );
+                            }
                           )}
                         </div>
 

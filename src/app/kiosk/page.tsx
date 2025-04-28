@@ -252,7 +252,7 @@ export default function Kiosk() {
       description: "",
     },
     {
-      code: "NSA",
+      code: "A",
       name: "New Service Application",
       description: "",
     },
