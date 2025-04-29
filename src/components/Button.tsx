@@ -67,7 +67,7 @@ export default function Button({
                 }
                 ${
                   variant === "warning"
-                    ? "bg-amber-500 text-black hover:bg-amber-600 active:bg-amber-700"
+                    ? "bg-amber-600 text-white hover:bg-amber-700 hover:text-white active:bg-amber-700"
                     : ""
                 }
                 ${

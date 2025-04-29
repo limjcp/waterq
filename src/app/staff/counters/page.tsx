@@ -1671,7 +1671,7 @@ export default function StaffDashboard() {
                               true
                             )
                           }
-                          className="text-xs text-amber-600 hover:text-amber-800 font-medium"
+                          className="text-xs text-amber-600 hover:text-white font-medium"
                         >
                           Show All (
                           {lapsedTickets.length})
@@ -1752,7 +1752,7 @@ export default function StaffDashboard() {
                               true
                             )
                           }
-                          className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                          className="text-xs text-purple-600 hover:text-white font-medium"
                         >
                           Show All (
                           {
@@ -1768,7 +1768,7 @@ export default function StaffDashboard() {
                         .map((ticket) => (
                           <div
                             key={ticket.id}
-                            className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
+                            className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium text-sky-800">
@@ -1784,7 +1784,7 @@ export default function StaffDashboard() {
                                 )}
                               </span>
                               {ticket.isPrioritized && (
-                                <span className="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded">
+                                <span className="bg-amber-200 text-amber-800 font-bold text-xs px-1.5 py-0.5 rounded">
                                   PWD
                                 </span>
                               )}
@@ -1847,7 +1847,7 @@ export default function StaffDashboard() {
             </h2>
             <div className="flex-1 flex items-center justify-center">
               {currentServingTicket ? (
-                <div className="flex flex-col items-center w-full max-w-[500px] mx-auto">
+                <div className="flex flex-col items-center w-full  mx-auto">
                   <div className="bg-sky-100 rounded-lg w-full h-[80px] lg:h-[100px] flex items-center justify-center mb-4">
                     <span
                       className={`${getTicketTextSizeClass(
@@ -2079,7 +2079,7 @@ export default function StaffDashboard() {
                         key={ticket.id}
                         className="flex flex-col items-center w-full"
                       >
-                        <div className="bg-green-50 rounded-lg w-full max-w-[500px] h-[80px] md:h-[100px] flex items-center justify-center mb-6 shadow-md">
+                        <div className="bg-green-50 rounded-lg w-full  h-[80px] md:h-[100px] flex items-center justify-center mb-6 shadow-md">
                           <span
                             className={`${getTicketTextSizeClass(
                               ticket
@@ -2168,7 +2168,7 @@ export default function StaffDashboard() {
                                 Start Serving
                               </Button>
                               <Button
-                                variant="warning"
+                                variant="primary"
                                 size="lg"
                                 withShortcut={
                                   true
@@ -2259,7 +2259,7 @@ export default function StaffDashboard() {
               Your Statistics
             </h2>
             <div className="flex-1 flex flex-col justify-center">
-              <div className="space-y-4 lg:space-y-8 w-full max-w-[500px] mx-auto">
+              <div className="space-y-4 lg:space-y-8 w-full mx-auto">
                 <div className="bg-sky-50 rounded-lg p-4 lg:p-6">
                   <p className="text-base lg:text-lg text-sky-700 font-medium">
                     Total Served
@@ -2294,7 +2294,7 @@ export default function StaffDashboard() {
 
       {/* Transfer Modal */}
       {isTransferModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-4 lg:p-6 w-full max-w-[384px] lg:max-w-[480px] shadow-2xl">
             <h3 className="text-lg font-semibold mb-4">
               Transfer Ticket
@@ -2346,7 +2346,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -2450,7 +2450,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -2571,7 +2571,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-centermb-6 text-amber-500">
                 <svg
@@ -2675,7 +2675,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -2796,7 +2796,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -2900,7 +2900,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -3021,7 +3021,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -3125,7 +3125,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -3246,7 +3246,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -3350,7 +3350,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -3471,7 +3471,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -3575,7 +3575,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -3696,7 +3696,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -3800,7 +3800,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -3921,7 +3921,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -4025,7 +4025,7 @@ export default function StaffDashboard() {
 
       {/* Add Service Type Modal */}
       {isServiceTypeModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-auto shadow-2xl">
             <h3 className="text-xl font-semibold mb-4">
               Select Service Type
@@ -4146,7 +4146,7 @@ export default function StaffDashboard() {
       {/* Add new Lapsed Confirmation Modal */}
       {isLapsedConfirmModalOpen &&
         ticketToLapse && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center min-h-screen z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center min-h-screen z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-amber-500">
                 <svg
@@ -4251,7 +4251,7 @@ export default function StaffDashboard() {
       {/* Add Service Type Confirmation Modal */}
       {isServiceTypeConfirmModalOpen &&
         serviceTypeToConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-8 w-[500px] shadow-2xl transform transition-all animate-fade-in-down">
               <div className="flex items-center mb-6 text-green-500">
                 <svg
@@ -4342,7 +4342,7 @@ export default function StaffDashboard() {
                 All Lapsed Tickets
               </h3>
               <Button
-                variant="secondary"
+                variant=""
                 size="sm"
                 onClick={() =>
                   setIsLapsedListModalOpen(false)
@@ -4369,7 +4369,7 @@ export default function StaffDashboard() {
                 // Same ticket card component as before
                 <div
                   key={ticket.id}
-                  className="bg-amber-50 p-2 rounded-lg flex flex-col gap-2"
+                  className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
@@ -4385,7 +4385,7 @@ export default function StaffDashboard() {
                       )}
                     </span>
                     {ticket.isPrioritized && (
-                      <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded">
+                      <span className="bg-amber-200 text-amber-800 font-bold text-xs px-1.5 py-0.5 rounded">
                         PWD
                       </span>
                     )}
@@ -4422,11 +4422,11 @@ export default function StaffDashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[800px] max-h-[80vh] shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-purple-700">
+              <h3 className="text-xl font-semibold text-sky-700">
                 All Returning Tickets
               </h3>
               <Button
-                variant="secondary"
+                variant=""
                 size="sm"
                 onClick={() =>
                   setIsReturningListModalOpen(
@@ -4455,7 +4455,7 @@ export default function StaffDashboard() {
                 // Same ticket card component as before
                 <div
                   key={ticket.id}
-                  className="bg-purple-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
+                  className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-sky-800">
@@ -4471,7 +4471,7 @@ export default function StaffDashboard() {
                       )}
                     </span>
                     {ticket.isPrioritized && (
-                      <span className="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded">
+                      <span className="bg-amber-200 text-amber-800 font-bold text-xs px-1.5 py-0.5 rounded">
                         PWD
                       </span>
                     )}
