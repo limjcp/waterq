@@ -23,10 +23,12 @@
 	<logmode>rotate</logmode>
 	<stoptimeout>30sec</stoptimeout>
 	<env name="DEFAULT_PRINTER" value=""/>
+	<env name="NODE_ENV" value="production"/>
 	<serviceaccount>
 		<domain>DESKTOP-JD8D0UP</domain>
 		<user>LocalSystem</user>
 		<password></password>
+		<allowservicelogon>true</allowservicelogon>
 	</serviceaccount>
 	<workingdirectory>C:\Users\jlim0\waterq\print-service</workingdirectory>
 </service>

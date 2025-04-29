@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "install-service": "node install-service.js"
+    "install-service": "node install-service.js",
+    "uninstall-service": "node uninstall-service.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
