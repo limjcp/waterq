@@ -13,14 +13,17 @@ type PrintSettings = {
   orientation: "portrait" | "landscape";
   paperSize: string;
   copies: number;
-  scale: number;
+  scale: "fit" | "shrink" | "noscale";
   fit: boolean;
   customWidth: number; // Added for custom dimensions
   customHeight: number; // Added for custom dimensions
 };
 
 const PAPER_SIZES = [
-  { value: "thermal", label: "Thermal Receipt (80mm × 51mm)" },
+  {
+    value: "thermal",
+    label: "Thermal Receipt (80mm × 51mm)",
+  },
   { value: "a4", label: "A4" },
   { value: "letter", label: "Letter" },
   { value: "legal", label: "Legal" },
@@ -36,20 +39,25 @@ const PAPER_DIMENSIONS = {
 };
 
 export default function PrinterSettings() {
-  const { data: session, status: authStatus } = useSession();
-  const [printers, setPrinters] = useState<Printer[]>([]);
-  const [settings, setSettings] = useState<PrintSettings>({
-    printer: "",
-    orientation: "portrait",
-    paperSize: "thermal",
-    copies: 1,
-    scale: 100,
-    fit: true,
-    customWidth: 227, // Default to thermal width
-    customHeight: 145, // Default to thermal height
-  });
+  const { data: session, status: authStatus } =
+    useSession();
+  const [printers, setPrinters] = useState<
+    Printer[]
+  >([]);
+  const [settings, setSettings] =
+    useState<PrintSettings>({
+      printer: "",
+      orientation: "portrait",
+      paperSize: "thermal",
+      copies: 1,
+      scale: "fit",
+      fit: true,
+      customWidth: 227, // Default to thermal width
+      customHeight: 145, // Default to thermal height
+    });
   const [loading, setLoading] = useState(true);
-  const [alertStatus, setAlertStatus] = useState("");
+  const [alertStatus, setAlertStatus] =
+    useState("");
 
   useEffect(() => {
     async function fetchPrinterData() {
@@ -57,7 +65,9 @@ export default function PrinterSettings() {
         setLoading(true);
 
         // Get list of available printers
-        const response = await fetch("http://localhost:3030/printers");
+        const response = await fetch(
+          "http://localhost:3030/printers"
+        );
         if (response.ok) {
           const data = await response.json();
           setPrinters(data);
@@ -69,16 +79,21 @@ export default function PrinterSettings() {
         );
 
         if (settingsResponse.ok) {
-          const data = await settingsResponse.json();
+          const data =
+            await settingsResponse.json();
           // Add default custom dimensions if they don't exist
           setSettings({
             ...data,
             customWidth: data.customWidth || 227,
-            customHeight: data.customHeight || 145,
+            customHeight:
+              data.customHeight || 145,
           });
         }
       } catch (error) {
-        console.error("Error fetching printer data:", error);
+        console.error(
+          "Error fetching printer data:",
+          error
+        );
         setAlertStatus(
           "Failed to connect to print service. Make sure it's running."
         );
@@ -93,40 +108,67 @@ export default function PrinterSettings() {
   const saveSettings = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:3030/print-settings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(settings),
-      });
+      const response = await fetch(
+        "http://localhost:3030/print-settings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(settings),
+        }
+      );
 
       if (response.ok) {
-        setAlertStatus("Print settings saved successfully!");
-        setTimeout(() => setAlertStatus(""), 3000);
+        setAlertStatus(
+          "Print settings saved successfully!"
+        );
+        setTimeout(
+          () => setAlertStatus(""),
+          3000
+        );
       } else {
-        setAlertStatus("Failed to save print settings");
+        setAlertStatus(
+          "Failed to save print settings"
+        );
       }
     } catch (error) {
-      console.error("Error saving print settings:", error);
-      setAlertStatus("Error connecting to print service");
+      console.error(
+        "Error saving print settings:",
+        error
+      );
+      setAlertStatus(
+        "Error connecting to print service"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (field: keyof PrintSettings, value: any) => {
-    setSettings((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (
+    field: keyof PrintSettings,
+    value: any
+  ) => {
+    setSettings((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   // When paper size changes, update custom dimensions to match if selecting a preset
-  const handlePaperSizeChange = (value: string) => {
+  const handlePaperSizeChange = (
+    value: string
+  ) => {
     if (
       value !== "custom" &&
-      PAPER_DIMENSIONS[value as keyof typeof PAPER_DIMENSIONS]
+      PAPER_DIMENSIONS[
+        value as keyof typeof PAPER_DIMENSIONS
+      ]
     ) {
       const dimensions =
-        PAPER_DIMENSIONS[value as keyof typeof PAPER_DIMENSIONS];
+        PAPER_DIMENSIONS[
+          value as keyof typeof PAPER_DIMENSIONS
+        ];
       setSettings((prev) => ({
         ...prev,
         paperSize: value,
@@ -153,46 +195,67 @@ export default function PrinterSettings() {
       };
     } else {
       dimensions =
-        PAPER_DIMENSIONS[settings.paperSize as keyof typeof PAPER_DIMENSIONS] ||
-        PAPER_DIMENSIONS.thermal;
+        PAPER_DIMENSIONS[
+          settings.paperSize as keyof typeof PAPER_DIMENSIONS
+        ] || PAPER_DIMENSIONS.thermal;
     }
 
     // Apply orientation
     const { width, height } = dimensions;
-    const isLandscape = settings.orientation === "landscape";
+    const isLandscape =
+      settings.orientation === "landscape";
 
     // Calculate scaled dimensions for preview (max 300px height)
     const maxPreviewHeight = 300;
     const scale = Math.min(
-      maxPreviewHeight / (isLandscape ? width : height),
+      maxPreviewHeight /
+        (isLandscape ? width : height),
       1
     );
 
     return {
-      width: (isLandscape ? height : width) * scale,
-      height: (isLandscape ? width : height) * scale,
+      width:
+        (isLandscape ? height : width) * scale,
+      height:
+        (isLandscape ? width : height) * scale,
       aspectRatio: isLandscape
         ? `${height} / ${width}`
         : `${width} / ${height}`,
+      // Calculate content scale factor based on selected scale option
+      contentScaleFactor:
+        settings.scale === "noscale"
+          ? 1
+          : settings.scale === "fit"
+          ? 0.9 // Simulate fit-to-page
+          : 0.75, // Simulate shrink-to-fit
     };
   };
 
-  const previewDimensions = getPreviewDimensions();
+  const previewDimensions =
+    getPreviewDimensions();
 
   // Convert points to more readable units for display
-  const pointsToReadableUnits = (points: number) => {
+  const pointsToReadableUnits = (
+    points: number
+  ) => {
     const inches = (points / 72).toFixed(2);
     const cm = (points / 28.35).toFixed(2);
     return `${points} pts (${inches}″ / ${cm} cm)`;
   };
 
   if (authStatus === "unauthenticated") {
-    return <div>You must be signed in to access this page</div>;
+    return (
+      <div>
+        You must be signed in to access this page
+      </div>
+    );
   }
 
   return (
     <div className="max-w-5xl mx-auto p-8">
-      <h1 className="text-3xl font-bold text-sky-800 mb-6">Printer Settings</h1>
+      <h1 className="text-3xl font-bold text-sky-800 mb-6">
+        Printer Settings
+      </h1>
 
       {alertStatus && (
         <div
@@ -223,16 +286,30 @@ export default function PrinterSettings() {
                 </label>
                 <select
                   value={settings.printer}
-                  onChange={(e) => handleChange("printer", e.target.value)}
+                  onChange={(e) =>
+                    handleChange(
+                      "printer",
+                      e.target.value
+                    )
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
-                  <option value="">System Default</option>
-                  {printers.map((printer, index) => (
-                    <option key={index} value={printer.name}>
-                      {printer.name}{" "}
-                      {printer.isDefault ? "(System Default)" : ""}
-                    </option>
-                  ))}
+                  <option value="">
+                    System Default
+                  </option>
+                  {printers.map(
+                    (printer, index) => (
+                      <option
+                        key={index}
+                        value={printer.name}
+                      >
+                        {printer.name}{" "}
+                        {printer.isDefault
+                          ? "(System Default)"
+                          : ""}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
 
@@ -243,11 +320,18 @@ export default function PrinterSettings() {
                 </label>
                 <select
                   value={settings.paperSize}
-                  onChange={(e) => handlePaperSizeChange(e.target.value)}
+                  onChange={(e) =>
+                    handlePaperSizeChange(
+                      e.target.value
+                    )
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
                   {PAPER_SIZES.map((size) => (
-                    <option key={size.value} value={size.value}>
+                    <option
+                      key={size.value}
+                      value={size.value}
+                    >
                       {size.label}
                     </option>
                   ))}
@@ -255,7 +339,8 @@ export default function PrinterSettings() {
               </div>
 
               {/* Custom Dimensions - only shown when paperSize is "custom" */}
-              {settings.paperSize === "custom" && (
+              {settings.paperSize ===
+                "custom" && (
                 <div className="mb-6 border-l-4 border-sky-100 pl-3 py-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -266,9 +351,16 @@ export default function PrinterSettings() {
                         type="number"
                         min="72"
                         max="2000"
-                        value={settings.customWidth}
+                        value={
+                          settings.customWidth
+                        }
                         onChange={(e) =>
-                          handleChange("customWidth", parseInt(e.target.value))
+                          handleChange(
+                            "customWidth",
+                            parseInt(
+                              e.target.value
+                            )
+                          )
                         }
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                       />
@@ -281,9 +373,16 @@ export default function PrinterSettings() {
                         type="number"
                         min="72"
                         max="2000"
-                        value={settings.customHeight}
+                        value={
+                          settings.customHeight
+                        }
                         onChange={(e) =>
-                          handleChange("customHeight", parseInt(e.target.value))
+                          handleChange(
+                            "customHeight",
+                            parseInt(
+                              e.target.value
+                            )
+                          )
                         }
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                       />
@@ -291,12 +390,19 @@ export default function PrinterSettings() {
                   </div>
                   <div className="mt-2">
                     <p className="text-xs text-gray-500">
-                      Width: {pointsToReadableUnits(settings.customWidth)}
+                      Width:{" "}
+                      {pointsToReadableUnits(
+                        settings.customWidth
+                      )}
                       <br />
-                      Height: {pointsToReadableUnits(settings.customHeight)}
+                      Height:{" "}
+                      {pointsToReadableUnits(
+                        settings.customHeight
+                      )}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Note: 72 points = 1 inch, 28.35 points = 1 cm
+                      Note: 72 points = 1 inch,
+                      28.35 points = 1 cm
                     </p>
                   </div>
                 </div>
@@ -312,8 +418,16 @@ export default function PrinterSettings() {
                     <input
                       type="radio"
                       name="orientation"
-                      checked={settings.orientation === "portrait"}
-                      onChange={() => handleChange("orientation", "portrait")}
+                      checked={
+                        settings.orientation ===
+                        "portrait"
+                      }
+                      onChange={() =>
+                        handleChange(
+                          "orientation",
+                          "portrait"
+                        )
+                      }
                       className="mr-2"
                     />
                     Portrait
@@ -322,8 +436,16 @@ export default function PrinterSettings() {
                     <input
                       type="radio"
                       name="orientation"
-                      checked={settings.orientation === "landscape"}
-                      onChange={() => handleChange("orientation", "landscape")}
+                      checked={
+                        settings.orientation ===
+                        "landscape"
+                      }
+                      onChange={() =>
+                        handleChange(
+                          "orientation",
+                          "landscape"
+                        )
+                      }
                       className="mr-2"
                     />
                     Landscape
@@ -342,37 +464,103 @@ export default function PrinterSettings() {
                   max="10"
                   value={settings.copies}
                   onChange={(e) =>
-                    handleChange("copies", parseInt(e.target.value))
+                    handleChange(
+                      "copies",
+                      parseInt(e.target.value)
+                    )
                   }
                   className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
 
-              {/* Scale */}
+              {/* Scale - replaced slider with radio buttons */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Scale ({settings.scale}%)
+                  Scale Options
                 </label>
-                <input
-                  type="range"
-                  min="50"
-                  max="200"
-                  step="5"
-                  value={settings.scale}
-                  onChange={(e) =>
-                    handleChange("scale", parseInt(e.target.value))
-                  }
-                  className="w-full"
-                />
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="scale"
+                      checked={
+                        settings.scale === "fit"
+                      }
+                      onChange={() =>
+                        handleChange(
+                          "scale",
+                          "fit"
+                        )
+                      }
+                      className="mr-2"
+                    />
+                    Fit to page (scale to fill
+                    page while maintaining aspect
+                    ratio)
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="scale"
+                      checked={
+                        settings.scale ===
+                        "shrink"
+                      }
+                      onChange={() =>
+                        handleChange(
+                          "scale",
+                          "shrink"
+                        )
+                      }
+                      className="mr-2"
+                    />
+                    Shrink to page (reduce if
+                    needed, never enlarge)
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="scale"
+                      checked={
+                        settings.scale ===
+                        "noscale"
+                      }
+                      onChange={() =>
+                        handleChange(
+                          "scale",
+                          "noscale"
+                        )
+                      }
+                      className="mr-2"
+                    />
+                    No scale (print at actual
+                    size)
+                  </label>
+                </div>
               </div>
 
-              {/* Fit to Page */}
-              <div className="mb-6">
+              {/* Remove or modify the "Fit to Page" checkbox since it's redundant with "fit" scale option */}
+              {/* If you want to keep it for backward compatibility: */}
+              <div className="mb-6 hidden">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
-                    checked={settings.fit}
-                    onChange={(e) => handleChange("fit", e.target.checked)}
+                    checked={
+                      settings.scale === "fit"
+                    }
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        handleChange(
+                          "scale",
+                          "fit"
+                        );
+                      } else {
+                        handleChange(
+                          "scale",
+                          "noscale"
+                        );
+                      }
+                    }}
                     className="mr-2"
                   />
                   <span className="text-sm font-medium text-gray-700">
@@ -404,18 +592,31 @@ export default function PrinterSettings() {
                 style={{
                   width: `${previewDimensions.width}px`,
                   height: `${previewDimensions.height}px`,
-                  aspectRatio: previewDimensions.aspectRatio,
-                  transform: `scale(${settings.scale / 100})`,
-                  transformOrigin: "center center",
+                  aspectRatio:
+                    previewDimensions.aspectRatio,
                 }}
               >
-                <div className="p-4 flex flex-col items-center justify-center w-full h-full">
-                  <div className="font-mono font-bold text-3xl mb-2">A-001</div>
+                <div
+                  className="p-4 flex flex-col items-center justify-center"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    // Apply different scaling based on scale option
+                    transform:
+                      settings.scale === "noscale"
+                        ? "none"
+                        : settings.scale === "fit"
+                        ? "scale(0.9)" // Simulate fit
+                        : "scale(0.8)", // Simulate shrink
+                    transformOrigin:
+                      "center center",
+                  }}
+                >
+                  <div className="font-mono font-bold text-3xl mb-2">
+                    A-001
+                  </div>
                   <div className="font-mono text-sm">
                     {new Date().toLocaleString()}
-                  </div>
-                  <div className="font-mono text-xs mt-2">
-                    Counter: Main Office
                   </div>
                 </div>
               </div>
@@ -426,20 +627,25 @@ export default function PrinterSettings() {
                 Paper size:{" "}
                 {settings.paperSize === "custom"
                   ? `Custom (${settings.customWidth}×${settings.customHeight} pts)`
-                  : PAPER_SIZES.find((p) => p.value === settings.paperSize)
-                      ?.label}
+                  : PAPER_SIZES.find(
+                      (p) =>
+                        p.value ===
+                        settings.paperSize
+                    )?.label}
               </p>
-              <p className="font-medium">Orientation: {settings.orientation}</p>
-              <p className="font-medium">Scale: {settings.scale}%</p>
-            </div>
-
-            <div className="text-xs text-gray-500 mt-4 text-center">
-              <p>
-                This is a preview and may differ slightly from actual print
-                output.
+              <p className="font-medium">
+                Orientation:{" "}
+                {settings.orientation}
               </p>
-              <p>
-                The preview shows how content will be positioned on the paper.
+              <p className="font-medium">
+                Scale mode: {settings.scale}
+              </p>
+              <p className="text-xs mt-1">
+                {settings.scale === "fit"
+                  ? "Content will be scaled to fill the page while preserving aspect ratio"
+                  : settings.scale === "shrink"
+                  ? "Content will be reduced if needed but never enlarged"
+                  : "Content will be printed at actual size without scaling"}
               </p>
             </div>
           </div>

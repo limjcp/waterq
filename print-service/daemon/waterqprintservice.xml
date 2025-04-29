@@ -4,9 +4,9 @@
 	<description>Local print service for WaterQ kiosk application</description>
 	<executable>C:\Program Files\nodejs\node.exe</executable>
 	<argument>--harmony</argument>
-	<argument>C:\Users\jlim0\Documents\waterq\print-service\node_modules\node-windows\lib\wrapper.js</argument>
+	<argument>C:\Users\jlim0\AppData\Roaming\npm\node_modules\node-windows\lib\wrapper.js</argument>
 	<argument>--file</argument>
-	<argument>C:\Users\jlim0\Documents\waterq\print-service\server.js</argument>
+	<argument>C:\Users\jlim0\waterq\print-service\server.js</argument>
 	<argument>--scriptoptions=</argument>
 	<argument>--log</argument>
 	<argument>WaterQ Print Service wrapper</argument>
@@ -28,5 +28,5 @@
 		<user>LocalSystem</user>
 		<password></password>
 	</serviceaccount>
-	<workingdirectory>C:\Users\jlim0\Documents\waterq\print-service</workingdirectory>
+	<workingdirectory>C:\Users\jlim0\waterq\print-service</workingdirectory>
 </service>

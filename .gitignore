@@ -3,6 +3,8 @@
 # dependencies
 /node_modules
 /print-service/node_modules
+/print-service/daemon
+/print/ticket.pdf
 /.pnp
 .pnp.*
 .yarn/*
