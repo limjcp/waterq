@@ -1592,9 +1592,9 @@ export default function StaffDashboard() {
             </h2>
             <div className="flex-1 flex flex-col">
               {/* Regular pending tickets */}
-              <div className="flex-0 mb-4 h-64">
+              <div className="flex-0 mb-6">
                 {activeTickets.length ? (
-                  <div className="flex flex-col items-center w-full max-w-[500px] mx-auto">
+                  <div className="flex flex-col items-center w-full mx-auto">
                     <div className="bg-sky-50 rounded-lg w-full h-[80px] lg:h-[100px] xl:h-[100px] flex items-center justify-center mb-4">
                       <span className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-sky-700 text-center px-2 break-all">
                         {activeTickets[0]
@@ -1628,7 +1628,7 @@ export default function StaffDashboard() {
 
                     {/* Show pending count if there are more waiting tickets */}
                     {activeTickets.length > 1 && (
-                      <div className="mt-2  rounded-lg py-3 px-6">
+                      <div className="mt-2 rounded-lg py-3 px-6">
                         <p className="text-center text-sky-700 font-medium text-xl">
                           Waiting:{" "}
                           {activeTickets.length -
@@ -1653,12 +1653,12 @@ export default function StaffDashboard() {
               </div>
 
               {/* Lapsed and Returning Tickets Container */}
-              <div className="flex-1 space-y-4 overflow-y-auto">
+              <div className="flex-1 space-y-10 overflow-y-auto">
                 {/* Lapsed Tickets - Show only 2 */}
                 {lapsedTickets.length > 0 && (
                   <div className="w-full">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium text-amber-700 sticky top-0 bg-white">
+                    <div className="flex justify-between items-center mb-5">
+                      <h3 className="text-3xl font-medium text-amber-700 sticky top-0 bg-white">
                         Lapsed Tickets
                       </h3>
                       {lapsedTickets.length >
@@ -1671,7 +1671,7 @@ export default function StaffDashboard() {
                               true
                             )
                           }
-                          className="text-xs text-amber-600 hover:text-white font-medium"
+                          className="text-5xl text-amber-600 hover:text-white font-medium"
                         >
                           Show All (
                           {lapsedTickets.length})
@@ -1687,7 +1687,7 @@ export default function StaffDashboard() {
                             className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2"
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-amber-600 font-medium">
+                              <span className="text-lg text-amber-600 font-medium">
                                 {ticket.isPrioritized
                                   ? "PWD-"
                                   : ""}
@@ -1700,14 +1700,14 @@ export default function StaffDashboard() {
                                 )}
                               </span>
                               {ticket.isPrioritized && (
-                                <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded font-bold">
+                                <span className="bg-amber-200 text-amber-800 text-sm px-1.5 py-0.5 rounded font-bold">
                                   PWD
                                 </span>
                               )}
                             </div>
                             <Button
                               variant="warning"
-                              size="sm"
+                              size="md"
                               disabled={
                                 calledTicketId !==
                                   null ||
@@ -1738,8 +1738,8 @@ export default function StaffDashboard() {
                 {/* Returning Tickets - Show only 2 */}
                 {returningTickets.length > 0 && (
                   <div className="w-full">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium text-sky-700 sticky top-0 bg-white">
+                    <div className="flex justify-between items-center mb-5">
+                      <h3 className="text-3xl font-medium text-sky-700 sticky top-0 bg-white">
                         Returning Tickets
                       </h3>
                       {returningTickets.length >
@@ -1752,7 +1752,7 @@ export default function StaffDashboard() {
                               true
                             )
                           }
-                          className="text-xs text-purple-600 hover:text-white font-medium"
+                          className="text-5xl text-purple-600 hover:text-white font-medium"
                         >
                           Show All (
                           {
@@ -1771,7 +1771,7 @@ export default function StaffDashboard() {
                             className="bg-sky-50 p-2 rounded-lg flex flex-col gap-2 border border-purple-100"
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-sky-800">
+                              <span className="text-lg font-medium text-sky-800">
                                 {ticket.isPrioritized
                                   ? "PWD-"
                                   : ""}
@@ -1784,14 +1784,14 @@ export default function StaffDashboard() {
                                 )}
                               </span>
                               {ticket.isPrioritized && (
-                                <span className="bg-amber-200 text-amber-800 font-bold text-xs px-1.5 py-0.5 rounded">
+                                <span className="bg-amber-200 text-amber-800 font-bold text-sm px-1.5 py-0.5 rounded">
                                   PWD
                                 </span>
                               )}
                             </div>
                             <Button
                               variant="primary"
-                              size="sm"
+                              size="md"
                               disabled={
                                 calledTicketId !==
                                   null ||
@@ -1845,7 +1845,7 @@ export default function StaffDashboard() {
             <h2 className="text-xl md:text-6xl font-bold text-sky-600 mb-4 lg:mb-6 text-center flex-none">
               Currently Serving
             </h2>
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex flex-col">
               {currentServingTicket ? (
                 <div className="flex flex-col items-center w-full  mx-auto">
                   <div className="bg-sky-100 rounded-lg w-full h-[80px] lg:h-[100px] flex items-center justify-center mb-4">
@@ -2258,7 +2258,7 @@ export default function StaffDashboard() {
             <h2 className="text-xl md:text-6xl font-bold text-sky-600 mb-4 lg:mb-6 text-center flex-none">
               Your Statistics
             </h2>
-            <div className="flex-1 flex flex-col justify-center">
+            <div className="flex-1 flex flex-col ">
               <div className="space-y-4 lg:space-y-8 w-full mx-auto">
                 <div className="bg-sky-50 rounded-lg p-4 lg:p-6">
                   <p className="text-base lg:text-lg text-sky-700 font-medium">
