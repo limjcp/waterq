@@ -80,8 +80,7 @@ export default function Kiosk() {
     string | null
   >(null);
   const [isPWD, setIsPWD] = useState(false);
-  const [countdown, setCountdown] =
-    useState(99999);
+  const [countdown, setCountdown] = useState(15);
   const [showScreensaver, setShowScreensaver] =
     useState(false);
   const [scrollPosition, setScrollPosition] =
@@ -500,7 +499,7 @@ export default function Kiosk() {
     setTicketData(null);
     setError(null);
     setCurrentStep(1);
-    setCountdown(5);
+    setCountdown(15);
     setShowErrorModal(false); // Close modal when resetting
   }
 
@@ -665,7 +664,7 @@ export default function Kiosk() {
                   </div>
                   {/* Emphasized ticket system message with water-themed styling */}
                   <div className="relative mb-8 mt-10 text-center">
-                    <p className="text-6xl md:text-8xl font-extrabold text-blue-700 drop-shadow-md">
+                    <p className="text-6xl md:text-7xl font-extrabold text-blue-700 drop-shadow-md">
                       GET YOUR NUMBER HERE
                     </p>
                     <p className="text-lg md:text-4xl text-blue-700 mt-4 drop-shadow-md">
@@ -696,18 +695,11 @@ export default function Kiosk() {
                         {/* Water ripple effect on hover */}
                         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxNXB4IiB2aWV3Qm94PSIwIDAgMTI4MCAxNDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTMyMCAyOGM0NCAwIDExMi0yOSAyMDItMjggNzMgMCAxMzMgNDkgMTggNzAgMCAzIDIwLTEzIDU1LTEzIDMyIDAgODMgMjAgMTM0IDIwIDM0IDAgMTQzLTMzIDE0My0zM3YxNDBIMHptNTIxIDY4YzAgMC0xNTkgNDItMzE5IDQyLTE4MCAwLTM0MS02Ni0zNDEtNjZ2MTZIMTQ0MFY2MGMwIDAgMTQtMTQgMzktMjkgOS00IDE2LTggMjUtMTQgNDAtMjQgNTUtMTIgOTgtNDIgNDgtMzAgMTQzIDE0IDE0MyAxNHoiLz48L2c+PC9zdmc+')] bg-center [background-size:100%] bottom-0 left-0 right-0 h-16 opacity-0 group-hover:opacity-20 transition-opacity duration-700"></div>
 
-                        <div className="items-center justify-center mb-6 relative">
+                        <div className="items-center justify-center">
                           <Wheelchair
                             size={350}
-                            weight="bold"
                             className="drop-shadow-xl transition-transform group-hover:scale-110 duration-300"
                           />
-                          <span className="text-7xl invisible block">
-                            SPACER
-                          </span>
-                          <span className="text-7xl invisible block">
-                            SPACER
-                          </span>
                         </div>
                         <div className="text-center drop-shadow-md">
                           <span className="text-7xl block">
@@ -735,25 +727,16 @@ export default function Kiosk() {
                             size={350}
                             className="drop-shadow-xl transition-transform group-hover:scale-110 duration-300"
                           />
-                          <span className="text-7xl invisible block">
-                            SPACER
-                          </span>
-                          <span className="text-7xl invisible block">
-                            SPACER
-                          </span>
-                          <span className="text-7xl invisible block">
-                            SPACER
-                          </span>
                         </div>
                         <div className="text-center drop-shadow-md">
                           <span className="text-7xl block">
-                            REGULAR
+                            PWD
                           </span>
-                          <span className="text-7xl invisible block">
-                            SPACER
+                          <span className="text-7xl block">
+                            PREGNANT
                           </span>
-                          <span className="text-7xl invisible block">
-                            SPACER
+                          <span className="text-7xl block">
+                            SENIOR CITIZEN
                           </span>
                         </div>
                       </button>
