@@ -107,7 +107,7 @@ export default function AdminLayout({
             isSidebarCollapsed ? "w-20" : "w-64"
           } bg-sky-800 text-white h-screen p-4 flex flex-col transition-all duration-300`}
         >
-          <div className="mb-8 flex justify-center">
+          <div className="mb-8 ">
             <Image
               src="/wdlogo.png"
               alt="Water District Logo"
@@ -117,7 +117,7 @@ export default function AdminLayout({
             />
             {!isSidebarCollapsed && (
               <h2 className="text-xl font-bold text-center mt-4">
-                Admin Panel
+                Queueing System
               </h2>
             )}
           </div>

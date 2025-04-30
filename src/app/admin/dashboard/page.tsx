@@ -1,102 +1,93 @@
 "use client";
 
-import Link from "next/link";
 import { useSession } from "next-auth/react";
-import {
-  UsersIcon,
-  ChartBarIcon,
-  QueueListIcon,
-  BuildingStorefrontIcon,
-} from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+
+type CounterStats = {
+  id: string;
+  name: string;
+  todayServed: number;
+  totalServed: number;
+  averageServiceTime: number;
+  todayAverageServiceTime: number;
+};
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
+  const [stats, setStats] = useState<CounterStats[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (status === "loading") {
+  useEffect(() => {
+    async function fetchCounterStats() {
+      try {
+        const res = await fetch('/api/counters/stats');
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Error fetching counter stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCounterStats();
+  }, []);
+
+  if (status === "loading" || loading) {
     return (
       <div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full mx-auto"></div>
     );
   }
 
+  function formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
   return (
-    <div className="min-h-screen bg-white p-8  transition-all duration-300">
-      <h1 className="text-3xl font-bold text-sky-800 mb-6">Admin Dashboard</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Summary Cards */}
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-sky-500 rounded-lg">
-              <UsersIcon className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h2 className="text-lg font-semibold text-sky-800">
-                Staff Management
-              </h2>
-              <p className="text-sky-600">Manage staff accounts and roles</p>
-            </div>
-          </div>
-          <Link
-            href="/admin/users"
-            className="mt-4 inline-block text-sky-600 hover:text-sky-800"
-          >
-            View Staff &rarr;
-          </Link>
-        </div>
-
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-sky-500 rounded-lg">
-              <QueueListIcon className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h2 className="text-lg font-semibold text-sky-800">Services</h2>
-              <p className="text-sky-600">Manage service types and options</p>
-            </div>
-          </div>
-          <Link
-            href="/admin/services"
-            className="mt-4 inline-block text-sky-600 hover:text-sky-800"
-          >
-            View Services &rarr;
-          </Link>
-        </div>
-
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-sky-500 rounded-lg">
-              <BuildingStorefrontIcon className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h2 className="text-lg font-semibold text-sky-800">Counters</h2>
-              <p className="text-sky-600">Set up service counters</p>
+    <div className="min-h-screen bg-white p-8 transition-all duration-300">
+      <h1 className="text-3xl font-bold text-sky-800 mb-6">Counter Statistics</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {stats.map((counter) => (
+          <div key={counter.id} className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-sky-800 mb-3">{counter.name}</h3>
+            <div className="space-y-3">
+              {/* Today's Stats */}
+              <div className="bg-white rounded-lg p-3">
+                <h4 className="text-sm font-medium text-sky-600 mb-2">Today's Statistics</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sky-600">Served:</span>
+                    <span className="font-semibold">{counter.todayServed}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sky-600">Avg. Time:</span>
+                    <span className="font-semibold">{formatTime(counter.todayAverageServiceTime)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* All-time Stats */}
+              <div className="bg-white rounded-lg p-3">
+                <h4 className="text-sm font-medium text-sky-600 mb-2">All-time Statistics</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sky-600">Total Served:</span>
+                    <span className="font-semibold">{counter.totalServed}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sky-600">Avg. Time:</span>
+                    <span className="font-semibold">{formatTime(counter.averageServiceTime)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <Link
-            href="/admin/counters"
-            className="mt-4 inline-block text-sky-600 hover:text-sky-800"
-          >
-            Manage Counters &rarr;
-          </Link>
-        </div>
-
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-sky-500 rounded-lg">
-              <ChartBarIcon className="h-6 w-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h2 className="text-lg font-semibold text-sky-800">Reports</h2>
-              <p className="text-sky-600">View and export performance data</p>
-            </div>
-          </div>
-          <Link
-            href="/admin/report"
-            className="mt-4 inline-block text-sky-600 hover:text-sky-800"
-          >
-            View Reports &rarr;
-          </Link>
-        </div>
+        ))}
       </div>
     </div>
   );
