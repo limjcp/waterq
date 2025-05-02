@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "http://172.20.10.84:3000",
+      "http://192.168.50.240:3000",
     ], // Add your kiosk IP/hostname
   })
 );

@@ -11,7 +11,9 @@ export default auth((req) => {
   // Public routes that don't require authentication
   if (
     nextUrl.pathname.startsWith("/api/auth") ||
-    nextUrl.pathname.startsWith("/public/upload") ||
+    nextUrl.pathname.startsWith(
+      "/public/upload"
+    ) ||
     nextUrl.pathname === "/WD.png" ||
     nextUrl.pathname === "/wdmascot.png" ||
     nextUrl.pathname === "/wdlogo.png" ||
@@ -20,21 +22,29 @@ export default auth((req) => {
     nextUrl.pathname.startsWith("/auth/signin") ||
     nextUrl.pathname.startsWith("/api/tickets") ||
     nextUrl.pathname.startsWith("/display") ||
-    nextUrl.pathname.startsWith("/api/screensaver") ||
+    nextUrl.pathname.startsWith(
+      "/api/screensaver"
+    ) ||
     nextUrl.pathname.startsWith("/api/upload") ||
     nextUrl.pathname.startsWith("/api/display") ||
     nextUrl.pathname === "/admin/register" ||
     nextUrl.pathname === "/push.png" ||
     nextUrl.pathname === "/users.png" ||
-    nextUrl.pathname.startsWith("/screensaver/") || // Add access to screensaver images
-    nextUrl.pathname.match(/\.(jpg|jpeg|png|gif|svg)$/) // Allow all image files
+    nextUrl.pathname.startsWith(
+      "/screensaver/"
+    ) || // Add access to screensaver images
+    nextUrl.pathname.match(
+      /\.(jpg|jpeg|png|gif|svg)$/
+    ) // Allow all image files
   ) {
     return NextResponse.next();
   }
 
   // Redirect unauthenticated users to login page
   if (!isLoggedIn) {
-    return NextResponse.redirect(new URL("/auth/signin", nextUrl));
+    return NextResponse.redirect(
+      new URL("/auth/signin", nextUrl)
+    );
   }
 
   const user = req.auth?.user;
@@ -42,19 +52,50 @@ export default auth((req) => {
   // Role-based redirects when accessing the root path "/"
   if (nextUrl.pathname === "/") {
     if (!user) {
-      return NextResponse.redirect(new URL("/auth/signin", nextUrl));
+      return NextResponse.redirect(
+        new URL("/auth/signin", nextUrl)
+      );
     }
 
     // For admin users, redirect to admin dashboard
-    if (user.role && Array.isArray(user.role) && user.role.includes("admin")) {
-      console.log("Redirecting admin user to /admin/dashboard");
-      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
+    if (
+      user.role &&
+      Array.isArray(user.role) &&
+      user.role.includes("admin")
+    ) {
+      console.log(
+        "Redirecting admin user to /admin/dashboard"
+      );
+      return NextResponse.redirect(
+        new URL("/admin/dashboard", nextUrl)
+      );
     }
 
     // For staff users, redirect to counter
-    if (user.role && Array.isArray(user.role) && user.role.includes("staff")) {
-      console.log("Redirecting staff user to /staff/counters");
-      return NextResponse.redirect(new URL("/staff/counters", nextUrl));
+    if (
+      user.role &&
+      Array.isArray(user.role) &&
+      user.role.includes("staff")
+    ) {
+      console.log(
+        "Redirecting staff user to /staff/counters"
+      );
+      return NextResponse.redirect(
+        new URL("/staff/counters", nextUrl)
+      );
+    }
+    // For supervisor users, redirect to supervisor dashboard
+    if (
+      user.role &&
+      Array.isArray(user.role) &&
+      user.role.includes("supervisor")
+    ) {
+      console.log(
+        "Redirecting supervisor user to /supervisor"
+      );
+      return NextResponse.redirect(
+        new URL("/supervisor", nextUrl)
+      );
     }
   }
 
@@ -68,8 +109,12 @@ export default auth((req) => {
       !Array.isArray(user.role) ||
       !user.role.includes("admin")
     ) {
-      console.log("Unauthorized access to admin route");
-      return NextResponse.redirect(new URL("/", nextUrl));
+      console.log(
+        "Unauthorized access to admin route"
+      );
+      return NextResponse.redirect(
+        new URL("/", nextUrl)
+      );
     }
   }
 
@@ -80,8 +125,30 @@ export default auth((req) => {
       !Array.isArray(user.role) ||
       !user.role.includes("staff")
     ) {
-      console.log("Unauthorized access to staff route");
-      return NextResponse.redirect(new URL("/", nextUrl));
+      console.log(
+        "Unauthorized access to staff route"
+      );
+      return NextResponse.redirect(
+        new URL("/", nextUrl)
+      );
+    }
+  }
+
+  // Restrict access to supervisor routes
+  if (
+    nextUrl.pathname.startsWith("/supervisor/")
+  ) {
+    if (
+      !user?.role ||
+      !Array.isArray(user.role) ||
+      !user.role.includes("supervisor")
+    ) {
+      console.log(
+        "Unauthorized access to supervisor route"
+      );
+      return NextResponse.redirect(
+        new URL("/", nextUrl)
+      );
     }
   }
 

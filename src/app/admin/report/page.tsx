@@ -8,8 +8,12 @@ import Button from "@/components/Button";
 // Format time (seconds) as MM:SS
 const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.round(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  const remainingSeconds = Math.round(
+    seconds % 60
+  );
+  return `${minutes}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
 };
 
 // Types
@@ -32,6 +36,7 @@ type TicketDetail = {
   serviceTypeName: string;
   dateTime: string;
   serviceTime: number;
+  remarks?: string; // Add remarks field
 };
 
 type ReportData = {
@@ -63,23 +68,45 @@ type ReportMode = "staff" | "service";
 export default function StaffReports() {
   const { status } = useSession();
   const [loading, setLoading] = useState(true);
-  const [reportMode, setReportMode] = useState<ReportMode>("staff");
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [selectedStaff, setSelectedStaff] = useState<string>("");
-  const [selectedService, setSelectedService] = useState<string>("");
-  const [startDate, setStartDate] = useState<string>(
-    format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")
-  );
+  const [reportMode, setReportMode] =
+    useState<ReportMode>("staff");
+  const [staffMembers, setStaffMembers] =
+    useState<StaffMember[]>([]);
+  const [services, setServices] = useState<
+    Service[]
+  >([]);
+  const [selectedStaff, setSelectedStaff] =
+    useState<string>("");
+  const [selectedService, setSelectedService] =
+    useState<string>("");
+  const [startDate, setStartDate] =
+    useState<string>(
+      format(
+        new Date(
+          Date.now() - 7 * 24 * 60 * 60 * 1000
+        ),
+        "yyyy-MM-dd"
+      )
+    );
   const [endDate, setEndDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd")
   );
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [reportData, setReportData] =
+    useState<ReportData | null>(null);
+  const [isGenerating, setIsGenerating] =
+    useState(false);
+  const [isLoadingPdf, setIsLoadingPdf] =
+    useState(false);
+
+  // New state for PDF preview
+  const [showPdfPreview, setShowPdfPreview] =
+    useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] =
+    useState<string | null>(null);
 
   // Add pagination for tickets display to improve performance
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] =
+    useState(1);
   const ticketsPerPage = 50; // Limit number of tickets shown per page
 
   // Update useEffect to fetch both staff and services
@@ -87,22 +114,28 @@ export default function StaffReports() {
     async function fetchData() {
       if (status === "authenticated") {
         try {
-          const [staffRes, servicesRes] = await Promise.all([
-            fetch("/api/user/list?role=STAFF"),
-            fetch("/api/service/list"),
-          ]);
+          const [staffRes, servicesRes] =
+            await Promise.all([
+              fetch("/api/user/list?role=STAFF"),
+              fetch("/api/service/list"),
+            ]);
 
           if (staffRes.ok) {
-            const staffData = await staffRes.json();
+            const staffData =
+              await staffRes.json();
             setStaffMembers(staffData);
           }
 
           if (servicesRes.ok) {
-            const servicesData = await servicesRes.json();
+            const servicesData =
+              await servicesRes.json();
             setServices(servicesData);
           }
         } catch (error) {
-          console.error("Error fetching data:", error);
+          console.error(
+            "Error fetching data:",
+            error
+          );
         } finally {
           setLoading(false);
         }
@@ -114,11 +147,22 @@ export default function StaffReports() {
     fetchData();
   }, [status]);
 
+  // Cleanup effect for PDF preview URL
+  useEffect(() => {
+    return () => {
+      if (pdfPreviewUrl) {
+        URL.revokeObjectURL(pdfPreviewUrl);
+      }
+    };
+  }, [pdfPreviewUrl]);
+
   // Update generate report function
   const generateReport = async () => {
     if (
-      (reportMode === "staff" && !selectedStaff) ||
-      (reportMode === "service" && !selectedService)
+      (reportMode === "staff" &&
+        !selectedStaff) ||
+      (reportMode === "service" &&
+        !selectedService)
     )
       return;
 
@@ -135,34 +179,42 @@ export default function StaffReports() {
         const data = await res.json();
         setReportData(data);
       } else {
-        console.error("Failed to generate report");
+        console.error(
+          "Failed to generate report"
+        );
       }
     } catch (error) {
-      console.error("Error generating report:", error);
+      console.error(
+        "Error generating report:",
+        error
+      );
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // New function for server-side PDF generation
-  const downloadPdf = async () => {
+  // New function to generate and show PDF preview
+  const previewPdf = async () => {
     if (!reportData) return;
 
-    setIsDownloadingPdf(true);
+    setIsLoadingPdf(true);
 
     try {
-      const response = await fetch("/api/reports/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          reportData,
-          startDate,
-          endDate,
-          reportMode,
-        }),
-      });
+      const response = await fetch(
+        "/api/reports/pdf",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reportData,
+            startDate,
+            endDate,
+            reportMode,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to generate PDF");
@@ -171,33 +223,68 @@ export default function StaffReports() {
       // Get the PDF blob from the response
       const blob = await response.blob();
 
-      // Create a download link and trigger download
+      // Create a URL for the blob
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${reportMode}_report_${startDate}_${endDate}.pdf`;
-      document.body.appendChild(a);
-      a.click();
 
-      // Clean up
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Set the preview URL and show the preview
+      setPdfPreviewUrl(url);
+      setShowPdfPreview(true);
     } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("Failed to generate PDF. Please try again later.");
+      console.error(
+        "Error generating PDF preview:",
+        error
+      );
+      alert(
+        "Failed to generate PDF preview. Please try again later."
+      );
     } finally {
-      setIsDownloadingPdf(false);
+      setIsLoadingPdf(false);
     }
   };
 
+  // Function to handle printing the PDF
+  const printPdf = () => {
+    if (!pdfPreviewUrl) return;
+
+    // Open the PDF URL in a new window and trigger print
+    const printWindow = window.open(
+      pdfPreviewUrl
+    );
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
+
+  // Function to download the PDF
+  const downloadPdf = () => {
+    if (!pdfPreviewUrl) return;
+
+    const a = document.createElement("a");
+    a.href = pdfPreviewUrl;
+    a.download = `${reportMode}_report_${startDate}_${endDate}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   // Calculate pagination for ticket display
-  const indexOfLastTicket = currentPage * ticketsPerPage;
-  const indexOfFirstTicket = indexOfLastTicket - ticketsPerPage;
+  const indexOfLastTicket =
+    currentPage * ticketsPerPage;
+  const indexOfFirstTicket =
+    indexOfLastTicket - ticketsPerPage;
   const currentTickets = reportData?.ticketDetails
-    ? reportData.ticketDetails.slice(indexOfFirstTicket, indexOfLastTicket)
+    ? reportData.ticketDetails.slice(
+        indexOfFirstTicket,
+        indexOfLastTicket
+      )
     : [];
   const totalPages = reportData?.ticketDetails
-    ? Math.ceil(reportData.ticketDetails.length / ticketsPerPage)
+    ? Math.ceil(
+        reportData.ticketDetails.length /
+          ticketsPerPage
+      )
     : 0;
 
   if (status === "loading" || loading) {
@@ -239,7 +326,9 @@ export default function StaffReports() {
               <select
                 value={reportMode}
                 onChange={(e) => {
-                  setReportMode(e.target.value as ReportMode);
+                  setReportMode(
+                    e.target.value as ReportMode
+                  );
                   setSelectedStaff("");
                   setSelectedService("");
                   setReportData(null);
@@ -247,8 +336,12 @@ export default function StaffReports() {
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 aria-label="Select report type"
               >
-                <option value="staff">Staff Report</option>
-                <option value="service">Service Report</option>
+                <option value="staff">
+                  Staff Report
+                </option>
+                <option value="service">
+                  Service Report
+                </option>
               </select>
             </div>
             {/* Staff/Service Selection */}
@@ -259,11 +352,19 @@ export default function StaffReports() {
                   : "Select Service"}
               </label>
               <select
-                value={reportMode === "staff" ? selectedStaff : selectedService}
+                value={
+                  reportMode === "staff"
+                    ? selectedStaff
+                    : selectedService
+                }
                 onChange={(e) =>
                   reportMode === "staff"
-                    ? setSelectedStaff(e.target.value)
-                    : setSelectedService(e.target.value)
+                    ? setSelectedStaff(
+                        e.target.value
+                      )
+                    : setSelectedService(
+                        e.target.value
+                      )
                 }
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 aria-label={
@@ -272,15 +373,23 @@ export default function StaffReports() {
                     : "Select service"
                 }
               >
-                <option value="">Select...</option>
+                <option value="">
+                  Select...
+                </option>
                 {reportMode === "staff"
                   ? staffMembers.map((staff) => (
-                      <option key={staff.id} value={staff.username}>
+                      <option
+                        key={staff.id}
+                        value={staff.username}
+                      >
                         {staff.name}
                       </option>
                     ))
                   : services.map((service) => (
-                      <option key={service.id} value={service.id}>
+                      <option
+                        key={service.id}
+                        value={service.id}
+                      >
                         {service.name}
                       </option>
                     ))}
@@ -294,7 +403,9 @@ export default function StaffReports() {
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) =>
+                  setStartDate(e.target.value)
+                }
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 aria-label="Start date"
                 title="Start date"
@@ -307,7 +418,9 @@ export default function StaffReports() {
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) =>
+                  setEndDate(e.target.value)
+                }
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 aria-label="End date"
                 title="End date"
@@ -318,7 +431,9 @@ export default function StaffReports() {
             <Button
               onClick={generateReport}
               disabled={
-                (reportMode === "staff" ? !selectedStaff : !selectedService) ||
+                (reportMode === "staff"
+                  ? !selectedStaff
+                  : !selectedService) ||
                 isGenerating
               }
               variant="success"
@@ -342,18 +457,18 @@ export default function StaffReports() {
                 Report for {reportData.name}
               </h2>
               <Button
-                onClick={downloadPdf}
-                disabled={isDownloadingPdf}
+                onClick={previewPdf}
+                disabled={isLoadingPdf}
                 variant="success"
                 size="md"
               >
-                {isDownloadingPdf ? (
+                {isLoadingPdf ? (
                   <>
                     <span className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    Preparing PDF...
+                    Preparing Preview...
                   </>
                 ) : (
-                  "Download PDF Report"
+                  "Preview PDF Report"
                 )}
               </Button>
             </div>
@@ -372,7 +487,9 @@ export default function StaffReports() {
                   Average Service Time
                 </h3>
                 <p className="text-3xl font-bold text-sky-800">
-                  {formatTime(reportData.averageServiceTime)}
+                  {formatTime(
+                    reportData.averageServiceTime
+                  )}
                 </p>
               </div>
             </div>
@@ -393,12 +510,21 @@ export default function StaffReports() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.serviceByDay.map((day, index) => (
-                    <tr key={index} className="border-b border-sky-50">
-                      <td className="py-3 px-4">{day.date}</td>
-                      <td className="py-3 px-4">{day.count}</td>
-                    </tr>
-                  ))}
+                  {reportData.serviceByDay.map(
+                    (day, index) => (
+                      <tr
+                        key={index}
+                        className="border-b border-sky-50"
+                      >
+                        <td className="py-3 px-4">
+                          {day.date}
+                        </td>
+                        <td className="py-3 px-4">
+                          {day.count}
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
@@ -406,48 +532,70 @@ export default function StaffReports() {
             <h3 className="text-xl font-bold text-sky-800 mb-4">
               Service Type Breakdown
             </h3>
-            {reportData.serviceTypesBreakdown.map((service, serviceIndex) => (
-              <div key={serviceIndex} className="mb-8">
-                <h4 className="text-lg font-semibold text-sky-700 mb-3">
-                  {service.serviceName}
-                </h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white border border-sky-100">
-                    <thead>
-                      <tr className="bg-sky-50">
-                        <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                          Service Type
-                        </th>
-                        <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                          Tickets Served
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {service.types.map((type, typeIndex) => (
-                        <tr key={typeIndex} className="border-b border-sky-50">
-                          <td className="py-3 px-4">{type.typeName}</td>
-                          <td className="py-3 px-4">{type.count}</td>
+            {reportData.serviceTypesBreakdown.map(
+              (service, serviceIndex) => (
+                <div
+                  key={serviceIndex}
+                  className="mb-8"
+                >
+                  <h4 className="text-lg font-semibold text-sky-700 mb-3">
+                    {service.serviceName}
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-sky-100">
+                      <thead>
+                        <tr className="bg-sky-50">
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Service Type
+                          </th>
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Tickets Served
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {service.types.map(
+                          (type, typeIndex) => (
+                            <tr
+                              key={typeIndex}
+                              className="border-b border-sky-50"
+                            >
+                              <td className="py-3 px-4">
+                                {type.typeName}
+                              </td>
+                              <td className="py-3 px-4">
+                                {type.count}
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
             {/* Modified detailed ticket information section with pagination */}
             {reportData.ticketDetails &&
-              reportData.ticketDetails.length > 0 && (
+              reportData.ticketDetails.length >
+                0 && (
                 <div className="mt-10">
                   <h3 className="text-xl font-bold text-sky-800 mb-4">
                     Detailed Ticket Information
                     <span className="text-sm font-normal ml-2 text-sky-600">
-                      (Showing {indexOfFirstTicket + 1}-
+                      (Showing{" "}
+                      {indexOfFirstTicket + 1}-
                       {Math.min(
                         indexOfLastTicket,
-                        reportData.ticketDetails.length
+                        reportData.ticketDetails
+                          .length
                       )}{" "}
-                      of {reportData.ticketDetails.length})
+                      of{" "}
+                      {
+                        reportData.ticketDetails
+                          .length
+                      }
+                      )
                     </span>
                   </h3>
                   <div className="overflow-x-auto">
@@ -469,24 +617,49 @@ export default function StaffReports() {
                           <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                             Service Time
                           </th>
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Remarks
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {currentTickets.map((ticket, index) => (
-                          <tr key={index} className="border-b border-sky-50">
-                            <td className="py-3 px-4">
-                              {ticket.prefix}-{ticket.ticketNumber}
-                            </td>
-                            <td className="py-3 px-4">{ticket.serviceName}</td>
-                            <td className="py-3 px-4">
-                              {ticket.serviceTypeName}
-                            </td>
-                            <td className="py-3 px-4">{ticket.dateTime}</td>
-                            <td className="py-3 px-4">
-                              {formatTime(ticket.serviceTime)}
-                            </td>
-                          </tr>
-                        ))}
+                        {currentTickets.map(
+                          (ticket, index) => (
+                            <tr
+                              key={index}
+                              className="border-b border-sky-50"
+                            >
+                              <td className="py-3 px-4">
+                                {ticket.prefix}-
+                                {
+                                  ticket.ticketNumber
+                                }
+                              </td>
+                              <td className="py-3 px-4">
+                                {
+                                  ticket.serviceName
+                                }
+                              </td>
+                              <td className="py-3 px-4">
+                                {
+                                  ticket.serviceTypeName
+                                }
+                              </td>
+                              <td className="py-3 px-4">
+                                {ticket.dateTime}
+                              </td>
+                              <td className="py-3 px-4">
+                                {formatTime(
+                                  ticket.serviceTime
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                {ticket.remarks ||
+                                  "-"}
+                              </td>
+                            </tr>
+                          )
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -494,8 +667,12 @@ export default function StaffReports() {
                   {totalPages > 1 && (
                     <div className="flex justify-center mt-4 gap-2">
                       <Button
-                        onClick={() => setCurrentPage(1)}
-                        disabled={currentPage === 1}
+                        onClick={() =>
+                          setCurrentPage(1)
+                        }
+                        disabled={
+                          currentPage === 1
+                        }
                         variant="secondary"
                         size="sm"
                       >
@@ -503,32 +680,50 @@ export default function StaffReports() {
                       </Button>
                       <Button
                         onClick={() =>
-                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          setCurrentPage((prev) =>
+                            Math.max(prev - 1, 1)
+                          )
                         }
-                        disabled={currentPage === 1}
+                        disabled={
+                          currentPage === 1
+                        }
                         variant="secondary"
                         size="sm"
                       >
                         Prev
                       </Button>
                       <div className="px-3 py-1">
-                        Page {currentPage} of {totalPages}
+                        Page {currentPage} of{" "}
+                        {totalPages}
                       </div>
                       <Button
                         onClick={() =>
                           setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages)
+                            Math.min(
+                              prev + 1,
+                              totalPages
+                            )
                           )
                         }
-                        disabled={currentPage === totalPages}
+                        disabled={
+                          currentPage ===
+                          totalPages
+                        }
                         variant="secondary"
                         size="sm"
                       >
                         Next
                       </Button>
                       <Button
-                        onClick={() => setCurrentPage(totalPages)}
-                        disabled={currentPage === totalPages}
+                        onClick={() =>
+                          setCurrentPage(
+                            totalPages
+                          )
+                        }
+                        disabled={
+                          currentPage ===
+                          totalPages
+                        }
                         variant="secondary"
                         size="sm"
                       >
@@ -538,6 +733,50 @@ export default function StaffReports() {
                   )}
                 </div>
               )}
+          </div>
+        )}{" "}
+        {/* PDF Preview Modal - Full Screen */}
+        {showPdfPreview && pdfPreviewUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+            <div className="bg-white w-full h-full flex flex-col">
+              <div className="p-4 bg-sky-100 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-sky-800">
+                  PDF Report Preview
+                </h2>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={printPdf}
+                    variant="success"
+                    size="sm"
+                  >
+                    Print Report
+                  </Button>
+                  <Button
+                    onClick={downloadPdf}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    Download PDF
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      setShowPdfPreview(false)
+                    }
+                    variant="danger"
+                    size="sm"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-grow overflow-hidden">
+                <iframe
+                  src={pdfPreviewUrl}
+                  className="w-full h-full border-0"
+                  title="PDF Preview"
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

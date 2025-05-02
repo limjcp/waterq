@@ -399,22 +399,16 @@ export default function DisplayBoard() {
       `}</style>
 
       {/* Background image with blur effect - stretched to fill the entire screen */}
-      <div className="fixed inset-0 z-0 w-full h-full">
+      <div className="fixed flex flex-col items-center justify-center inset-0 z-0 w-full h-full">
         <Image
           src="/wdlogo.png"
           alt="Background"
-          fill
-          sizes="100vw"
+          height={900}
+          width={900}
           quality={100}
-          priority
-          style={{
-            objectFit: "cover",
-            width: "100%",
-            height: "100%",
-          }}
         />
         {/* Enhanced blur overlay */}
-        <div className="absolute inset-0 backdrop-blur-md bg-white/50"></div>
+        <div className="absolute inset-0 backdrop-blur-md bg-black/70"></div>
       </div>
 
       {/* Water effects */}

@@ -19,6 +19,8 @@ model Service {
   serviceTypes ServiceType[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  supervisorId String?       @unique
+  supervisor   User?         @relation("ServiceSupervisor", fields: [supervisorId], references: [id])
 }
 
 // Each counter is physically a window/desk and is linked to a Service.
@@ -50,6 +52,7 @@ model QueueTicket {
   // Add service type relation
   serviceTypeId String?
   serviceType   ServiceType? @relation(fields: [serviceTypeId], references: [id])
+  remarks       String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   // Add fields to track serving start and end times
@@ -72,6 +75,7 @@ model User {
   // If the user is a staff, they can be assigned to a specific counter.
   assignedCounterId String?
   assignedCounter   Counter?  @relation(fields: [assignedCounterId], references: [id])
+  supervisedService Service?  @relation("ServiceSupervisor")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   lastLogin         DateTime?
@@ -94,6 +98,7 @@ enum Role {
   staff
   admin
   archived
+  supervisor
 }
 
 // New model for service types
