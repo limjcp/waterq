@@ -201,6 +201,7 @@ export async function POST(request: NextRequest) {
           staffName:
             ticket.counter?.User[0] &&
             `${ticket.counter.User[0].firstName} ${ticket.counter.User[0].lastName}`,
+          remarks: ticket.remarks || "", // Add this line
         });
       }
     }
@@ -474,6 +475,7 @@ function generateReportHtml(
               <th>Date & Time</th>
               <th>Service Time</th>
               <th>Staff</th>
+              <th>Remarks</th><!-- Add this column -->
             </tr>
           </thead>
           <tbody>
@@ -493,6 +495,9 @@ function generateReportHtml(
                 <td>${
                   ticket.staffName || "N/A"
                 }</td>
+                <td>${
+                  ticket.remarks || ""
+                }</td><!-- Add this column -->
               </tr>
             `
               )

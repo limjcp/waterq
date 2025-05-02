@@ -149,6 +149,7 @@ export async function GET(request: NextRequest) {
               },
             },
           },
+          // No changes needed here as remarks is a direct field on QueueTicket
         },
         orderBy: { servingEnd: "desc" },
       });
@@ -213,6 +214,7 @@ export async function GET(request: NextRequest) {
           staffName: ticket.counter?.User[0]
             ? `${ticket.counter.User[0].firstName} ${ticket.counter.User[0].lastName}`
             : "Unknown",
+          remarks: ticket.remarks || "", // Add this line
         });
       }
     }

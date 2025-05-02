@@ -36,6 +36,7 @@ type TicketDetail = {
   serviceTypeName: string;
   dateTime: string;
   serviceTime: number;
+  remarks?: string; // Add remarks field
 };
 
 type ReportData = {
@@ -616,6 +617,9 @@ export default function StaffReports() {
                           <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                             Service Time
                           </th>
+                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                            Remarks
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -648,6 +652,10 @@ export default function StaffReports() {
                                 {formatTime(
                                   ticket.serviceTime
                                 )}
+                              </td>
+                              <td className="py-3 px-4">
+                                {ticket.remarks ||
+                                  "-"}
                               </td>
                             </tr>
                           )

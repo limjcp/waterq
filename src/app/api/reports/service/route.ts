@@ -195,6 +195,7 @@ export async function GET(request: NextRequest) {
             ticket.servingEnd?.toLocaleString() ||
             "-",
           serviceTime: serviceTime,
+          remarks: ticket.remarks || "", // Add the remarks field
         };
       }
     );

@@ -43,6 +43,7 @@ type TicketDetail = {
   dateTime: string;
   serviceTime: number;
   staffName?: string;
+  remarks?: string; // Add this line
 };
 
 // New types for filters
@@ -661,6 +662,9 @@ export default function SupervisorReports() {
                             <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                               Service Time
                             </th>
+                            <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                              Remarks
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -695,6 +699,10 @@ export default function SupervisorReports() {
                                   {formatTime(
                                     ticket.serviceTime
                                   )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  {ticket.remarks ||
+                                    "-"}
                                 </td>
                               </tr>
                             )

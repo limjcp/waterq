@@ -31,6 +31,7 @@ type TicketDetail = {
   servingStart: string;
   servingEnd: string;
   serviceTime: number;
+  remarks?: string; // Add remarks field
 };
 
 type ReportData = {
@@ -760,16 +761,18 @@ export async function POST(request: NextRequest) {
 
         const col1 = marginLeft + 5;
         const col2 = col1 + ticketColWidth;
-        const col3 = col2 + typeColWidth;
-        const col4 = col3 + startColWidth;
+        const col3 = col2 + typeColWidth * 0.8; // Adjust column width to fit remarks
+        const col4 = col3 + startColWidth * 0.8; // Adjust column width to fit remarks
+        const col5 = col4 + startColWidth * 0.8; // New column for remarks
 
         doc.text("Ticket #", col1, y);
         doc.text("Service Type", col2, y);
         doc.text("Service Start", col3, y);
         doc.text("Service End", col4, y);
+        doc.text("Remarks", col5, y); // Add remarks column header
 
         y += 10;
-        return { col1, col2, col3, col4 };
+        return { col1, col2, col3, col4, col5 };
       };
 
       // Function to add consistent header on new pages
@@ -953,6 +956,14 @@ export async function POST(request: NextRequest) {
                     ticket.servingEnd
                   ),
               col4,
+              y
+            );
+            doc.text(
+              truncateText(
+                ticket.remarks || "",
+                25
+              ), // Truncate long remarks
+              col5,
               y
             );
 
