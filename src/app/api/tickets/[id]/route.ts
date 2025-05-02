@@ -173,6 +173,7 @@ export async function PUT(
           servingEnd: data.servingEnd
             ? new Date(data.servingEnd)
             : undefined,
+          remarks: data.remarks, // Add this line to handle remarks
         },
         include: {
           service: true,
