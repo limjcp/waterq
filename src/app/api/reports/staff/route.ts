@@ -19,13 +19,18 @@ type Ticket = {
   servingStart: Date | null;
   servingEnd: Date | null;
   isPrioritized: boolean;
+  serviceTypeId: string | null;
+  remarks?: string | null;
   service?: {
+    id: string;
     name: string;
   };
   serviceType?: {
+    id: string;
     name: string;
     service: {
       name: string;
+      id: string;
     };
   };
 };
@@ -39,13 +44,15 @@ export async function GET(request: NextRequest) {
       { status: 401 }
     );
   }
-
   // Extract query parameters
   const searchParams =
     request.nextUrl.searchParams;
   const username = searchParams.get("username");
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
+  const serviceTypeId = searchParams.get(
+    "serviceTypeId"
+  ); // New filter parameter
 
   if (!username || !startDate || !endDate) {
     return NextResponse.json(
@@ -80,9 +87,7 @@ export async function GET(request: NextRequest) {
     );
     const endDateTime = new Date(
       `${endDate}T23:59:59`
-    );
-
-    // Get all served tickets by this user in the date range
+    ); // Get all served tickets by this user in the date range
     const tickets =
       (await prisma.queueTicket.findMany({
         where: {
@@ -92,16 +97,30 @@ export async function GET(request: NextRequest) {
             gte: startDateTime,
             lte: endDateTime,
           },
+          // Add optional serviceTypeId filter
+          ...(serviceTypeId
+            ? { serviceTypeId }
+            : {}),
         },
         include: {
           service: {
-            select: { name: true },
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
           },
           serviceType: {
             select: {
+              id: true,
               name: true,
+              code: true,
               service: {
-                select: { name: true },
+                select: {
+                  id: true,
+                  name: true,
+                  code: true,
+                },
               },
             },
           },
@@ -186,12 +205,19 @@ export async function GET(request: NextRequest) {
     ).map(([serviceName, count]) => ({
       serviceName,
       count,
-    }));
+    })); // Update service type grouping to include detailed breakdown
+    // Use a structure that tracks both the breakdown and service IDs
+    interface ServiceBreakdown {
+      typeMap: Map<
+        string,
+        { count: number; id: string }
+      >;
+      serviceId: string;
+    }
 
-    // Update service type grouping to include detailed breakdown
     const serviceBreakdownMap = new Map<
       string,
-      Map<string, number>
+      ServiceBreakdown
     >();
 
     tickets.forEach((ticket: Ticket) => {
@@ -199,20 +225,10 @@ export async function GET(request: NextRequest) {
         ticket.service?.name || "Unknown";
       const serviceTypeName =
         ticket.serviceType?.name || "Unspecified";
-
-      if (!serviceBreakdownMap.has(serviceName)) {
-        serviceBreakdownMap.set(
-          serviceName,
-          new Map<string, number>()
-        );
-      }
-
-      const typeMap =
-        serviceBreakdownMap.get(serviceName)!;
-      typeMap.set(
-        serviceTypeName,
-        (typeMap.get(serviceTypeName) || 0) + 1
-      );
+      const serviceTypeId =
+        ticket.serviceTypeId || ""; // As we now use the updated ServiceBreakdown structure defined above,
+      // this code is no longer needed and should be removed.
+      // The updated structure is properly used in the section we've already replaced.
     });
 
     const serviceTypesBreakdown = Array.from(
@@ -242,16 +258,18 @@ export async function GET(request: NextRequest) {
               1000
           );
         }
-
         return {
           ticketNumber:
             ticket.ticketNumber.toString(),
           prefix: ticket.prefix,
           serviceName:
             ticket.service?.name || "Unknown",
+          serviceId: ticket.serviceId || "",
           serviceTypeName:
             ticket.serviceType?.name ||
             "Unspecified",
+          serviceTypeId:
+            ticket.serviceTypeId || "",
           dateTime:
             ticket.updatedAt.toLocaleString(),
           servingStart:

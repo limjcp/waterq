@@ -20,6 +20,10 @@ type User = {
   assignedCounter?: {
     name: string;
   };
+  supervisedService?: {
+    id: string;
+    name: string;
+  };
 };
 
 type Counter = {
@@ -34,6 +38,9 @@ export default function UsersPage() {
   const [counters, setCounters] = useState<
     Counter[]
   >([]);
+  const [services, setServices] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [editUserId, setEditUserId] = useState<
     string | null
   >(null);
@@ -41,6 +48,7 @@ export default function UsersPage() {
     useState({
       password: "",
       assignedCounterId: "",
+      serviceId: "", // Add serviceId for supervisors
     });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -57,6 +65,7 @@ export default function UsersPage() {
       username: "",
       password: "",
       role: "staff",
+      serviceId: "", // Add serviceId for supervisors
     });
   const [registerLoading, setRegisterLoading] =
     useState(false);
@@ -70,6 +79,7 @@ export default function UsersPage() {
     if (status === "authenticated") {
       fetchUsers();
       fetchCounters();
+      fetchServices();
     } else if (status === "unauthenticated") {
       setLoading(false);
     }
@@ -108,6 +118,22 @@ export default function UsersPage() {
     }
   };
 
+  const fetchServices = async () => {
+    try {
+      const response = await fetch(
+        "/api/services"
+      );
+      const data = await response.json();
+      setServices(data);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch services"
+      );
+    }
+  };
+
   const handleEditChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement
@@ -126,6 +152,23 @@ export default function UsersPage() {
     setError("");
     setSuccess("");
 
+    const formData = { ...editFormData };
+
+    // Remove unnecessary fields based on user role
+    const editingUser = users.find(
+      (user) => user.id === editUserId
+    );
+    if (editingUser) {
+      if (!editingUser.role.includes("staff")) {
+        delete formData.assignedCounterId;
+      }
+      if (
+        !editingUser.role.includes("supervisor")
+      ) {
+        delete formData.serviceId;
+      }
+    }
+
     try {
       const response = await fetch(
         `/api/users/${editUserId}`,
@@ -134,7 +177,7 @@ export default function UsersPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(editFormData),
+          body: JSON.stringify(formData),
         }
       );
       const data = await response.json();
@@ -149,6 +192,7 @@ export default function UsersPage() {
         setEditFormData({
           password: "",
           assignedCounterId: "",
+          serviceId: "", // Reset serviceId
         });
         fetchUsers();
       }
@@ -217,6 +261,18 @@ export default function UsersPage() {
     setSuccess("");
     setRegisterLoading(true);
 
+    // Validate supervisor form
+    if (
+      registerFormData.role === "supervisor" &&
+      !registerFormData.serviceId
+    ) {
+      setError(
+        "A supervisor must be assigned to a service."
+      );
+      setRegisterLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(
         "/api/auth/register",
@@ -247,6 +303,7 @@ export default function UsersPage() {
           username: "",
           password: "",
           role: "staff",
+          serviceId: "", // Reset serviceId
         });
         setIsRegisterModalOpen(false);
         fetchUsers(); // Refresh the users list
@@ -310,82 +367,137 @@ export default function UsersPage() {
       )}
 
       {/* Edit User Form */}
-      {editUserId && (
-        <div className="mb-8 bg-sky-50 p-6 rounded-xl border border-sky-100">
-          <h2 className="text-xl font-semibold text-sky-700 mb-4">
-            Edit User
-          </h2>
-          <form
-            onSubmit={handleEditSubmit}
-            className="space-y-4"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-sky-700 mb-2">
-                  New Password (leave empty to
-                  keep current)
-                </label>
-                <input
-                  name="password"
-                  type="password"
-                  value={editFormData.password}
-                  onChange={handleEditChange}
-                  placeholder="Enter new password"
-                  className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
+      {editUserId &&
+        (() => {
+          const editingUser = users.find(
+            (user) => user.id === editUserId
+          );
+          const userRoles =
+            editingUser?.role || [];
 
-              <div>
-                <label className="block text-sm font-medium text-sky-700 mb-2">
-                  Assigned Counter
-                </label>
-                <select
-                  name="assignedCounterId"
-                  value={
-                    editFormData.assignedCounterId
-                  }
-                  onChange={handleEditChange}
-                  className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  aria-label="Assign counter to user"
-                >
-                  <option value="">
-                    None (Unassign)
-                  </option>
-                  {counters.map((counter) => (
-                    <option
-                      key={counter.id}
-                      value={counter.id}
-                    >
-                      {counter.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          return (
+            <div className="mb-8 bg-sky-50 p-6 rounded-xl border border-sky-100">
+              <h2 className="text-xl font-semibold text-sky-700 mb-4">
+                Edit User:{" "}
+                {editingUser?.firstName}{" "}
+                {editingUser?.lastName}
+              </h2>
+              <form
+                onSubmit={handleEditSubmit}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-sky-700 mb-2">
+                      New Password (leave empty to
+                      keep current)
+                    </label>
+                    <input
+                      name="password"
+                      type="password"
+                      value={
+                        editFormData.password
+                      }
+                      onChange={handleEditChange}
+                      placeholder="Enter new password"
+                      className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
 
-            <div className="flex justify-end gap-4 pt-2">
-              <Button
-                type="button"
-                onClick={() =>
-                  setEditUserId(null)
-                }
-                size="md"
-                variant="danger"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                onClick={handleEditSubmit}
-                size="md"
-                variant="success"
-              >
-                Update User
-              </Button>
+                  {userRoles.includes(
+                    "staff"
+                  ) && (
+                    <div>
+                      <label className="block text-sm font-medium text-sky-700 mb-2">
+                        Assigned Counter
+                      </label>
+                      <select
+                        name="assignedCounterId"
+                        value={
+                          editFormData.assignedCounterId
+                        }
+                        onChange={
+                          handleEditChange
+                        }
+                        className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        aria-label="Assign counter to user"
+                      >
+                        <option value="">
+                          None (Unassign)
+                        </option>
+                        {counters.map(
+                          (counter) => (
+                            <option
+                              key={counter.id}
+                              value={counter.id}
+                            >
+                              {counter.name}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </div>
+                  )}
+
+                  {userRoles.includes(
+                    "supervisor"
+                  ) && (
+                    <div>
+                      <label className="block text-sm font-medium text-sky-700 mb-2">
+                        Assigned Service
+                      </label>
+                      <select
+                        name="serviceId"
+                        value={
+                          editFormData.serviceId
+                        }
+                        onChange={
+                          handleEditChange
+                        }
+                        className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        aria-label="Assign service to supervisor"
+                      >
+                        <option value="">
+                          Select a service
+                        </option>
+                        {services.map(
+                          (service) => (
+                            <option
+                              key={service.id}
+                              value={service.id}
+                            >
+                              {service.name}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-4 pt-2">
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      setEditUserId(null)
+                    }
+                    size="md"
+                    variant="danger"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="md"
+                    variant="success"
+                  >
+                    Update User
+                  </Button>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
-      )}
+          );
+        })()}
 
       {/* Registration Modal */}
       {isRegisterModalOpen && (
@@ -573,9 +685,52 @@ export default function UsersPage() {
                     <option value="staff">
                       Staff
                     </option>
+                    <option value="supervisor">
+                      Supervisor
+                    </option>
                   </select>
                 </div>
               </div>
+
+              {registerFormData.role ===
+                "supervisor" && (
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-sky-700 mb-2">
+                    Assigned Service
+                  </label>
+                  <select
+                    name="serviceId"
+                    value={
+                      registerFormData.serviceId
+                    }
+                    onChange={
+                      handleRegisterChange
+                    }
+                    required={
+                      registerFormData.role ===
+                      "supervisor"
+                    }
+                    className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    aria-label="Select service to supervise"
+                  >
+                    <option value="">
+                      Select a service
+                    </option>
+                    {services.map((service) => (
+                      <option
+                        key={service.id}
+                        value={service.id}
+                      >
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-sm text-sky-600">
+                    A supervisor must be assigned
+                    to a service
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end gap-4 pt-4">
                 <Button
@@ -632,7 +787,7 @@ export default function UsersPage() {
                   Role
                 </th>
                 <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                  Assigned Counter
+                  Assignment
                 </th>
                 <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                   Actions
@@ -669,6 +824,9 @@ export default function UsersPage() {
                                 ? "bg-purple-100 text-purple-800"
                                 : role === "staff"
                                 ? "bg-blue-100 text-blue-800"
+                                : role ===
+                                  "supervisor"
+                                ? "bg-green-100 text-green-800"
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >
@@ -678,17 +836,44 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      {user.assignedCounter
-                        ?.name || "None"}
+                      {user.role.includes("staff")
+                        ? user.assignedCounter
+                            ?.name || "No Counter"
+                        : user.role.includes(
+                            "supervisor"
+                          )
+                        ? user.supervisedService
+                            ?.name || "No Service"
+                        : "N/A"}
                     </td>
                     <td className="flex flex-row gap-1 py-3 px-4 text-right">
                       <Button
                         variant="primary"
-                        onClick={() =>
-                          setEditUserId(user.id)
-                        }
+                        onClick={() => {
+                          setEditUserId(user.id);
+
+                          // Set initial form data based on user role
+                          const formData = {
+                            password: "",
+                            assignedCounterId:
+                              user.assignedCounter
+                                ? user
+                                    .assignedCounter
+                                    .id
+                                : "",
+                            serviceId:
+                              user.supervisedService
+                                ? user
+                                    .supervisedService
+                                    .id
+                                : "",
+                          };
+
+                          setEditFormData(
+                            formData
+                          );
+                        }}
                       >
-                        {" "}
                         <PencilIcon className="h-5 w-5 inline" />
                       </Button>
                       <Button

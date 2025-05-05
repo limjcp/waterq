@@ -729,13 +729,13 @@ export default function Kiosk() {
                           />
                         </div>
                         <div className="text-center drop-shadow-md">
-                          <span className="text-7xl block">
-                            PWD
+                          <span className="text-7xl block invisible">
+                            REGULAR
                           </span>
-                          <span className="text-7xl block">
-                            PREGNANT
+                          <span className="text-7xl block ">
+                            REGULAR
                           </span>
-                          <span className="text-7xl block">
+                          <span className="text-7xl block invisible">
                             SENIOR CITIZEN
                           </span>
                         </div>

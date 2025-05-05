@@ -29,6 +29,16 @@ type Service = {
   name: string;
 };
 
+// Add ServiceType type
+type ServiceType = {
+  id: string;
+  name: string;
+  code: string;
+  serviceId: string;
+  serviceName: string;
+};
+
+// Update TicketDetail to include serviceTypeId
 type TicketDetail = {
   ticketNumber: string;
   prefix: string;
@@ -36,7 +46,8 @@ type TicketDetail = {
   serviceTypeName: string;
   dateTime: string;
   serviceTime: number;
-  remarks?: string; // Add remarks field
+  remarks?: string;
+  serviceTypeId?: string;
 };
 
 type ReportData = {
@@ -54,15 +65,16 @@ type ReportData = {
   }[];
   serviceTypesBreakdown: {
     serviceName: string;
+    serviceId: string;
     types: {
       typeName: string;
+      typeId: string;
       count: number;
     }[];
   }[];
-  ticketDetails: TicketDetail[]; // Added field for individual ticket details
+  ticketDetails: TicketDetail[];
 };
 
-// Add new type for report mode
 type ReportMode = "staff" | "service";
 
 export default function StaffReports() {
@@ -97,6 +109,14 @@ export default function StaffReports() {
     useState(false);
   const [isLoadingPdf, setIsLoadingPdf] =
     useState(false);
+
+  // Add new state for service types
+  const [serviceTypes, setServiceTypes] =
+    useState<ServiceType[]>([]);
+  const [
+    selectedServiceTypeId,
+    setSelectedServiceTypeId,
+  ] = useState<string>("");
 
   // New state for PDF preview
   const [showPdfPreview, setShowPdfPreview] =
@@ -147,6 +167,68 @@ export default function StaffReports() {
     fetchData();
   }, [status]);
 
+  // New effect to fetch service types when a service is selected
+  useEffect(() => {
+    async function fetchServiceTypes() {
+      if (selectedService) {
+        try {
+          const response = await fetch(
+            `/api/servicetypes?serviceId=${selectedService}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setServiceTypes(data);
+          } else {
+            console.error(
+              "Failed to fetch service types"
+            );
+            setServiceTypes([]);
+          }
+        } catch (error) {
+          console.error(
+            "Error fetching service types:",
+            error
+          );
+          setServiceTypes([]);
+        }
+      } else if (
+        selectedStaff &&
+        reportMode === "staff"
+      ) {
+        try {
+          // For staff report, fetch all service types the staff member has tickets for
+          const response = await fetch(
+            `/api/servicetypes/user?username=${selectedStaff}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setServiceTypes(data);
+          } else {
+            console.error(
+              "Failed to fetch service types for staff"
+            );
+            setServiceTypes([]);
+          }
+        } catch (error) {
+          console.error(
+            "Error fetching service types for staff:",
+            error
+          );
+          setServiceTypes([]);
+        }
+      } else {
+        setServiceTypes([]);
+      }
+      setSelectedServiceTypeId("");
+    }
+
+    fetchServiceTypes();
+  }, [
+    selectedService,
+    selectedStaff,
+    reportMode,
+  ]);
+
   // Cleanup effect for PDF preview URL
   useEffect(() => {
     return () => {
@@ -156,7 +238,7 @@ export default function StaffReports() {
     };
   }, [pdfPreviewUrl]);
 
-  // Update generate report function
+  // Update generate report function to include service type filter
   const generateReport = async () => {
     if (
       (reportMode === "staff" &&
@@ -168,16 +250,25 @@ export default function StaffReports() {
 
     setIsGenerating(true);
     try {
-      const endpoint =
-        reportMode === "staff"
-          ? `/api/reports/staff?username=${selectedStaff}&startDate=${startDate}&endDate=${endDate}`
-          : `/api/reports/service?serviceId=${selectedService}&startDate=${startDate}&endDate=${endDate}`;
+      let endpoint;
+
+      if (reportMode === "staff") {
+        endpoint = `/api/reports/staff?username=${selectedStaff}&startDate=${startDate}&endDate=${endDate}`;
+      } else {
+        endpoint = `/api/reports/service?serviceId=${selectedService}&startDate=${startDate}&endDate=${endDate}`;
+      }
+
+      // Add service type filter if selected
+      if (selectedServiceTypeId) {
+        endpoint += `&serviceTypeId=${selectedServiceTypeId}`;
+      }
 
       const res = await fetch(endpoint);
 
       if (res.ok) {
         const data = await res.json();
         setReportData(data);
+        setCurrentPage(1); // Reset to first page when new report is generated
       } else {
         console.error(
           "Failed to generate report"
@@ -212,6 +303,8 @@ export default function StaffReports() {
             startDate,
             endDate,
             reportMode,
+            serviceTypeId:
+              selectedServiceTypeId || undefined,
           }),
         }
       );
@@ -269,23 +362,33 @@ export default function StaffReports() {
     document.body.removeChild(a);
   };
 
+  // Filter tickets by selected service type if needed
+  const filteredTickets =
+    reportData?.ticketDetails
+      ? selectedServiceTypeId
+        ? reportData.ticketDetails.filter(
+            (ticket) =>
+              ticket.serviceTypeId ===
+              selectedServiceTypeId
+          )
+        : reportData.ticketDetails
+      : [];
+
   // Calculate pagination for ticket display
   const indexOfLastTicket =
     currentPage * ticketsPerPage;
   const indexOfFirstTicket =
     indexOfLastTicket - ticketsPerPage;
-  const currentTickets = reportData?.ticketDetails
-    ? reportData.ticketDetails.slice(
-        indexOfFirstTicket,
-        indexOfLastTicket
-      )
-    : [];
-  const totalPages = reportData?.ticketDetails
-    ? Math.ceil(
-        reportData.ticketDetails.length /
-          ticketsPerPage
-      )
-    : 0;
+  const currentTickets = filteredTickets.slice(
+    indexOfFirstTicket,
+    indexOfLastTicket
+  );
+  const totalPages =
+    filteredTickets.length > 0
+      ? Math.ceil(
+          filteredTickets.length / ticketsPerPage
+        )
+      : 0;
 
   if (status === "loading" || loading) {
     return (
@@ -311,13 +414,13 @@ export default function StaffReports() {
   }
 
   return (
-    <div className=" bg-gradient-to-br from-sky-50 to-sky-100 ">
+    <div className="bg-gradient-to-br from-sky-50 to-sky-100">
       <div className="max-w-10xl mx-auto">
         <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
           <h1 className="text-3xl font-bold text-sky-800 mb-6">
             Performance Reports
           </h1>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
             {/* Report Type Selection */}
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
@@ -331,6 +434,8 @@ export default function StaffReports() {
                   );
                   setSelectedStaff("");
                   setSelectedService("");
+                  setSelectedServiceTypeId("");
+                  setServiceTypes([]);
                   setReportData(null);
                 }}
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -344,6 +449,7 @@ export default function StaffReports() {
                 </option>
               </select>
             </div>
+
             {/* Staff/Service Selection */}
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
@@ -357,15 +463,18 @@ export default function StaffReports() {
                     ? selectedStaff
                     : selectedService
                 }
-                onChange={(e) =>
-                  reportMode === "staff"
-                    ? setSelectedStaff(
-                        e.target.value
-                      )
-                    : setSelectedService(
-                        e.target.value
-                      )
-                }
+                onChange={(e) => {
+                  if (reportMode === "staff") {
+                    setSelectedStaff(
+                      e.target.value
+                    );
+                  } else {
+                    setSelectedService(
+                      e.target.value
+                    );
+                  }
+                  setSelectedServiceTypeId("");
+                }}
                 className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 aria-label={
                   reportMode === "staff"
@@ -395,6 +504,109 @@ export default function StaffReports() {
                     ))}
               </select>
             </div>
+
+            {/* Service Type Selection */}
+            <div>
+              <label className="block text-sm font-medium text-sky-700 mb-2">
+                Service Type (Optional)
+              </label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedServiceTypeId}
+                  onChange={(e) =>
+                    setSelectedServiceTypeId(
+                      e.target.value
+                    )
+                  }
+                  className="w-full px-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  aria-label="Select service type"
+                  disabled={
+                    serviceTypes.length === 0
+                  }
+                >
+                  <option value="">
+                    All Types
+                  </option>
+                  {/* Group service types by service for staff reports */}
+                  {reportMode === "staff"
+                    ? Object.entries(
+                        serviceTypes.reduce(
+                          (acc, type) => {
+                            // Group by service
+                            const serviceName =
+                              type.serviceName;
+                            if (
+                              !acc[serviceName]
+                            ) {
+                              acc[serviceName] =
+                                [];
+                            }
+                            acc[serviceName].push(
+                              type
+                            );
+                            return acc;
+                          },
+                          {} as Record<
+                            string,
+                            ServiceType[]
+                          >
+                        )
+                      ).map(
+                        ([
+                          serviceName,
+                          types,
+                        ]) => (
+                          <optgroup
+                            key={serviceName}
+                            label={serviceName}
+                          >
+                            {types.map((type) => (
+                              <option
+                                key={type.id}
+                                value={type.id}
+                              >
+                                {type.name} (
+                                {type.code})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )
+                      )
+                    : serviceTypes.map((type) => (
+                        <option
+                          key={type.id}
+                          value={type.id}
+                        >
+                          {type.name} ({type.code}
+                          )
+                        </option>
+                      ))}
+                </select>
+                {selectedServiceTypeId && (
+                  <button
+                    onClick={() =>
+                      setSelectedServiceTypeId("")
+                    }
+                    className="bg-gray-200 hover:bg-gray-300 rounded-md p-2 text-gray-700 transition-colors"
+                    title="Clear service type filter"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Existing date inputs */}
             <div>
               <label className="block text-sm font-medium text-sky-700 mb-2">
@@ -449,136 +661,178 @@ export default function StaffReports() {
               )}
             </Button>
           </div>
-        </div>
-        {reportData && (
-          <div className="bg-white rounded-2xl shadow-2xl p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-sky-800">
-                Report for {reportData.name}
-              </h2>
-              <Button
-                onClick={previewPdf}
-                disabled={isLoadingPdf}
-                variant="success"
-                size="md"
-              >
-                {isLoadingPdf ? (
-                  <>
-                    <span className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    Preparing Preview...
-                  </>
-                ) : (
-                  "Preview PDF Report"
-                )}
-              </Button>
-            </div>
-            {/* Summary Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-sky-50 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-sky-700 mb-3">
-                  Total Tickets Served
-                </h3>
-                <p className="text-3xl font-bold text-sky-800">
-                  {reportData.ticketsServed}
-                </p>
-              </div>
-              <div className="bg-sky-50 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-sky-700 mb-3">
-                  Average Service Time
-                </h3>
-                <p className="text-3xl font-bold text-sky-800">
-                  {formatTime(
-                    reportData.averageServiceTime
-                  )}
-                </p>
-              </div>
-            </div>
-            {/* Daily Breakdown */}
-            <h3 className="text-xl font-bold text-sky-800 mb-4">
-              Daily Breakdown
-            </h3>
-            <div className="mb-8 overflow-x-auto">
-              <table className="min-w-full bg-white border border-sky-100">
-                <thead>
-                  <tr className="bg-sky-50">
-                    <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                      Date
-                    </th>
-                    <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                      Tickets Served
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportData.serviceByDay.map(
-                    (day, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-sky-50"
-                      >
-                        <td className="py-3 px-4">
-                          {day.date}
-                        </td>
-                        <td className="py-3 px-4">
-                          {day.count}
-                        </td>
-                      </tr>
-                    )
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {/* Service Type Detailed Breakdown */}
-            <h3 className="text-xl font-bold text-sky-800 mb-4">
-              Service Type Breakdown
-            </h3>
-            {reportData.serviceTypesBreakdown.map(
-              (service, serviceIndex) => (
-                <div
-                  key={serviceIndex}
-                  className="mb-8"
+
+          {reportData && (
+            <div className="">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-sky-800">
+                  Report for {reportData.name}
+                  {selectedServiceTypeId &&
+                    serviceTypes.length > 0 && (
+                      <span className="ml-2 bg-sky-100 text-sky-800 text-sm px-2 py-1 rounded-full">
+                        Filtered by:{" "}
+                        {serviceTypes.find(
+                          (t) =>
+                            t.id ===
+                            selectedServiceTypeId
+                        )?.name ||
+                          "Unknown service type"}
+                      </span>
+                    )}
+                </h2>
+                <Button
+                  onClick={previewPdf}
+                  disabled={isLoadingPdf}
+                  variant="success"
+                  size="md"
                 >
-                  <h4 className="text-lg font-semibold text-sky-700 mb-3">
-                    {service.serviceName}
-                  </h4>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-sky-100">
-                      <thead>
-                        <tr className="bg-sky-50">
-                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                            Service Type
-                          </th>
-                          <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                            Tickets Served
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {service.types.map(
-                          (type, typeIndex) => (
-                            <tr
-                              key={typeIndex}
-                              className="border-b border-sky-50"
-                            >
-                              <td className="py-3 px-4">
-                                {type.typeName}
-                              </td>
-                              <td className="py-3 px-4">
-                                {type.count}
-                              </td>
-                            </tr>
-                          )
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                  {isLoadingPdf ? (
+                    <>
+                      <span className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Preparing Preview...
+                    </>
+                  ) : (
+                    "Preview PDF Report"
+                  )}
+                </Button>
+              </div>
+
+              {/* Summary Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-sky-50 rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-sky-700 mb-3">
+                    Total Tickets Served
+                  </h3>
+                  <p className="text-3xl font-bold text-sky-800">
+                    {reportData.ticketsServed}
+                  </p>
                 </div>
-              )
-            )}
-            {/* Modified detailed ticket information section with pagination */}
-            {reportData.ticketDetails &&
-              reportData.ticketDetails.length >
-                0 && (
+                <div className="bg-sky-50 rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-sky-700 mb-3">
+                    Average Service Time
+                  </h3>
+                  <p className="text-3xl font-bold text-sky-800">
+                    {formatTime(
+                      reportData.averageServiceTime
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Daily Breakdown */}
+              <h3 className="text-xl font-bold text-sky-800 mb-4">
+                Daily Breakdown
+              </h3>
+              <div className="mb-8 overflow-x-auto">
+                <table className="min-w-full bg-white border border-sky-100">
+                  <thead>
+                    <tr className="bg-sky-50">
+                      <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                        Date
+                      </th>
+                      <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                        Tickets Served
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.serviceByDay.map(
+                      (day, index) => (
+                        <tr
+                          key={index}
+                          className="border-b border-sky-50"
+                        >
+                          <td className="py-3 px-4">
+                            {day.date}
+                          </td>
+                          <td className="py-3 px-4">
+                            {day.count}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Service Type Detailed Breakdown */}
+              <h3 className="text-xl font-bold text-sky-800 mb-4">
+                Service Type Breakdown
+              </h3>
+              {reportData.serviceTypesBreakdown.map(
+                (service, serviceIndex) => (
+                  <div
+                    key={serviceIndex}
+                    className="mb-8"
+                  >
+                    <h4 className="text-lg font-semibold text-sky-700 mb-3">
+                      {service.serviceName}
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full bg-white border border-sky-100">
+                        <thead>
+                          <tr className="bg-sky-50">
+                            <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                              Service Type
+                            </th>
+                            <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
+                              Tickets Served
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {service.types.map(
+                            (type, typeIndex) => (
+                              <tr
+                                key={typeIndex}
+                                className="border-b border-sky-50"
+                              >
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-1">
+                                    {
+                                      type.typeName
+                                    }
+                                    {!selectedServiceTypeId && (
+                                      <button
+                                        onClick={() =>
+                                          setSelectedServiceTypeId(
+                                            type.typeId
+                                          )
+                                        }
+                                        title="Filter by this service type"
+                                        className="ml-2 text-sky-600 hover:text-sky-800 focus:outline-none"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          className="h-4 w-4"
+                                          viewBox="0 0 20 20"
+                                          fill="currentColor"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  {type.count}
+                                </td>
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )
+              )}
+
+              {/* Modified detailed ticket information section with pagination */}
+              {filteredTickets.length > 0 && (
                 <div className="mt-10">
                   <h3 className="text-xl font-bold text-sky-800 mb-4">
                     Detailed Ticket Information
@@ -587,14 +841,14 @@ export default function StaffReports() {
                       {indexOfFirstTicket + 1}-
                       {Math.min(
                         indexOfLastTicket,
-                        reportData.ticketDetails
-                          .length
+                        filteredTickets.length
                       )}{" "}
-                      of{" "}
-                      {
+                      of {filteredTickets.length}
+                      {selectedServiceTypeId &&
                         reportData.ticketDetails
-                          .length
-                      }
+                          .length !==
+                          filteredTickets.length &&
+                        ` filtered from ${reportData.ticketDetails.length} total tickets`}
                       )
                     </span>
                   </h3>
@@ -641,9 +895,36 @@ export default function StaffReports() {
                                 }
                               </td>
                               <td className="py-3 px-4">
-                                {
-                                  ticket.serviceTypeName
-                                }
+                                <div className="flex items-center gap-1">
+                                  {
+                                    ticket.serviceTypeName
+                                  }
+                                  {!selectedServiceTypeId &&
+                                    ticket.serviceTypeId && (
+                                      <button
+                                        onClick={() =>
+                                          setSelectedServiceTypeId(
+                                            ticket.serviceTypeId!
+                                          )
+                                        }
+                                        title="Filter by this service type"
+                                        className="ml-2 text-sky-600 hover:text-sky-800 focus:outline-none"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          className="h-4 w-4"
+                                          viewBox="0 0 20 20"
+                                          fill="currentColor"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                      </button>
+                                    )}
+                                </div>
                               </td>
                               <td className="py-3 px-4">
                                 {ticket.dateTime}
@@ -663,6 +944,7 @@ export default function StaffReports() {
                       </tbody>
                     </table>
                   </div>
+
                   {/* Pagination controls */}
                   {totalPages > 1 && (
                     <div className="flex justify-center mt-4 gap-2">
@@ -733,8 +1015,9 @@ export default function StaffReports() {
                   )}
                 </div>
               )}
-          </div>
-        )}{" "}
+            </div>
+          )}
+        </div>
         {/* PDF Preview Modal - Full Screen */}
         {showPdfPreview && pdfPreviewUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">

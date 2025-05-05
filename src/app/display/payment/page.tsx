@@ -256,7 +256,7 @@ const ScrollingFooter = () => {
   );
 };
 
-// Modified component that displays content immediately (not a true screensaver)
+// Modified component that displays content immediately
 const ScreenDisplay = () => {
   const [
     currentImageIndex,
@@ -577,16 +577,10 @@ const ScreenDisplay = () => {
   );
 };
 
-export default function DisplayBoard() {
+export default function PaymentDisplay() {
   const [counters, setCounters] = useState<
     DisplayCounter[]
   >([]);
-  const [
-    selectedCounterIds,
-    setSelectedCounterIds,
-  ] = useState<Set<string>>(new Set());
-  const [isFilterOpen, setIsFilterOpen] =
-    useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -613,22 +607,12 @@ export default function DisplayBoard() {
   async function fetchCounters() {
     const res = await fetch("/api/display");
     const data = await res.json();
-    setCounters(data);
+    // Filter to only include payment counters
+    const paymentCounters = data.filter(
+      (counter) => counter.code.startsWith("P")
+    );
+    setCounters(paymentCounters);
   }
-
-  const handleCounterToggle = (
-    counterId: string
-  ) => {
-    setSelectedCounterIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(counterId)) {
-        newSet.delete(counterId);
-      } else {
-        newSet.add(counterId);
-      }
-      return newSet;
-    });
-  };
 
   // Format ticket names to display as SERVICE-NUMBER or PWD-SERVICE-NUMBER for priority
   const formatTicketName = (
@@ -641,63 +625,14 @@ export default function DisplayBoard() {
       : `${ticket.prefix}-${ticket.number}`;
   };
 
-  // Filter counters based on selection
-  const displayedCounters =
-    selectedCounterIds.size > 0
-      ? counters.filter((c) =>
-          selectedCounterIds.has(c.id)
-        )
-      : counters;
-
-  // Group counters by service type and sort them by their number
-  const groupedCounters = {
-    CW: displayedCounters
-      .filter((c) => c.code.startsWith("CW"))
-      .sort((a, b) => {
-        const numA =
-          parseInt(a.code.replace("CW", "")) || 0;
-        const numB =
-          parseInt(b.code.replace("CW", "")) || 0;
-        return numA - numB;
-      }),
-    A: displayedCounters
-      .filter((c) => c.code.startsWith("A"))
-      .sort((a, b) => {
-        const numA =
-          parseInt(a.code.replace("A", "")) || 0;
-        const numB =
-          parseInt(b.code.replace("A", "")) || 0;
-        return numA - numB;
-      }),
-    P: displayedCounters
-      .filter((c) => c.code.startsWith("P"))
-      .sort((a, b) => {
-        const numA =
-          parseInt(a.code.replace("P", "")) || 0;
-        const numB =
-          parseInt(b.code.replace("P", "")) || 0;
-        return numA - numB;
-      }),
-  };
-
-  // Group all counters by service type for the filter section
-  const allGroupedCounters = {
-    CW: counters.filter((c) =>
-      c.code.startsWith("CW")
-    ),
-    A: counters.filter((c) =>
-      c.code.startsWith("A")
-    ),
-    P: counters.filter((c) =>
-      c.code.startsWith("P")
-    ),
-  };
-
-  const serviceNames = {
-    CW: "Customer Welfare",
-    A: "New Service Application",
-    P: "Payment",
-  };
+  // Sort payment counters by their number
+  const sortedCounters = counters.sort((a, b) => {
+    const numA =
+      parseInt(a.code.replace("P", "")) || 0;
+    const numB =
+      parseInt(b.code.replace("P", "")) || 0;
+    return numA - numB;
+  });
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start p-0 relative overflow-hidden">
@@ -814,7 +749,7 @@ export default function DisplayBoard() {
         }
       `}</style>
 
-      {/* Background image with blur effect - stretched to fill the entire screen */}
+      {/* Background image with blur effect */}
       <div className="fixed flex flex-col items-center justify-center inset-0 z-0 w-full h-full">
         <Image
           src="/wdlogo.png"
@@ -832,208 +767,73 @@ export default function DisplayBoard() {
       <WaterRipple />
 
       <div className="w-full z-10 relative flex flex-col h-screen pb-14">
-        {/* Navigation and Filter buttons in the same row */}
-        <div className="flex flex-wrap items-center justify-center gap-3 px-4 py-3">
-          <button
-            onClick={() =>
-              router.push("/display/payment")
-            }
-            className="px-5 py-2 bg-sky-800 hover:from-blue-600 hover:to-cyan-600 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center text-sm md:text-base"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
-              />
-            </svg>
-            Payment Display
-          </button>
-
-          <button
-            onClick={() =>
-              router.push("/display/customer")
-            }
-            className="px-5 py-2 bg-sky-800 hover:from-cyan-600 hover:to-teal-600 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center text-sm md:text-base"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            Customer Service
-          </button>
-
-          <button
-            onClick={() =>
-              setIsFilterOpen(!isFilterOpen)
-            }
-            className="px-5 py-2 bg-sky-800 hover:bg-sky-700 text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center text-sm md:text-base"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={`h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2 transition-transform ${
-                isFilterOpen ? "rotate-180" : ""
-              }`}
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Filter Counters
-          </button>
+        {/* Header with payment section name */}
+        <div className="flex justify-center py-4">
+          <h1 className="text-3xl font-bold text-white bg-sky-800 px-8 py-2 rounded-full shadow-lg">
+            Payment Counters
+          </h1>
         </div>
 
-        {/* Filter panel (remains unchanged) */}
-        {isFilterOpen && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-md p-4 w-full max-w-2xl mb-6 mx-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-sky-800">
-                Select Counters to Display
-              </h3>
-              {selectedCounterIds.size > 0 && (
-                <button
-                  onClick={() =>
-                    setSelectedCounterIds(
-                      new Set()
-                    )
-                  }
-                  className="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white text-sm rounded-lg transition shadow-sm hover:shadow-md font-medium"
-                >
-                  Clear All
-                </button>
-              )}
-            </div>
-            <div className="space-y-4">
-              {(["CW", "A", "P"] as const).map(
-                (serviceCode) => (
-                  <div
-                    key={serviceCode}
-                    className="space-y-2"
-                  >
-                    <h4 className="font-medium text-sky-700">
-                      {serviceNames[serviceCode]}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {allGroupedCounters[
-                        serviceCode
-                      ].map((counter) => (
-                        <label
-                          key={counter.id}
-                          className="flex items-center space-x-2 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedCounterIds.has(
-                              counter.id
-                            )}
-                            onChange={() =>
-                              handleCounterToggle(
-                                counter.id
-                              )
-                            }
-                            className="form-checkbox h-4 w-4 text-sky-600 rounded border-sky-300 focus:ring-sky-500"
-                          />
-                          <span className="text-sm text-sky-700">
-                            {counter.name}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Split Layout (remains unchanged) */}
+        {/* Split Layout */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-5 py-2 px-2 md:px-6 lg:px-10 overflow-hidden">
-          {/* Left side - Counter Display (smaller) */}
+          {/* Left side - Payment Counter Display */}
           <div className="md:col-span-3 overflow-y-auto pr-4 border-r border-cyan-800/30">
-            {/* Render counters by service group */}
-            {(["CW", "A", "P"] as const).map(
-              (serviceCode) =>
-                groupedCounters[serviceCode]
-                  .length > 0 && (
+            {sortedCounters.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedCounters.map((counter) => (
                   <div
-                    key={serviceCode}
-                    className="mb-8"
+                    key={counter.id}
+                    onClick={() =>
+                      router.push(
+                        `/display/${counter.id}`
+                      )
+                    }
+                    className="bg-gradient-to-br from-cyan-100/80 to-blue-200/80 backdrop-blur-sm rounded-xl shadow-lg p-4 hover:shadow-xl transition-all duration-300 border border-blue-100 cursor-pointer hover:from-cyan-200/90 hover:to-blue-300/90 group flex flex-col"
                   >
-                    <h2 className="text-xl font-semibold text-white mb-4 pl-2 border-l-4 border-sky-500">
-                      {serviceNames[serviceCode]}
+                    <h2 className="text-lg font-semibold text-cyan-800 mb-3 text-center group-hover:text-blue-900">
+                      {counter.name}
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {groupedCounters[
-                        serviceCode
-                      ].map((c) => (
-                        <div
-                          key={c.id}
-                          onClick={() =>
-                            router.push(
-                              `/display/${c.id}`
-                            )
-                          }
-                          className="bg-gradient-to-br from-cyan-100/80 to-blue-200/80 backdrop-blur-sm rounded-xl shadow-lg p-4 hover:shadow-xl transition-all duration-300 border border-blue-100 cursor-pointer hover:from-cyan-200/90 hover:to-blue-300/90 group flex flex-col"
-                        >
-                          <h2 className="text-lg font-semibold text-cyan-800 mb-3 text-center group-hover:text-blue-900">
-                            {c.name}
-                          </h2>
-                          <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-white/80 to-cyan-50/80 rounded-lg p-4 shadow-inner border border-blue-50">
-                            <p
-                              className={`text-3xl font-bold ${
-                                c.currentTicket?.status?.toLowerCase() ===
-                                "called"
-                                  ? "blink-animation"
-                                  : "text-sky-800"
-                              }`}
-                            >
-                              {formatTicketName(
-                                c.currentTicket
-                              )}
-                            </p>
-                          </div>
-                          <p className="text-xs text-cyan-700 mt-2 text-center font-medium">
-                            {c.currentTicket
-                              ? c.currentTicket.status?.toLowerCase() ===
-                                "called"
-                                ? "Now Calling"
-                                : c.currentTicket.status?.toLowerCase() ===
-                                  "serving"
-                                ? "Currently Serving"
-                                : c.currentTicket
-                                    .status
-                              : ""}
-                          </p>
-                        </div>
-                      ))}
+                    <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-white/80 to-cyan-50/80 rounded-lg p-6 shadow-inner border border-blue-50">
+                      <p
+                        className={`text-4xl font-bold ${
+                          counter.currentTicket?.status?.toLowerCase() ===
+                          "called"
+                            ? "blink-animation"
+                            : "text-sky-800"
+                        }`}
+                      >
+                        {formatTicketName(
+                          counter.currentTicket
+                        )}
+                      </p>
                     </div>
+                    <p className="text-xs text-cyan-700 mt-2 text-center font-medium">
+                      {counter.currentTicket
+                        ? counter.currentTicket.status?.toLowerCase() ===
+                          "called"
+                          ? "Now Calling"
+                          : counter.currentTicket.status?.toLowerCase() ===
+                            "serving"
+                          ? "Currently Serving"
+                          : counter.currentTicket
+                              .status
+                        : ""}
+                    </p>
                   </div>
-                )
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-xl">
+                  <h3 className="text-xl text-white font-medium">
+                    No payment counters available
+                  </h3>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Right side - Now using ScreenDisplay instead of Screensaver */}
+          {/* Right side - Screensaver */}
           <div className="hidden md:block md:col-span-2 h-full">
             <ScreenDisplay />
           </div>

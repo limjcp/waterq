@@ -1,20 +1,19 @@
-import {
-  NextRequest,
-  NextResponse,
-} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const runtime = "nodejs";
 
 // GET a single user by ID
-export async function GET(request: NextRequest) {
-  // Extract id from URL path
-  const parts = request.url.split("/");
-  const id = parts[parts.length - 1];
-
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // In Next.js App Router, we can simply use the params
+  // But DO NOT use const id = params.id directly
   try {
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: { id: params.id },
     });
 
     if (!user) {
@@ -38,12 +37,12 @@ export async function GET(request: NextRequest) {
 }
 
 // Update a user's password or assigned counter via PUT
-export async function PUT(request: Request) {
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Extract id from URL path
-    const parts = request.url.split("/");
-    const userId = parts[parts.length - 1];
-
+    const userId = params.id;
     const {
       password,
       assignedCounterId,
@@ -51,12 +50,11 @@ export async function PUT(request: Request) {
     } = await request.json();
 
     // Prepare the update data
-    const updateData: any = {};
+    const updateData: Record<string, any> = {};
 
     // Only include password if provided
     if (password && password.trim() !== "") {
       // Hash the password before storing
-      const bcrypt = require("bcryptjs");
       updateData.password = await bcrypt.hash(
         password,
         10
@@ -174,11 +172,12 @@ export async function PUT(request: Request) {
 }
 
 // Archive a user via DELETE
-export async function DELETE(request: Request) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Extract id from URL path
-    const parts = request.url.split("/");
-    const userId = parts[parts.length - 1];
+    const userId = params.id;
 
     // Get the current user to check if they're a supervisor
     const currentUser =

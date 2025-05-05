@@ -3,7 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import {
+  useSession,
+  signOut,
+} from "next-auth/react";
 import {
   UsersIcon,
   ChartBarIcon,
@@ -24,19 +27,31 @@ export default function AdminLayout({
 }>) {
   const { status, data: session } = useSession();
   const pathname = usePathname();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+  ] = useState(false);
 
   // Determine active page based on current pathname
   const getActivePage = () => {
-    if (pathname === "/admin/dashboard") return "dashboard";
-    if (pathname === "/admin/users") return "users";
-    if (pathname === "/admin/register") return "register";
-    if (pathname === "/admin/services") return "services";
-    if (pathname === "/admin/counters") return "counters";
-    if (pathname === "/admin/register-service") return "register-service";
-    if (pathname === "/admin/screensaver") return "screensaver";
-    if (pathname === "/admin/report") return "report";
-    if (pathname === "/admin/printer") return "printer";
+    if (pathname === "/admin/dashboard")
+      return "dashboard";
+    if (pathname === "/admin/users")
+      return "users";
+    if (pathname === "/admin/register")
+      return "register";
+    if (pathname === "/admin/services")
+      return "services";
+    if (pathname === "/admin/counters")
+      return "counters";
+    if (pathname === "/admin/register-service")
+      return "register-service";
+    if (pathname === "/admin/screensaver")
+      return "screensaver";
+    if (pathname === "/admin/report")
+      return "report";
+    if (pathname === "/admin/printer")
+      return "printer";
     return "";
   };
 
@@ -54,9 +69,12 @@ export default function AdminLayout({
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100 p-8">
         <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center">
-          <h1 className="text-3xl font-bold text-sky-800 mb-6">Admin Area</h1>
+          <h1 className="text-3xl font-bold text-sky-800 mb-6">
+            Admin Area
+          </h1>
           <p className="text-xl text-red-500">
-            Please log in to access the admin area.
+            Please log in to access the admin
+            area.
           </p>
         </div>
       </div>
@@ -68,15 +86,23 @@ export default function AdminLayout({
       {/* Header */}
       <div
         className={`fixed top-0 right-0 ${
-          isSidebarCollapsed ? "left-20" : "left-64"
+          isSidebarCollapsed
+            ? "left-20"
+            : "left-64"
         } h-16 bg-white shadow-md z-10 flex items-center justify-between px-8 transition-all duration-300`}
       >
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            onClick={() =>
+              setIsSidebarCollapsed(
+                !isSidebarCollapsed
+              )
+            }
             className="p-2 hover:bg-sky-100 rounded-lg transition-colors"
             aria-label={
-              isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              isSidebarCollapsed
+                ? "Expand sidebar"
+                : "Collapse sidebar"
             }
           >
             <Bars3Icon className="h-6 w-6 text-sky-800" />
@@ -87,7 +113,9 @@ export default function AdminLayout({
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm text-gray-600">Logged in as:</p>
+            <p className="text-sm text-gray-600">
+              Logged in as:
+            </p>
             <p className="font-medium text-sky-800">
               {session?.user?.name || "User"}
             </p>
@@ -134,7 +162,8 @@ export default function AdminLayout({
                   title="Dashboard"
                 >
                   <HomeIcon className="h-5 w-5 mr-3" />
-                  {!isSidebarCollapsed && "Dashboard"}
+                  {!isSidebarCollapsed &&
+                    "Dashboard"}
                 </Link>
               </li>
               <li>
@@ -162,7 +191,8 @@ export default function AdminLayout({
                   title="Service Type"
                 >
                   <QueueListIcon className="h-5 w-5 mr-3" />
-                  {!isSidebarCollapsed && "Service Type"}
+                  {!isSidebarCollapsed &&
+                    "Service Type"}
                 </Link>
               </li>
               <li>
@@ -176,10 +206,11 @@ export default function AdminLayout({
                   title="Counters"
                 >
                   <BuildingStorefrontIcon className="h-5 w-5 mr-3" />
-                  {!isSidebarCollapsed && "Counters"}
+                  {!isSidebarCollapsed &&
+                    "Counters"}
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href="/admin/register-service"
                   className={`flex items-center p-3 rounded-lg ${
@@ -192,7 +223,7 @@ export default function AdminLayout({
                   <ServerStackIcon className="h-5 w-5 mr-3" />
                   {!isSidebarCollapsed && "Register Service"}
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   href="/admin/screensaver"
@@ -218,12 +249,13 @@ export default function AdminLayout({
                     />
                   </svg>
 
-                  {!isSidebarCollapsed && "Screensaver"}
+                  {!isSidebarCollapsed &&
+                    "Screensaver"}
                 </Link>
               </li>
 
               {/* New Printer Settings Menu Item */}
-              <li>
+              {/* <li>
                 <Link
                   href="/admin/printer"
                   className={`flex items-center p-3 rounded-lg ${
@@ -249,7 +281,7 @@ export default function AdminLayout({
                   </svg>
                   {!isSidebarCollapsed && "Printer Settings"}
                 </Link>
-              </li>
+              </li> */}
 
               <li>
                 <Link
@@ -262,14 +294,19 @@ export default function AdminLayout({
                   title="Reports"
                 >
                   <ChartBarIcon className="h-5 w-5 mr-3" />
-                  {!isSidebarCollapsed && "Reports"}
+                  {!isSidebarCollapsed &&
+                    "Reports"}
                 </Link>
               </li>
             </ul>
           </nav>
           <div className="mt-auto pt-4 border-t border-sky-700">
             <button
-              onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+              onClick={() =>
+                signOut({
+                  callbackUrl: "/auth/signin",
+                })
+              }
               className="flex items-center w-full p-3 rounded-lg text-white hover:bg-sky-700/50 transition-colors"
               title="Sign Out"
             >

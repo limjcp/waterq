@@ -12,10 +12,20 @@ export async function GET() {
             code: true,
           },
         },
+        supervisedService: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
     });
     return NextResponse.json(users);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }

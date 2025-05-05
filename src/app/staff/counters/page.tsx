@@ -1520,29 +1520,48 @@ export default function StaffDashboard() {
           {/* User Profile */}
           {session?.user && (
             <div className="flex items-center relative">
+              {" "}
               <button
                 onClick={() =>
                   setIsProfileMenuOpen(
                     !isProfileMenuOpen
                   )
                 }
-                className="flex items-center cursor-pointer"
+                className="flex items-center cursor-pointer hover:bg-sky-700 px-3 py-1 rounded-full transition-colors"
               >
-                <div className="bg-white text-sky-600 rounded-full w-20 h-20 flex items-center justify-center font-bold text-lg mr-3">
+                <div className="bg-white text-sky-600 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-3 shadow-sm">
                   {getInitials(
                     session.user.name || ""
                   )}
                 </div>
-                <span className="text-white font-extrabold">
+                <span className="text-white font-medium">
                   {session.user.name ||
                     "Staff User"}
                 </span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`h-4 w-4 ml-2 text-white transition-transform ${
+                    isProfileMenuOpen
+                      ? "rotate-180"
+                      : ""
+                  }`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </button>
-
               {/* Profile Menu Dropdown */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 top-24 w-64 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
+                <div className="absolute right-0 top-14 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-3 z-50 animate-fadeIn">
+                  <div className="px-4 py-3 mb-2 border-b border-gray-100">
+                    <h3 className="font-semibold text-sky-800 mb-2">
+                      Settings
+                    </h3>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">
                         Always Confirm
@@ -1580,14 +1599,57 @@ export default function StaffDashboard() {
                         : "Actions will be performed without confirmation"}
                     </p>
                   </div>
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-sky-50 transition-colors"
-                  >
-                    Sign Out
-                  </Button>
+                  <h3 className="font-semibold text-sky-800 px-4 mb-1">
+                    Quick Links
+                  </h3>
+                  <div className="px-2 py-1">
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      onClick={() =>
+                        (window.location.href =
+                          "/staff/reports")
+                      }
+                      className="w-full text-left px-4 py-2 transition-colors flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      My Reports
+                    </Button>
+                  </div>
+                  <div className="px-2 py-1">
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-2 transition-colors flex items-center gap-2"
+                    >
+                      {" "}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3 3a1 1 0 011-1h12a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V3zm10 12a1 1 0 01-1 1H8a1 1 0 110-2h4a1 1 0 011 1zm0-4a1 1 0 01-1 1H8a1 1 0 110-2h4a1 1 0 011 1zm0-4a1 1 0 01-1 1H8a1 1 0 010-2h4a1 1 0 011 1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Sign Out
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1624,7 +1686,7 @@ export default function StaffDashboard() {
                         )}
                       </span>
                     </div>
-                    <p className="text-xl font-medium text-sky-600 mb-2">
+                    <p className="text-2xl font-medium text-sky-600 mb-2">
                       {activeTickets[0].service
                         ?.name ||
                         "Unknown Service"}
@@ -1671,7 +1733,7 @@ export default function StaffDashboard() {
                 {lapsedTickets.length > 0 && (
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-5">
-                      <h3 className="text-3xl font-medium text-amber-700 sticky top-0 bg-white">
+                      <h3 className="text-2xl font-medium text-amber-700 sticky top-0 bg-white">
                         Lapsed Tickets
                       </h3>
                       {lapsedTickets.length >
@@ -1752,7 +1814,7 @@ export default function StaffDashboard() {
                 {returningTickets.length > 0 && (
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-5">
-                      <h3 className="text-3xl font-medium text-sky-700 sticky top-0 bg-white">
+                      <h3 className="text-2xl font-medium text-sky-700 sticky top-0 bg-white">
                         Returning Tickets
                       </h3>
                       {returningTickets.length >
@@ -1879,7 +1941,7 @@ export default function StaffDashboard() {
                       )}
                     </span>
                   </div>
-                  <p className="text-xl font-medium text-sky-600 mb-2">
+                  <p className="text-2xl font-medium text-sky-600 mb-2">
                     {currentServingTicket.service
                       ?.name || "Unknown Service"}
                   </p>
@@ -2110,7 +2172,7 @@ export default function StaffDashboard() {
                             )}
                           </span>
                         </div>
-                        <p className="text-xl font-medium text-sky-600 mb-2">
+                        <p className="text-2xl font-medium text-sky-600 mb-2">
                           {ticket.service?.name ||
                             "Unknown Service"}
                         </p>
@@ -2238,7 +2300,7 @@ export default function StaffDashboard() {
                     No ticket currently being
                     served
                   </p>
-                  <div className="flex flex-col space-y-4 w-full">
+                  <div className="flex flex-col space-y-4 w-full mt-56">
                     <Button
                       variant="primary"
                       size="lg"
