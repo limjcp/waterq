@@ -238,7 +238,7 @@ export default function StaffReports() {
     };
   }, [pdfPreviewUrl]);
 
-  // Update generate report function to include service type filter
+  // Update the generateReport function to also generate the PDF preview
   const generateReport = async () => {
     if (
       (reportMode === "staff" &&
@@ -269,6 +269,9 @@ export default function StaffReports() {
         const data = await res.json();
         setReportData(data);
         setCurrentPage(1); // Reset to first page when new report is generated
+
+        // Automatically generate PDF after report data is loaded
+        await generatePdfPreview(data);
       } else {
         console.error(
           "Failed to generate report"
@@ -284,9 +287,9 @@ export default function StaffReports() {
     }
   };
 
-  // New function to generate and show PDF preview
-  const previewPdf = async () => {
-    if (!reportData) return;
+  // Create a separate function for PDF generation that can be called both automatically and manually
+  const generatePdfPreview = async (data) => {
+    if (!data) return;
 
     setIsLoadingPdf(true);
 
@@ -299,7 +302,7 @@ export default function StaffReports() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            reportData,
+            reportData: data,
             startDate,
             endDate,
             reportMode,
@@ -333,6 +336,12 @@ export default function StaffReports() {
     } finally {
       setIsLoadingPdf(false);
     }
+  };
+
+  // Update the previewPdf function to use the new generatePdfPreview function
+  const previewPdf = () => {
+    if (!reportData) return;
+    generatePdfPreview(reportData);
   };
 
   // Function to handle printing the PDF
@@ -680,7 +689,7 @@ export default function StaffReports() {
                       </span>
                     )}
                 </h2>
-                <Button
+                {/* <Button
                   onClick={previewPdf}
                   disabled={isLoadingPdf}
                   variant="success"
@@ -692,9 +701,9 @@ export default function StaffReports() {
                       Preparing Preview...
                     </>
                   ) : (
-                    "Preview PDF Report"
+                    "Regenerate PDF"
                   )}
-                </Button>
+                </Button> */}
               </div>
 
               {/* Summary Statistics */}
@@ -1018,7 +1027,7 @@ export default function StaffReports() {
             </div>
           )}
         </div>
-        {/* PDF Preview Modal - Full Screen */}
+
         {showPdfPreview && pdfPreviewUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
             <div className="bg-white w-full h-full flex flex-col">
@@ -1027,20 +1036,6 @@ export default function StaffReports() {
                   PDF Report Preview
                 </h2>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={printPdf}
-                    variant="success"
-                    size="sm"
-                  >
-                    Print Report
-                  </Button>
-                  <Button
-                    onClick={downloadPdf}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    Download PDF
-                  </Button>
                   <Button
                     onClick={() =>
                       setShowPdfPreview(false)

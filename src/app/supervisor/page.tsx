@@ -99,9 +99,9 @@ export default function SupervisorDashboard() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-sky-50 to-sky-100 min-h-screen">
-      <div className="max-w-7xl mx-auto p-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
+    <div className="bg-gradient-to-br from-sky-50 to-sky-100 ">
+      <div className="h-[90vh]">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6 h-[93vh]">
           <h1 className="text-3xl font-bold text-sky-800 mb-6">
             Supervisor Dashboard
           </h1>

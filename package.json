@@ -24,7 +24,7 @@
     "next": "^15.2.1",
     "next-auth": "^5.0.0-beta.25",
     "pdfkit": "^0.16.0",
-    "puppeteer": "^24.7.2",
+    "puppeteer": "^24.8.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "socket.io": "^4.8.1",

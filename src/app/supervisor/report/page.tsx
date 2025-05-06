@@ -264,6 +264,12 @@ export default function SupervisorReports() {
       const data = await response.json();
       setReportData(data);
       setCurrentPage(1);
+
+      // Automatically generate PDF preview after report data is loaded
+      // We need to run this after the state is updated and report data is available
+      setTimeout(() => {
+        handlePdfGeneration();
+      }, 100);
     } catch (error) {
       console.error(
         "Error generating report:",
@@ -511,7 +517,7 @@ export default function SupervisorReports() {
                 )}
               </Button>
 
-              <Button
+              {/* <Button
                 onClick={handlePdfGeneration}
                 disabled={
                   isLoadingPdf || !reportData
@@ -527,7 +533,7 @@ export default function SupervisorReports() {
                 ) : (
                   "Preview PDF Report"
                 )}
-              </Button>
+              </Button> */}
             </div>
           </div>
 
@@ -784,20 +790,15 @@ export default function SupervisorReports() {
       {/* PDF Preview Modal */}
       {showPdfPreview && pdfPreviewUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-xl w-full h-full flex flex-col">
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-semibold text-sky-800">
                 PDF Report Preview
               </h3>
               <div className="flex gap-2">
-                <a
-                  href={pdfPreviewUrl}
-                  download={`${serviceName}-report-${startDate}-to-${endDate}.pdf`}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                >
-                  Download
-                </a>
-                <button
+
+                <Button
+                variant="danger"
                   onClick={() => {
                     setShowPdfPreview(false);
                     if (pdfPreviewUrl)
@@ -806,10 +807,10 @@ export default function SupervisorReports() {
                       );
                     setPdfPreviewUrl(null);
                   }}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                  className="px-4 py-2 transition-colors"
                 >
                   Close
-                </button>
+                </Button>
               </div>
             </div>
             <div className="flex-1 overflow-auto p-1 bg-gray-100">

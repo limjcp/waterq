@@ -114,6 +114,11 @@ export default function StaffReports() {
     setIsProfileMenuOpen,
   ] = useState(false);
 
+  // Add new state for PDF preview
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   // Add click handler for sign out
   const handleSignOut = () => {
     window.location.href = "/api/auth/signout";
@@ -176,51 +181,12 @@ export default function StaffReports() {
     } else if (status === "authenticated") {
       setLoading(false);
       fetchServiceTypes();
-      // Auto-generate report on component mount for the current user
-      if (session?.user?.username) {
-        // We call generateReport in this effect but defined it later, so we use this approach
-        const generateInitialReport =
-          async () => {
-            if (!session?.user?.username) return;
-
-            setIsGenerating(true);
-            try {
-              let endpoint = `/api/reports/staff?username=${session.user.username}&startDate=${startDate}&endDate=${endDate}`;
-
-              // Add service type filter if selected
-              if (selectedServiceTypeId) {
-                endpoint += `&serviceTypeId=${selectedServiceTypeId}`;
-              }
-
-              const res = await fetch(endpoint);
-
-              if (res.ok) {
-                const data = await res.json();
-                setReportData(data);
-                setCurrentPage(1); // Reset to first page
-              } else {
-                console.error(
-                  "Failed to generate initial report"
-                );
-              }
-            } catch (error) {
-              console.error(
-                "Error generating initial report:",
-                error
-              );
-            } finally {
-              setIsGenerating(false);
-            }
-          };
-
-        generateInitialReport();
-      }
+      // No longer auto-generating report on component mount
     }
   }, [
     status,
     router,
-    session,
-    selectedServiceTypeId,
+    session
   ]);
 
   // Generate report function
@@ -242,6 +208,9 @@ export default function StaffReports() {
         const data = await res.json();
         setReportData(data);
         setCurrentPage(1); // Reset to first page
+
+        // Automatically generate PDF preview after report data is loaded
+        generatePdfPreview(data);
       } else {
         console.error(
           "Failed to generate report"
@@ -255,6 +224,53 @@ export default function StaffReports() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  // Update the PDF preview generation to accept report data parameter
+  const generatePdfPreview = async (reportDataToUse = null) => {
+    const dataToUse = reportDataToUse || reportData;
+    if (!session?.user?.username || !dataToUse) return;
+
+    setIsGeneratingPdf(true);
+    try {
+      // Use the existing PDF generation endpoint
+      const res = await fetch("/api/reports/pdf", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          reportData: dataToUse,
+          startDate,
+          endDate,
+          reportMode: "staff"
+        })
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        setPdfPreviewUrl(url);
+        setIsPdfPreviewOpen(true);
+      } else {
+        console.error("Failed to generate PDF preview");
+        alert("Failed to generate PDF preview. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error generating PDF preview:", error);
+      alert("An error occurred while generating the PDF preview.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // Close PDF preview and clean up the object URL
+  const closePdfPreview = () => {
+    if (pdfPreviewUrl) {
+      URL.revokeObjectURL(pdfPreviewUrl);
+      setPdfPreviewUrl(null);
+    }
+    setIsPdfPreviewOpen(false);
   };
 
   // Format date for display
@@ -286,7 +302,7 @@ export default function StaffReports() {
             />
 
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-4xl font-bold text-white mb-2">
                 My Service Reports
               </h1>
             </div>
@@ -544,9 +560,37 @@ export default function StaffReports() {
         {/* Report Results */}
         {reportData && (
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-sky-800 mb-6">
-              Report for {reportData.name}
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-sky-800">
+                Report for {reportData.name}
+              </h2>
+
+              {/* PDF Preview Button */}
+              {/* <Button
+                variant="secondary"
+                size="md"
+                onClick={generatePdfPreview}
+                disabled={isGeneratingPdf}
+                className="flex items-center gap-2"
+                aria-label="Preview PDF Report"
+                title="Generate a PDF preview of this report"
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <span className="animate-spin inline-block h-4 w-4 border-2 border-sky-500 border-t-transparent rounded-full"></span>
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                    Preview PDF Report
+                  </>
+                )}
+              </Button> */}
+            </div>
+
             {/* Summary Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-sky-50 p-4 rounded-lg border border-sky-100">
@@ -855,6 +899,37 @@ export default function StaffReports() {
           </div>
         )}
       </div>
+
+      {/* PDF Preview Modal */}
+      {isPdfPreviewOpen && pdfPreviewUrl && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-sky-800 rounded-lg shadow-xl w-full h-full flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-white">PDF Report Preview</h3>
+              <div className="flex gap-3">
+
+                <Button
+                variant="danger"
+                  onClick={closePdfPreview}
+                  className=" py-2 px-4 rounded-md flex items-center gap-2 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Close
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                src={pdfPreviewUrl}
+                className="w-full h-full"
+                title="PDF Report Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -362,8 +362,8 @@ export default function SupervisorUserManagement() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-sky-50 to-sky-100 min-h-screen">
-      <div className="max-w-7xl mx-auto p-8">
+    <div className="bg-gradient-to-br from-sky-50 to-sky-100 ">
+      <div className="">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-sky-800">

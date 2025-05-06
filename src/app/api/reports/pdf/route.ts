@@ -772,7 +772,7 @@ export async function POST(request: NextRequest) {
         doc.text("Remarks", col5, y); // Add remarks column header
 
         y += 10;
-        return { col1, col2, col3, col4, col5 };
+        return { col1, col2, col3, col4, col5 }; // Return col5 as well
       };
 
       // Function to add consistent header on new pages
@@ -874,7 +874,7 @@ export async function POST(request: NextRequest) {
           y += 10;
 
           // Table headers
-          const { col1, col2, col3, col4 } =
+          const { col1, col2, col3, col4, col5 } =
             addTicketTableHeaders();
 
           // Display ticket rows with alternating colors
@@ -898,12 +898,9 @@ export async function POST(request: NextRequest) {
               y += 15;
 
               // Repeat table headers
-              const columns =
-                addTicketTableHeaders();
-              Object.assign(
-                { col1, col2, col3, col4 },
-                columns
-              );
+              const columns = addTicketTableHeaders();
+              const { col1: newCol1, col2: newCol2, col3: newCol3, col4: newCol4, col5: newCol5 } = columns;
+              Object.assign({ col1, col2, col3, col4, col5 }, columns);
               rowCount = 0;
             }
 
