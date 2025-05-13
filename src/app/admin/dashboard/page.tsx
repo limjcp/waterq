@@ -50,7 +50,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-white p-8 transition-all duration-300">
       <h1 className="text-3xl font-bold text-sky-800 mb-6">Counter Statistics</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((counter) => (
           <div key={counter.id} className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6">
@@ -65,12 +65,12 @@ export default function Dashboard() {
                     <span className="font-semibold">{counter.todayServed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sky-600">Avg. Time:</span>
+                    <span className="text-sky-600">Avg. Time: (MM:SS)</span>
                     <span className="font-semibold">{formatTime(counter.todayAverageServiceTime)}</span>
                   </div>
                 </div>
               </div>
-              
+
               {/* All-time Stats */}
               <div className="bg-white rounded-lg p-3">
                 <h4 className="text-sm font-medium text-sky-600 mb-2">All-time Statistics</h4>
@@ -80,7 +80,7 @@ export default function Dashboard() {
                     <span className="font-semibold">{counter.totalServed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sky-600">Avg. Time:</span>
+                    <span className="text-sky-600">Avg. Time: (MM:SS)</span>
                     <span className="font-semibold">{formatTime(counter.averageServiceTime)}</span>
                   </div>
                 </div>

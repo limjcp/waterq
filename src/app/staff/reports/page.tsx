@@ -9,13 +9,15 @@ import Image from "next/image";
 
 // Format time (seconds) as MM:SS
 const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.round(
-    seconds % 60
-  );
-  return `${minutes}:${remainingSeconds
-    .toString()
-    .padStart(2, "0")}`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  } else {
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }
 };
 
 // Helper function to get user initials
@@ -603,7 +605,7 @@ export default function StaffReports() {
               </div>
               <div className="bg-green-50 p-4 rounded-lg border border-green-100">
                 <h3 className="text-lg font-semibold text-green-700 mb-1">
-                  Average Service Time
+                  Average Service Time (MM:SS)
                 </h3>
                 <p className="text-3xl font-bold text-green-800">
                   {formatTime(
@@ -761,7 +763,7 @@ export default function StaffReports() {
                             End Time
                           </th>
                           <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
-                            Service Time
+                            Service Time (MM:SS)
                           </th>
                           <th className="py-3 px-4 text-left font-medium text-sky-700 border-b">
                             Remarks

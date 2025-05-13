@@ -5,15 +5,17 @@ import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import Button from "@/components/Button";
 
-// Format time (seconds) as MM:SS
+// Format time (seconds) as HH:MM:SS
 const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.round(
-    seconds % 60
-  );
-  return `${minutes}:${remainingSeconds
-    .toString()
-    .padStart(2, "0")}`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  } else {
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }
 };
 
 // Types

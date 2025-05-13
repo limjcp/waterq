@@ -43,18 +43,20 @@ type ReportData = {
   ticketDetails?: TicketDetail[];
 };
 
-// Format time (seconds) as MM:SS
+// Format time (seconds) as HH:MM:SS or MM:SS depending on duration
 const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.round(
-    seconds % 60
-  );
-  return `${minutes}:${remainingSeconds
-    .toString()
-    .padStart(2, "0")}`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  } else {
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }
 };
 
-// Function to format datetime to show AM/PM
+// Function to format datetime to show AM/PM without seconds
 const formatDateTime = (
   dateTimeStr: string
 ): string => {
@@ -63,10 +65,10 @@ const formatDateTime = (
 
   // Extract date and time parts
   const datePart = dateTimeStr.substring(0, 10);
-  const timePart = dateTimeStr.substring(11, 19); // Include seconds by getting 19 characters
+  const timePart = dateTimeStr.substring(11, 16); // Only include HH:MM (no seconds)
 
   // Parse the time
-  const [hours, minutes, seconds] = timePart
+  const [hours, minutes] = timePart
     .split(":")
     .map(Number);
 
@@ -75,8 +77,6 @@ const formatDateTime = (
   const formattedHours = hours % 12 || 12; // Convert 0 to 12
 
   return `${datePart} ${formattedHours}:${minutes
-    .toString()
-    .padStart(2, "0")}:${seconds
     .toString()
     .padStart(2, "0")} ${period}`;
 };
@@ -762,17 +762,17 @@ export async function POST(request: NextRequest) {
         const col1 = marginLeft + 5;
         const col2 = col1 + ticketColWidth;
         const col3 = col2 + typeColWidth * 0.8; // Adjust column width to fit remarks
-        const col4 = col3 + startColWidth * 0.8; // Adjust column width to fit remarks
-        const col5 = col4 + startColWidth * 0.8; // New column for remarks
+        const col4 = col3 + startColWidth * 0.8; // Column for service time
+        const col5 = col4 + startColWidth * 0.8; // Column for remarks
 
         doc.text("Ticket #", col1, y);
         doc.text("Service Type", col2, y);
         doc.text("Service Start", col3, y);
-        doc.text("Service End", col4, y);
-        doc.text("Remarks", col5, y); // Add remarks column header
+        doc.text("Service Time", col4, y); // Changed from "Service End" to "Service Time"
+        doc.text("Remarks", col5, y);
 
         y += 10;
-        return { col1, col2, col3, col4, col5 }; // Return col5 as well
+        return { col1, col2, col3, col4, col5 };
       };
 
       // Function to add consistent header on new pages
@@ -937,29 +937,41 @@ export async function POST(request: NextRequest) {
               col2,
               y
             );
+
+            // Format start time without seconds
+            const startTimeFormatted = ticket.servingStart === "-"
+              ? "-"
+              : (() => {
+                  // Extract date part and time part without seconds
+                  const datePart = ticket.servingStart.substring(0, 10);
+                  const timePart = ticket.servingStart.substring(11, 16); // Only HH:MM
+
+                  // Parse the time for AM/PM
+                  const [hours, minutes] = timePart.split(":").map(Number);
+                  const period = hours >= 12 ? "PM" : "AM";
+                  const formattedHours = hours % 12 || 12; // Convert 0 to 12
+
+                  return `${datePart} ${formattedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+                })();
+
             doc.text(
-              ticket.servingStart === "-"
-                ? "-"
-                : formatDateTime(
-                    ticket.servingStart
-                  ),
+              startTimeFormatted,
               col3,
               y
             );
+
+            // Display service time instead of end time
             doc.text(
-              ticket.servingEnd === "-"
-                ? "-"
-                : formatDateTime(
-                    ticket.servingEnd
-                  ),
+              ticket.serviceTime ? formatTime(ticket.serviceTime) : "-",
               col4,
               y
             );
+
             doc.text(
               truncateText(
                 ticket.remarks || "",
                 25
-              ), // Truncate long remarks
+              ),
               col5,
               y
             );
